@@ -8,11 +8,6 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true
   },
 
-  rules: {
-    "@typescript-eslint/no-explicit-any": "off"
-  },
-
-  project: "sky-realty"
 
   
   /* config options here */
