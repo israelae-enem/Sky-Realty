@@ -6,7 +6,7 @@ import Image from 'next/image'
 const Maintenance= () => {
   
   return (
-    <div className='max-h-screen flex flex-1 bg-cta text-white justify-between items-center'>
+    <div className='min-h-screen flex flex-1 bg-cta text-white justify-between items-center'>
 
       <MaintenanceForm closeModal={() => {}} />
 

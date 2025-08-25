@@ -4,7 +4,7 @@ import React from 'react'
 
 const Realtor = () => {
   return (
-    <div className='flex flex-1 bg-cta text-white justify-between items-center'>
+    <div className='flex flex-1 min-h-screen bg-cta text-white justify-between items-center'>
 
       <RealtorSignUpForm />
 

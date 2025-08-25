@@ -102,7 +102,7 @@ export default function RealtorDashboard() {
         <Topbar />
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <StatCard icon={<Building />} title="Properties" value={stats.properties} />
           <StatCard icon={<CheckCircle />} title="Occupied Units" value={stats.occupied} />
           <StatCard icon={<FileText />} title="Active Leases" value={stats.leases} />

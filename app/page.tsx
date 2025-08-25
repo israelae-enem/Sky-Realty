@@ -1,3 +1,4 @@
+import Footer from '@/components/Footer'
 import PlanCTA from '@/components/PlanCTA'
 import PropertyCTA from '@/components/PropertyCTA'
 import StripePricingTable from '@/components/StripePricingTable'
@@ -6,14 +7,14 @@ import Image from 'next/image'
 
 const page = () => {
   return (
-    <main className=" flex flex-1 bg-blue-300  text-gray-800 max-w-screen gap-4 justify-between  w-full max-lg:flex-col-reverse max-lg:items-center">
+    <main className=" flex flex-1 bg-blue-300  text-gray-800 max-w-screen gap-4 justify-between  w-full max-lg:flex-col max-lg:items-center">
 
       <h1 className="text-2xl text-blue-500 justify-items-center items-center">
        <p> Welcome To Sky-Realty </p>
         <p> The Smart Way To Manage Your Rental Properties</p>
       </h1>
 
-      <section className="Home section flex bg-blue-400">
+      <section className="Home section flex">
 
          <div className="ml-5 mb-5  mt-5">
       Are you a landlord or agent tired of juggling rent collection, maintenance calls, and endless paperwork?
@@ -47,7 +48,7 @@ const page = () => {
       </section>
 
 
-      <section className="flex flex-1 bg-blue-200 mt-5">
+      <section className="flex flex-1 mt-5">
 
          <Image
          src="/assets/images/maintenance-request.jpg"
@@ -117,7 +118,7 @@ const page = () => {
          />
       </section>
 
-      <section className='bg-blue-200 ml-5'>
+      <section className=' ml-5'>
         <div className="font-bold">
           <p className="font-bold text-blue-600 mb-5">Safe. Secure. Transparent.</p>
 
@@ -196,7 +197,7 @@ const page = () => {
         </div>
       </section>
 
-      <section className='flex flex-1 justify-between m-5 bg-blue-500'>
+      <section className='flex flex-1 justify-between m-5'>
         <PlanCTA />
         <PropertyCTA />
 
@@ -211,6 +212,10 @@ const page = () => {
 
       <section>
         <StripePricingTable />
+      </section>
+
+      <section>
+        <Footer />
       </section>
 
       
