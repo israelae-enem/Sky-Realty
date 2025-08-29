@@ -10,7 +10,7 @@ import Navbar from "@/components/Navbar";
 
 
 const inter = Inter ({
-  variable: "--font-geist-sans",
+  weight: ['400', '700'],
   subsets: ["latin"],
   
 });
@@ -30,7 +30,7 @@ export default function RootLayout({
       lang="en">
       
       <body
-        className={cn("min-h-screen  antialiased", inter.variable)}>
+        className={cn("min-h-screen  antialiased", inter.className)}>
           <Navbar/>
           
           {children}

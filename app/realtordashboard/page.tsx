@@ -1,58 +1,54 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabaseClient'
 import StatCard from '@/components/StatCard'
 import { Building, CheckCircle, FileText } from 'lucide-react'
 import Topbar from '@/components/Topbar'
 import PropertyTable from '@/components/PropertyTable'
-import FileUploader from '@/components/FileUploader'
 import AppointmentTable from '@/components/AppointmentTable'
-import { format } from 'date-fns'
 import TenantTable from '@/components/TenantTable'
 import CollapsibleDashboardSections from '@/components/CollapsibleDashboardSession'
+import { format } from 'date-fns'
 
-const supabase = createClientComponentClient()
+interface Stats {
+  properties: number
+  occupied: number
+  leases: number
+}
 
 export default function RealtorDashboard() {
-  const [stats, setStats] = useState({ properties: 0, occupied: 0, leases: 0 })
+  const [stats, setStats] = useState<Stats>({ properties: 0, occupied: 0, leases: 0 })
   const [realtorId, setRealtorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let channel: any
+
     const init = async () => {
       try {
-        // ✅ Get logged in user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
+        // Get logged-in user
+        const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
           setRealtorId(null)
-          setStats({ properties: 0, occupied: 0, leases: 0 })
           setLoading(false)
           return
         }
 
         setRealtorId(user.id)
 
-        // ✅ Fetch properties for this realtor
-        const { data: properties, error } = await supabase
+        // Fetch initial properties
+        const { data: properties } = await supabase
           .from('properties')
           .select('*')
           .eq('realtor_id', user.id)
 
-        if (error) {
-          console.error('Error fetching properties:', error)
-          setLoading(false)
-          return
-        }
+        updateStats(properties ?? [])
 
-        updateStats(user.id, properties ?? [])
-
-        // ✅ Subscribe to realtime property changes
-        const channel = supabase
-          .channel('properties-channel')
+        // Subscribe to realtime property changes
+        channel = supabase
+          .channel(`properties-realtor-${user.id}`)
           .on(
             'postgres_changes',
             {
@@ -66,26 +62,26 @@ export default function RealtorDashboard() {
                 .from('properties')
                 .select('*')
                 .eq('realtor_id', user.id)
-
-              updateStats(user.id, updated ?? [])
+              updateStats(updated ?? [])
             }
           )
           .subscribe()
 
         setLoading(false)
-        return () => {
-          supabase.removeChannel(channel)
-        }
       } catch (err) {
-        console.error('Auth error:', err)
+        console.error('Error initializing dashboard:', err)
         setLoading(false)
       }
     }
 
     init()
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [])
 
-  const updateStats = (realtorId: string, properties: any[]) => {
+  const updateStats = (properties: any[]) => {
     const total = properties.length
     const occupied = properties.filter((p) => p.status === 'Occupied').length
     const activeLeases = properties.filter(
@@ -93,17 +89,19 @@ export default function RealtorDashboard() {
     ).length
 
     setStats({ properties: total, occupied, leases: activeLeases })
-    checkLeaseExpirations(realtorId, properties)
+    checkLeaseExpirations(properties)
   }
 
-  const checkLeaseExpirations = async (realtorId: string, properties: any[]) => {
+  const checkLeaseExpirations = async (properties: any[]) => {
+    if (!realtorId) return
+
     const now = new Date()
     const in30Days = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
     const expiringProps = properties.filter((prop) => {
       if (!prop.lease_end) return false
-      const leaseEndDate = new Date(prop.lease_end)
-      return leaseEndDate >= now && leaseEndDate <= in30Days
+      const leaseEnd = new Date(prop.lease_end)
+      return leaseEnd >= now && leaseEnd <= in30Days
     })
 
     for (const prop of expiringProps) {
@@ -112,7 +110,6 @@ export default function RealtorDashboard() {
         'yyyy-MM-dd'
       )}`
 
-      // ✅ Insert notification if not already exists
       const { data: existing } = await supabase
         .from('notification')
         .select('*')
@@ -130,6 +127,8 @@ export default function RealtorDashboard() {
     }
   }
 
+  if (loading) return <p className="text-white p-4">Loading dashboard...</p>
+
   return (
     <div className="flex bg-black text-white min-h-screen">
       <div className="flex-1 p-8 space-y-8">
@@ -143,11 +142,15 @@ export default function RealtorDashboard() {
           <StatCard icon={<FileText />} title="Active Leases" value={stats.leases} />
         </div>
 
-        {/* Tables + Uploads */}
-        <PropertyTable realtorId={realtorId} />
-        <TenantTable realtorId={realtorId} />
-        <CollapsibleDashboardSections realtorId={realtorId ?? ''} />
-        <AppointmentTable realtorId={realtorId} />
+        {/* Tables */}
+        {realtorId && (
+          <>
+            <PropertyTable realtorId={realtorId} />
+            <TenantTable realtorId={realtorId} />
+            <CollapsibleDashboardSections realtorId={realtorId} />
+            <AppointmentTable realtorId={realtorId} />
+          </>
+        )}
       </div>
     </div>
   )
