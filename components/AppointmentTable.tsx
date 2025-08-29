@@ -1,23 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  addDoc,
-  Timestamp,
-  orderBy,
-} from 'firebase/firestore'
-import { db } from '@/lib/firebase'
 import { format } from 'date-fns'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Appointment {
   id: string
-  tenantName: string
-  date: Timestamp
-  status: string
+  tenant_name: string
+  date: string // stored as ISO string in Supabase
+  status: 'Scheduled' | 'Completed' | 'Canceled'
+  realtor_id: string
 }
 
 interface AppointmentTableProps {
@@ -32,47 +24,54 @@ const AppointmentTable = ({ realtorId }: AppointmentTableProps) => {
   const [tenantName, setTenantName] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
-  const [status, setStatus] = useState('Scheduled')
+  const [status, setStatus] = useState<Appointment['status']>('Scheduled')
 
+  // Fetch appointments
   useEffect(() => {
     if (!realtorId) return
 
-    setLoadingAppointments(true)
+    let mounted = true
 
-    const q = query(
-      collection(db, 'appointments'),
-      where('realtorId', '==', realtorId),
-      orderBy('date', 'asc')
-    )
+    const fetchAppointments = async () => {
+      setLoadingAppointments(true)
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('realtor_id', realtorId)
+        .order('date', { ascending: true })
 
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const apps: Appointment[] = []
-        querySnapshot.forEach((doc) => {
-          const data = doc.data()
-          apps.push({
-            id: doc.id,
-            tenantName: data.tenantName,
-            date: data.date,
-            status: data.status,
-          })
-        })
-        setAppointments(apps)
-        setLoadingAppointments(false)
-      },
-      (err) => {
-        setError('Failed to fetch appointments: ' + err.message)
-        setLoadingAppointments(false)
+      if (error) {
+        setError('Failed to fetch appointments: ' + error.message)
+      } else if (mounted) {
+        setAppointments(data as Appointment[])
       }
-    )
+      setLoadingAppointments(false)
+    }
 
-    return () => unsubscribe()
+    fetchAppointments()
+
+    // Realtime subscription
+    const channel = supabase
+      .channel(`appointments-realtor-${realtorId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'appointments', filter: `realtor_id=eq.${realtorId}` },
+        () => {
+          fetchAppointments()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      mounted = false
+      supabase.removeChannel(channel)
+    }
   }, [realtorId])
 
+  // Add new appointment
   const handleAddAppointment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!tenantName || !date || !time) {
+    if (!tenantName || !date || !time || !realtorId) {
       setError('Please fill in all fields')
       return
     }
@@ -82,22 +81,37 @@ const AppointmentTable = ({ realtorId }: AppointmentTableProps) => {
 
     try {
       const dateTime = new Date(`${date}T${time}`)
-      await addDoc(collection(db, 'appointments'), {
-        realtorId,
-        tenantName,
-        date: Timestamp.fromDate(dateTime),
-        status,
-      })
 
+      const { data, error } = await supabase
+        .from('appointments')
+        .insert([
+          {
+            realtor_id: realtorId,
+            tenant_name: tenantName,
+            date: dateTime.toISOString(),
+            status,
+          },
+        ])
+        .select()
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        // Add immediately to UI
+        setAppointments((prev) => [...prev, data])
+      }
+
+      // Reset form
       setTenantName('')
       setDate('')
       setTime('')
       setStatus('Scheduled')
     } catch (err: any) {
       setError('Failed to add appointment: ' + err.message)
+    } finally {
+      setAddingAppointment(false)
     }
-
-    setAddingAppointment(false)
   }
 
   return (
@@ -125,15 +139,14 @@ const AppointmentTable = ({ realtorId }: AppointmentTableProps) => {
         />
         <input
           type="time"
-          placeholder='12:00'
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          className="px-3 py-2 rounded bg-white text-black border border-gray-300"
+          className="px-3 py-2 rounded bg-black text-white border border-gray-300"
           required
         />
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => setStatus(e.target.value as Appointment['status'])}
           className="px-3 py-2 rounded bg-black text-white border border-gray-300"
         >
           <option value="Scheduled">Scheduled</option>
@@ -149,7 +162,6 @@ const AppointmentTable = ({ realtorId }: AppointmentTableProps) => {
         </button>
       </form>
 
-      {/* Error */}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {/* Appointments Table */}
@@ -166,18 +178,17 @@ const AppointmentTable = ({ realtorId }: AppointmentTableProps) => {
             </tr>
           </thead>
           <tbody>
-            {appointments.map(({ id, tenantName, date, status }) => (
-              <tr key={id} className="hover:bg-gray-800 transition">
-                <td className="border border-gray-300 px-4 py-2">{tenantName}</td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {format(date.toDate(), 'yyyy-MM-dd')}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
-                  {format(date.toDate(), 'HH:mm')}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">{status}</td>
-              </tr>
-            ))}
+            {appointments.map(({ id, tenant_name, date, status }) => {
+              const d = new Date(date)
+              return (
+                <tr key={id} className="hover:bg-gray-800 transition">
+                  <td className="border border-gray-300 px-4 py-2">{tenant_name}</td>
+                  <td className="border border-gray-300 px-4 py-2">{format(d, 'yyyy-MM-dd')}</td>
+                  <td className="border border-gray-300 px-4 py-2">{format(d, 'HH:mm')}</td>
+                  <td className="border border-gray-300 px-4 py-2">{status}</td>
+                </tr>
+              )
+            })}
             {!appointments.length && !loadingAppointments && (
               <tr>
                 <td colSpan={4} className="text-center py-4 text-gray-400">

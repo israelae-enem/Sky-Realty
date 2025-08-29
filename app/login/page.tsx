@@ -1,5 +1,4 @@
 import LoginForm from '@/components/LoginForm';
-import RealtorSignUpForm from '@/components/RealtorSignUpForm'
 import Image from 'next/image'
 import React from 'react'
 

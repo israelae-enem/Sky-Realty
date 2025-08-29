@@ -1,12 +1,13 @@
+'use client'
+
 import { useState, useEffect } from 'react'
-import { collection, query, where, getDocs } from 'firebase/firestore'
-import { db } from '@/lib/firebase' // your Firebase config file
+import { supabase } from '@/lib/supabaseClient'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 interface MaintenanceRequest {
   id: string
-  propertyId: string
-  tenantName: string
+  property_id: string
+  tenant_name: string
   priority: string
   status: string
   description?: string
@@ -14,11 +15,11 @@ interface MaintenanceRequest {
 
 interface RentTracking {
   id: string
-  tenantName: string
-  propertyId: string
-  amountDue: number
-  dueDate: string
-  paymentStatus: string
+  tenant_name: string
+  property_id: string
+  amount_due: number
+  due_date: string
+  payment_status: string
 }
 
 type Props = {
@@ -33,48 +34,74 @@ const CollapsibleDashboardSections = ({ realtorId }: Props) => {
   const [loadingMaintenance, setLoadingMaintenance] = useState(false)
   const [loadingRentTracking, setLoadingRentTracking] = useState(false)
 
+  // 🔹 Fetch Maintenance Requests
+  const fetchMaintenance = async () => {
+    setLoadingMaintenance(true)
+    const { data, error } = await supabase
+      .from('maintenance_request')
+      .select('*')
+      .eq('realtor_id', realtorId)
+
+    if (!error && data) {
+      setMaintenanceRequests(data as MaintenanceRequest[])
+    }
+    setLoadingMaintenance(false)
+  }
+
+  // 🔹 Fetch Rent Tracking
+  const fetchRentTracking = async () => {
+    setLoadingRentTracking(true)
+    const { data, error } = await supabase
+      .from('rent_tracking')
+      .select('*')
+      .eq('realtor_id', realtorId)
+
+    if (!error && data) {
+      setRentTrackingList(data as RentTracking[])
+    }
+    setLoadingRentTracking(false)
+  }
+
+  // 🔹 Realtime subscription for Maintenance
   useEffect(() => {
     if (!realtorId || !showMaintenance) return
-
-    setLoadingMaintenance(true)
-    const fetchMaintenance = async () => {
-      try {
-        const q = query(collection(db, 'maintenanceRequests'), where('realtorId', '==', realtorId))
-        const snapshot = await getDocs(q)
-        const requests: MaintenanceRequest[] = []
-        snapshot.forEach(doc => {
-          requests.push({ id: doc.id, ...doc.data() } as MaintenanceRequest)
-        })
-        setMaintenanceRequests(requests)
-      } catch (error) {
-        console.error('Error fetching maintenance requests:', error)
-      } finally {
-        setLoadingMaintenance(false)
-      }
-    }
     fetchMaintenance()
+
+    const channel = supabase
+      .channel('maintenance-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'maintenance_request' },
+        () => {
+          fetchMaintenance()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [realtorId, showMaintenance])
 
+  // 🔹 Realtime subscription for Rent Tracking
   useEffect(() => {
     if (!realtorId || !showRentTracking) return
-
-    setLoadingRentTracking(true)
-    const fetchRentTracking = async () => {
-      try {
-        const q = query(collection(db, 'rentTracking'), where('realtorId', '==', realtorId))
-        const snapshot = await getDocs(q)
-        const rentRecords: RentTracking[] = []
-        snapshot.forEach(doc => {
-          rentRecords.push({ id: doc.id, ...doc.data() } as RentTracking)
-        })
-        setRentTrackingList(rentRecords)
-      } catch (error) {
-        console.error('Error fetching rent tracking:', error)
-      } finally {
-        setLoadingRentTracking(false)
-      }
-    }
     fetchRentTracking()
+
+    const channel = supabase
+      .channel('rent-tracking-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rent_tracking' },
+        () => {
+          fetchRentTracking()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [realtorId, showRentTracking])
 
   return (
@@ -109,13 +136,14 @@ const CollapsibleDashboardSections = ({ realtorId }: Props) => {
                   {maintenanceRequests.map(req => (
                     <tr key={req.id} className="border-t border-gray-300">
                       <td className="px-3 py-2">{req.id}</td>
-                      <td className="px-3 py-2">{req.propertyId}</td>
-                      <td className="px-3 py-2">{req.tenantName}</td>
+                      <td className="px-3 py-2">{req.property_id}</td>
+                      <td className="px-3 py-2">{req.tenant_name}</td>
                       <td className="px-3 py-2">{req.priority}</td>
                       <td className="px-3 py-2">{req.status}</td>
                       <td className="px-3 py-2">
-                        {/* Add your action buttons here */}
-                        <button className="text-sm text-green-400 hover:underline">Mark Done</button>
+                        <button className="text-sm text-green-400 hover:underline">
+                          Mark Done
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -154,11 +182,13 @@ const CollapsibleDashboardSections = ({ realtorId }: Props) => {
                 <tbody>
                   {rentTrackingList.map(r => (
                     <tr key={r.id} className="border-t border-gray-300">
-                      <td className="px-3 py-2">{r.tenantName}</td>
-                      <td className="px-3 py-2">{r.propertyId}</td>
-                      <td className="px-3 py-2">${r.amountDue.toFixed(2)}</td>
-                      <td className="px-3 py-2">{new Date(r.dueDate).toLocaleDateString()}</td>
-                      <td className="px-3 py-2">{r.paymentStatus}</td>
+                      <td className="px-3 py-2">{r.tenant_name}</td>
+                      <td className="px-3 py-2">{r.property_id}</td>
+                      <td className="px-3 py-2">${r.amount_due.toFixed(2)}</td>
+                      <td className="px-3 py-2">
+                        {new Date(r.due_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 py-2">{r.payment_status}</td>
                     </tr>
                   ))}
                 </tbody>

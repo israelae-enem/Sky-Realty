@@ -5,12 +5,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { toast } from 'sonner'
-
-import { getAuth } from 'firebase/auth'
-import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore'
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-
-// Your firebase app should be initialized somewhere before using this, e.g. in /lib/firebase.ts
+import { supabase } from '@/lib/supabaseClient'
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -35,72 +30,80 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
     setLoading(true)
 
     try {
-      const auth = getAuth()
-      const user = auth.currentUser
-
-      if (!user) {
+      // ✅ Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
         toast.error('You must be logged in as a tenant.')
         setLoading(false)
         return
       }
 
-      const db = getFirestore()
-      const storage = getStorage()
+      // ✅ Fetch tenant info (property_id + realtor_id)
+      const { data: tenant, error: tenantError } = await supabase
+        .from('tenant')
+        .select('id, property_id, realtor_id')
+        .eq('id', user.id)
+        .single()
 
-      // Fetch tenant record from Firestore
-      const tenantRef = doc(db, 'tenants', user.uid)
-      const tenantSnap = await getDoc(tenantRef)
-
-      if (!tenantSnap.exists()) {
-        toast.error('Tenant information not found')
+      if (tenantError || !tenant) {
+        toast.error('Tenant record not found.')
         setLoading(false)
         return
       }
 
-      const tenant = tenantSnap.data()
-      const tenantId = user.uid
-      const realtorId = tenant.realtor_id
-      const propertyId = tenant.property_id
-
-      // Upload file to Firebase Storage if selected
+      // ✅ Upload file (optional)
       let fileUrl: string | null = null
       if (file) {
-        const ext = file.name.split('.').pop()
-        const filePath =  `maintenance_files/${tenantId}/${Date.now()}.${ext}`
-        const storageRef = ref(storage, filePath)
+        const { data: uploadedFile, error: fileError } = await supabase.storage
+          .from('documents')
+          .upload(`maintenance/${user.id}-${Date.now()}-${file.name}`, file)
 
-        await uploadBytes(storageRef, file)
+        if (fileError) {
+          console.error(fileError)
+          toast.error('Failed to upload file')
+          setLoading(false)
+          return
+        }
 
-        fileUrl = await getDownloadURL(storageRef)
+        // ✅ Public URL
+        const { data: publicUrl } = supabase.storage
+          .from('documents')
+          .getPublicUrl(uploadedFile.path)
+
+        fileUrl = publicUrl.publicUrl
       }
 
-      // Insert maintenance request into Firestore
-      const maintenanceRef = collection(db, 'maintenance_request')
-      await addDoc(maintenanceRef, {
-        tenant_id: tenantId,
-        property_id: propertyId,
+      // ✅ Create maintenance request
+      const { error: maintenanceError } = await supabase.from('maintenance_request').insert({
+        tenant_id: user.id,
+        property_id: tenant.property_id,
+        realtor_id: tenant.realtor_id,
         title: data.title,
         description: data.description,
         status: 'pending',
         media_url: fileUrl,
-        created_at: serverTimestamp(),
       })
 
-      // Send notification to realtor
-      const notifRef = collection(db, 'notification')
-      await addDoc(notifRef, {
+      if (maintenanceError) {
+        console.error(maintenanceError)
+        toast.error('Failed to submit request')
+        setLoading(false)
+        return
+      }
+
+      // ✅ Create notification for realtor
+      await supabase.from('notification').insert({
         type: 'maintenance',
         message: `New maintenance request: ${data.title}`,
-        realtor_id: realtorId,
+        realtor_id: tenant.realtor_id,
         read: false,
-        created_at: serverTimestamp(),
       })
 
       toast.success('Maintenance request submitted!')
       closeModal()
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error)
-      toast.error('Failed to submit maintenance request')
+      toast.error('Something went wrong')
     } finally {
       setLoading(false)
     }
@@ -127,7 +130,7 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
       {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
 
       <div className="w-full border rounded-md border-gray-300">
-        <label className="block text-sm mb-10 text-gray-200 m-2">Upload Image or Video</label>
+        <label className="block text-sm mb-2 text-gray-200 m-2">Upload Image or Video</label>
         <input
           type="file"
           accept="image/*,video/mp4,video/quicktime"

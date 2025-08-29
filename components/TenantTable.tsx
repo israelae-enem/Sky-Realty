@@ -1,15 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  addDoc,
-  orderBy,
-} from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { useEffect, useState, useCallback } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import debounce from 'lodash.debounce'
 
 interface Tenant {
@@ -18,6 +10,7 @@ interface Tenant {
   email: string
   phone?: string
   property?: string
+  realtorId: string
 }
 
 interface TenantTableProps {
@@ -26,11 +19,11 @@ interface TenantTableProps {
 
 const TenantTable = ({ realtorId }: TenantTableProps) => {
   const [tenants, setTenants] = useState<Tenant[]>([])
+  const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([])
   const [isFetching, setIsFetching] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([])
 
   // New Tenant form states
   const [fullName, setFullName] = useState('')
@@ -38,51 +31,79 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
   const [phone, setPhone] = useState('')
   const [property, setProperty] = useState('')
 
+  // -------------------------------
+  // Fetch tenants function (callable anywhere)
+  // -------------------------------
+  const fetchTenants = useCallback(async () => {
+    if (!realtorId) return
+    setIsFetching(true)
+    const { data, error } = await supabase
+      .from('tenants')
+      .select('*')
+      .eq('realtorId', realtorId)
+      .order('fullName', { ascending: true })
+
+    if (error) {
+      setError('Failed to fetch tenants: ' + error.message)
+    } else {
+      setTenants(data as Tenant[])
+      setFilteredTenants(data as Tenant[])
+    }
+    setIsFetching(false)
+  }, [realtorId])
+
+  // -------------------------------
+  // Initial fetch + real-time subscription
+  // -------------------------------
   useEffect(() => {
     if (!realtorId) return
 
-    setIsFetching(true)
+    fetchTenants() // initial load
 
-    const q = query(
-      collection(db, 'tenants'),
-      where('realtorId', '==', realtorId),
-      orderBy('fullName')
-    )
+    const channel = supabase
+      .channel('tenants-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants',
+          filter: `realtorId=eq.${realtorId}`,
+        },
+        () => {
+          fetchTenants() // auto refresh on any change
+        }
+      )
+      .subscribe()
 
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const tenantsList: Tenant[] = []
-        querySnapshot.forEach((doc) => {
-          tenantsList.push({ id: doc.id, ...doc.data() } as Tenant)
-        })
-        setTenants(tenantsList)
-        setFilteredTenants(tenantsList)
-        setIsFetching(false)
-      },
-      (err) => {
-        setError('Failed to fetch tenants: ' + err.message)
-        setIsFetching(false)
-      }
-    )
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [realtorId, fetchTenants])
 
-    return () => unsubscribe()
-  }, [realtorId])
-
+  // -------------------------------
   // Debounced search handler
-  const handleSearch = debounce((term: string) => {
-    const filtered = tenants.filter((tenant) =>
-      tenant.fullName.toLowerCase().includes(term.toLowerCase()) ||
-      tenant.email.toLowerCase().includes(term.toLowerCase())
-    )
-    setFilteredTenants(filtered)
-  }, 300)
+  // -------------------------------
+  const handleSearch = useCallback(
+    debounce((term: string) => {
+      const filtered = tenants.filter(
+        (tenant) =>
+          tenant.fullName.toLowerCase().includes(term.toLowerCase()) ||
+          tenant.email.toLowerCase().includes(term.toLowerCase())
+      )
+      setFilteredTenants(filtered)
+    }, 300),
+    [tenants]
+  )
 
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
     handleSearch(e.target.value)
   }
 
+  // -------------------------------
+  // Add tenant (insert logic stays the same)
+  // -------------------------------
   const handleAddTenant = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!fullName || !email) {
@@ -93,21 +114,27 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
     setIsAdding(true)
     setError(null)
 
-    try {
-      await addDoc(collection(db, 'tenants'), {
+    const { error } = await supabase.from('tenants').insert([
+      {
         realtorId,
         fullName,
         email,
         phone,
         property,
-      })
+      },
+    ])
 
+    if (error) {
+      setError('Failed to add tenant: ' + error.message)
+    } else {
+      // Clear form
       setFullName('')
       setEmail('')
       setPhone('')
       setProperty('')
-    } catch (err: any) {
-      setError('Failed to add tenant: ' + err.message)
+
+      // ✅ Refresh table immediately after insert
+      fetchTenants()
     }
 
     setIsAdding(false)

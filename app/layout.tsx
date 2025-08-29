@@ -4,7 +4,7 @@ import { cn } from '../lib/utils';
 import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
-import { AuthProvider } from "@/components/AuthContext";
+
 
 
 
@@ -32,9 +32,9 @@ export default function RootLayout({
       <body
         className={cn("min-h-screen  antialiased", inter.variable)}>
           <Navbar/>
-          <AuthProvider>
+          
           {children}
-          </AuthProvider>
+        
           <Toaster position="top-center" richColors theme="dark" />
          
       </body>

@@ -1,89 +1,102 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useRef } from 'react'
-import { Bell, MessageCircle } from 'lucide-react'
-import { auth, db } from '@/lib/firebase'
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  getDocs,
-} from 'firebase/firestore'
-import Link from 'next/link'
+import { useEffect, useState, useRef } from 'react';
+import { Bell, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
+
+
+interface Tenant {
+  id: string;
+  full_name: string | null;
+  status: string;
+}
+
+interface Notification {
+  id: string;
+  message: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+interface Conversation {
+  id: string;
+  participants: string[];
+  last_updated: string;
+}
+
+interface MaintenanceRequest {
+  id: string;
+  description: string;
+  priority: string;
+  status: string;
+  created_at: string;
+}
+
+
 
 const TenantDashboard = () => {
-  const [open, setOpen] = useState<string | null>(null)
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [conversations, setConversations] = useState<any[]>([])
-  const [tenantName, setTenantName] = useState('')
-  const [tenantStatus, setTenantStatus] = useState<'pending' | 'active' | null>(null)
-  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([])
-  const chatInputRef = useRef<HTMLInputElement>(null)
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const [open, setOpen] = useState<'notifications' | 'chat' | null>(null);
+  const [tenant, setTenant] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
-    const user = auth.currentUser
-    if (!user) return
+    const fetchTenantData = async () => {
+      const {
+      data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Fetch tenant profile
-    const fetchTenant = async () => {
-      const q = query(collection(db, 'tenants'), where('uid', '==', user.uid))
-      const snapshot = await getDocs(q)
-      if (!snapshot.empty) {
-        const data = snapshot.docs[0].data()
-        setTenantName(data.full_name || '')
-        setTenantStatus(data.status || 'pending') // 👈 important
-      }
-    }
+      // Tenant profile
+      const { data: tenantData } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-    // Notifications
-    const qNotif = query(
-      collection(db, 'notifications'),
-      where('tenant_id', '==', user.uid),
-      orderBy('created_at', 'desc')
-    )
-    const unsubNotif = onSnapshot(qNotif, (snapshot) => {
-      setNotifications(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
-    })
+      setTenant(tenantData);
 
-    // Conversations
-    const qConv = query(
-      collection(db, 'conversations'),
-      where('participants', 'array-contains', user.uid),
-      orderBy('last_updated', 'desc')
-    )
-    const unsubConv = onSnapshot(qConv, (snapshot) => {
-      setConversations(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
-    })
+      // Notifications
+      const { data: notifData } = await supabase
+        .from('notification')
+        .select('*')
+        .eq('tenant_id', user.id)
+        .order('created_at', { ascending: false });
+      setNotifications(notifData || []);
 
-    // Maintenance requests
-    const qRequests = query(
-      collection(db, 'maintenance_requests'),
-      where('tenant_id', '==', user.uid),
-      orderBy('created_at', 'desc')
-    )
-    const unsubRequests = onSnapshot(qRequests, (snapshot) => {
-      setMaintenanceRequests(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
-    })
+      // Conversations
+      const { data: convData } = await supabase
+        .from('conversations')
+        .select('*')
+        .contains('participants', [user.id])
+        .order('last_updated', { ascending: false });
+      setConversations(convData || []);
 
-    fetchTenant()
+      // Maintenance requests
+      const { data: reqData } = await supabase
+        .from('maintenance_requests')
+        .select('*')
+        .eq('tenant_id', user.id)
+        .order('created_at', { ascending: false });
+      setMaintenanceRequests(reqData || []);
+    };
 
-    return () => {
-      unsubNotif()
-      unsubConv()
-      unsubRequests()
-    }
-  }, [])
+    fetchTenantData();
+  }, []);
+
+  if (!tenant) return <p className="p-8 text-center">Loading...</p>;
+
+  const tenantStatus = tenant.status;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       {tenantStatus === 'pending' ? (
-        // 🚨 Banner if pending approval
         <div className="bg-yellow-600 text-black font-bold p-4 rounded-md text-center">
-          Pending approval by your realtor.  
-          Please wait until your realtor approves your account.
+          Pending approval by your realtor. Please wait until your account is approved.
         </div>
       ) : (
         <>
@@ -94,9 +107,7 @@ const TenantDashboard = () => {
               <button
                 aria-haspopup="true"
                 aria-expanded={open === 'notifications'}
-                onClick={() =>
-                  setOpen(open === 'notifications' ? null : 'notifications')
-                }
+                onClick={() => setOpen(open === 'notifications' ? null : 'notifications')}
                 className="flex items-center gap-2 px-3 py-2 rounded-md border btn-primary border-gray-300 hover:text-black text-gray-200"
               >
                 <Bell size={18} />
@@ -113,9 +124,7 @@ const TenantDashboard = () => {
                     notifications.map((n) => (
                       <p
                         key={n.id}
-                        className={`mb-2 text-sm ${
-                          n.read ? 'text-gray-400' : 'font-semibold'
-                        }`}
+                        className={`mb-2 text-sm ${n.read ? 'text-gray-400' : 'font-semibold'}`}
                       >
                         🔔 {n.message || 'Notification'}
                       </p>
@@ -138,16 +147,15 @@ const TenantDashboard = () => {
                 <MessageCircle size={18} />
                 <span>Chat</span>
               </button>
-              {/* (Chat dropdown stays same as before) */}
             </div>
           </div>
 
           {/* Welcome */}
           <h1 className="text-3xl font-bold mb-8">
-            Welcome, {tenantName || 'Tenant'}!
+            Welcome, {tenant.full_name || 'Tenant'}!
           </h1>
 
-          {/* Maintenance Request Form Button */}
+          {/* Maintenance Request Button */}
           <Link
             href="/maintenance-requests"
             className="btn-primary px-6 py-3 mb-8 inline-block"
@@ -176,18 +184,13 @@ const TenantDashboard = () => {
                       <td className="border border-gray-600 px-4 py-2">{req.priority}</td>
                       <td className="border border-gray-600 px-4 py-2">{req.status}</td>
                       <td className="border border-gray-600 px-4 py-2">
-                        {req.created_at?.toDate
-                          ? req.created_at.toDate().toLocaleDateString()
-                          : new Date(req.created_at?.seconds * 1000).toLocaleDateString()}
+                        {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="text-center p-4 text-gray-400"
-                    >
+                    <td colSpan={4} className="text-center p-4 text-gray-400">
                       No maintenance requests submitted yet.
                     </td>
                   </tr>
@@ -198,7 +201,7 @@ const TenantDashboard = () => {
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default TenantDashboard
+export default TenantDashboard;

@@ -4,12 +4,12 @@ import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
   return (
-    <footer className="bg-blue-500 text-gray-900 py-12 mt-16">
+    <footer className=" text-black font-bold py-12 mt-16">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
         
         {/* Brand Section */}
         <div>
-          <h2 className="text-xl font-bold text-white">Sky-Realty</h2>
+          <h2 className="text-xl font-bold text-blue-500">Sky-Realty</h2>
           <p className="mt-3 text-sm">
             Simplifying property management for realtors.
           </p>
@@ -19,7 +19,7 @@ export default function Footer() {
 
         {/* Product Links */}
         <div>
-          <h3 className="text-white font-semibold mb-4">Product</h3>
+          <h3 className="text-blue-500 font-semibold mb-4">Product</h3>
           <ul className="space-y-2 text-sm">
             <li><Link href="/dashboard" className="hover:text-[#302cfc]">Dashboard</Link></li>
             <li><Link href="/pricing" className="hover:text-[#302cfc]">Pricing</Link></li>
@@ -30,7 +30,7 @@ export default function Footer() {
 
         {/* Company Links */}
         <div>
-          <h3 className="text-white font-semibold mb-4">Company</h3>
+          <h3 className="text-blue-500 font-semibold mb-4">Company</h3>
           <ul className="space-y-2 text-sm">
             <li><Link href="/about" className="hover:text-[#302cfc]">About Us</Link></li>
             <li><Link href="/contact" className="hover:text-[#302cfc]">Contact</Link></li>
@@ -40,7 +40,7 @@ export default function Footer() {
 
         {/* Support Links */}
         <div>
-          <h3 className="text-white font-semibold mb-4">Support</h3>
+          <h3 className="text-blue-500 font-semibold mb-4">Support</h3>
           <ul className="space-y-2 text-sm">
             <li><Link href="/help" className="hover:text-[#302cfc]">Help Center</Link></li>
             <li><Link href="/faq" className="hover:text-[#302cfc]">FAQ</Link></li>
@@ -51,7 +51,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Strip */}
-      <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm text-gray-400">
+      <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm text-black">
         <p>© {new Date().getFullYear()} Sky-Realty. All rights reserved.</p>
         <p className="mt-2">Made with ❤ for realtors.</p>
       </div>

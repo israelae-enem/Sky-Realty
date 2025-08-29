@@ -1,9 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { onAuthStateChanged } from 'firebase/auth'
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore'
-import { auth, db } from '@/lib/firebase' // your firebase config
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import StatCard from '@/components/StatCard'
 import { Building, CheckCircle, FileText } from 'lucide-react'
 import Topbar from '@/components/Topbar'
@@ -14,49 +12,89 @@ import { format } from 'date-fns'
 import TenantTable from '@/components/TenantTable'
 import CollapsibleDashboardSections from '@/components/CollapsibleDashboardSession'
 
+const supabase = createClientComponentClient()
+
 export default function RealtorDashboard() {
   const [stats, setStats] = useState({ properties: 0, occupied: 0, leases: 0 })
   const [realtorId, setRealtorId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        setRealtorId(null)
-        setStats({ properties: 0, occupied: 0, leases: 0 })
+    const init = async () => {
+      try {
+        // ✅ Get logged in user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user) {
+          setRealtorId(null)
+          setStats({ properties: 0, occupied: 0, leases: 0 })
+          setLoading(false)
+          return
+        }
+
+        setRealtorId(user.id)
+
+        // ✅ Fetch properties for this realtor
+        const { data: properties, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('realtor_id', user.id)
+
+        if (error) {
+          console.error('Error fetching properties:', error)
+          setLoading(false)
+          return
+        }
+
+        updateStats(user.id, properties ?? [])
+
+        // ✅ Subscribe to realtime property changes
+        const channel = supabase
+          .channel('properties-channel')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'properties',
+              filter: `realtor_id=eq.${user.id}`,
+            },
+            async () => {
+              const { data: updated } = await supabase
+                .from('properties')
+                .select('*')
+                .eq('realtor_id', user.id)
+
+              updateStats(user.id, updated ?? [])
+            }
+          )
+          .subscribe()
+
         setLoading(false)
-        return
+        return () => {
+          supabase.removeChannel(channel)
+        }
+      } catch (err) {
+        console.error('Auth error:', err)
+        setLoading(false)
       }
+    }
 
-      // Here, realtorId = user.uid
-      setRealtorId(user.uid)
-
-      // Listen to properties in real-time
-      const q = query(
-        collection(db, 'properties'),
-        where('realtor_id', '==', user.uid)
-      )
-
-      const unsubProps = onSnapshot(q, (snapshot) => {
-        const props = snapshot.docs.map(doc => doc.data())
-
-        const total = props.length
-        const occupied = props.filter((p) => p.status === 'Occupied').length
-        const activeLeases = props.filter(
-          (p) => p.lease_end && new Date(p.lease_end) > new Date()
-        ).length
-
-        setStats({ properties: total, occupied, leases: activeLeases })
-
-        checkLeaseExpirations(user.uid, props)
-        setLoading(false)
-      })
-
-      return () => unsubProps()
-    })
-
-    return () => unsubAuth()
+    init()
   }, [])
+
+  const updateStats = (realtorId: string, properties: any[]) => {
+    const total = properties.length
+    const occupied = properties.filter((p) => p.status === 'Occupied').length
+    const activeLeases = properties.filter(
+      (p) => p.lease_end && new Date(p.lease_end) > new Date()
+    ).length
+
+    setStats({ properties: total, occupied, leases: activeLeases })
+    checkLeaseExpirations(realtorId, properties)
+  }
 
   const checkLeaseExpirations = async (realtorId: string, properties: any[]) => {
     const now = new Date()
@@ -74,24 +112,21 @@ export default function RealtorDashboard() {
         'yyyy-MM-dd'
       )}`
 
-      // Add notification if not already present
-      const notifQuery = query(
-        collection(db, 'notifications'),
-        where('realtor_id', '==', realtorId),
-        where('message', '==', message)
-      )
+      // ✅ Insert notification if not already exists
+      const { data: existing } = await supabase
+        .from('notification')
+        .select('*')
+        .eq('realtor_id', realtorId)
+        .eq('message', message)
 
-      const unsubCheck = onSnapshot(notifQuery, async (snapshot) => {
-        if (snapshot.empty) {
-          await addDoc(collection(db, 'notifications'), {
-            realtor_id: realtorId,
-            message,
-            read: false,
-            created_at: serverTimestamp()
-          })
-        }
-        unsubCheck() // stop listening after first check
-      })
+      if (!existing || existing.length === 0) {
+        await supabase.from('notification').insert({
+          realtor_id: realtorId,
+          message,
+          read: false,
+          created_at: new Date().toISOString(),
+        })
+      }
     }
   }
 
@@ -109,12 +144,10 @@ export default function RealtorDashboard() {
         </div>
 
         {/* Tables + Uploads */}
-        <PropertyTable realtorId={realtorId}/>
-        <TenantTable realtorId={realtorId}/>
-        <CollapsibleDashboardSections realtorId='realtorId'/>
+        <PropertyTable realtorId={realtorId} />
+        <TenantTable realtorId={realtorId} />
+        <CollapsibleDashboardSections realtorId={realtorId ?? ''} />
         <AppointmentTable realtorId={realtorId} />
-        
-        
       </div>
     </div>
   )
