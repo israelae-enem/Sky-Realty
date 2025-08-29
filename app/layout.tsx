@@ -1,18 +1,15 @@
-import type { Metadata } from "next"
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cn } from '../lib/utils';
+import { cn } from "../lib/utils";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
 
-
-
-
-
-const inter = Inter ({
-  weight: ['400', '700'],
+// Use .className property when applying to body
+const inter = Inter({
   subsets: ["latin"],
-  
+  weight: ["400", "700"],
+  variable: "--font-inter", // optional, can help with Tailwind/var usage
 });
 
 export const metadata: Metadata = {
@@ -22,21 +19,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en">
-      
-      <body
-        className={cn("min-h-screen  antialiased", inter.className)}>
-          <Navbar/>
-          
-          {children}
-        
-          <Toaster position="top-center" richColors theme="dark" />
-         
+    <html lang="en" className={inter.variable}>
+      <body className={cn("min-h-screen antialiased")}>
+        <Navbar />
+        {children}
+        <Toaster position="top-center" richColors theme="dark" />
       </body>
     </html>
   );
