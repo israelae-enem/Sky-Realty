@@ -1,7 +1,6 @@
 import Footer from '@/components/Footer'
 import PlanCTA from '@/components/PlanCTA'
 import PropertyCTA from '@/components/PropertyCTA'
-import StripePricingTable from '@/components/StripePricingTable'
 import Image from 'next/image'
 
 
@@ -210,18 +209,10 @@ const page = () => {
         </div>
       </section>
 
-      <section>
-        <StripePricingTable />
-      </section>
 
       <section>
         <Footer />
       </section>
-
-      
-
-      
-      
 
 
 
