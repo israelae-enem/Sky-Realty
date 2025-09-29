@@ -41,7 +41,7 @@ export default function HelpCenter() {
                 <Link href="/terms" className="hover:text-[#302cfc]">Terms & Conditions</Link>
               </li>
               <li>
-                <Link href="/help/security" className="hover:text-[#302cfc]">How We Keep Your Data Safe</Link>
+                <Link href="/privacy" className="hover:text-[#302cfc]">How We Keep Your Data Safe</Link>
               </li>
             </ul>
           </div>
@@ -51,11 +51,11 @@ export default function HelpCenter() {
             <h2 className="text-2xl font-semibold text-white mb-3">Tenants & Leases</h2>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/help/tenants" className="hover:text-[#302cfc]">Inviting Tenants</Link>
+                <Link href="/tenants" className="hover:text-[#302cfc]">Inviting Tenants</Link>
               </li>
               
               <li>
-                <Link href="/help/maintenance-requests" className="hover:text-[#302cfc]">Handling Maintenance Requests</Link>
+                <Link href="/maintenance" className="hover:text-[#302cfc]">Handling Maintenance Requests</Link>
               </li>
             </ul>
           </div>
@@ -65,13 +65,13 @@ export default function HelpCenter() {
             <h2 className="text-2xl font-semibold text-white mb-3">Billing & Payments</h2>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/help/subscription" className="hover:text-[#302cfc]">How Billing Works</Link>
+                <Link href="/subscription" className="hover:text-[#302cfc]">How Billing Works</Link>
               </li>
               <li>
-                <Link href="/help/invoices" className="hover:text-[#302cfc]">Viewing Invoices & Receipts</Link>
+                <Link href="/subscription" className="hover:text-[#302cfc]">Viewing Invoices & Receipts</Link>
               </li>
               <li>
-                <Link href="/help/upgrade" className="hover:text-[#302cfc]">Upgrading or Cancelling Your Plan</Link>
+                <Link href="/subscription" className="hover:text-[#302cfc]">Upgrading or Cancelling Your Plan</Link>
               </li>
             </ul>
           </div>

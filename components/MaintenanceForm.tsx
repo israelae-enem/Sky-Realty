@@ -3,9 +3,11 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabaseClient'
+import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -14,9 +16,39 @@ const schema = z.object({
 
 type MaintenanceFormData = z.infer<typeof schema>
 
-export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
+export const MaintenanceForm = () => {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const { user } = useUser()
+  const router = useRouter()
+
+  // Auto-fetch tenant info
+  const [tenantInfo, setTenantInfo] = useState<{
+    id: string
+    property_id: string
+    realtor_id: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const fetchTenant = async () => {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('id, property_id, realtor_id')
+        .eq('id', user.id)
+        .single()
+
+      if (error || !data) {
+        toast.error('Tenant record not found.')
+        return
+      }
+      setTenantInfo(data)
+    }
+
+    fetchTenant()
+  }, [user?.id])
 
   const {
     register,
@@ -26,61 +58,73 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
     resolver: zodResolver(schema),
   })
 
+  // Preview for uploaded file
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null)
+      return
+    }
+
+    const url = URL.createObjectURL(file)
+    setPreviewUrl(url)
+
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  // ✅ Call server-side AI triage
+  const getPriority = async (description: string) => {
+    try {
+      const res = await fetch('/api/maintenance-triage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description }),
+      })
+      const data = await res.json()
+      return data.priority || 'medium'
+    } catch (err) {
+      console.error(err)
+      return 'medium'
+    }
+  }
+
   const onSubmit = async (data: MaintenanceFormData) => {
+    if (!user || !tenantInfo) {
+      toast.error('Tenant information not found.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      // ✅ Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) {
-        toast.error('You must be logged in as a tenant.')
-        setLoading(false)
-        return
-      }
-
-      // ✅ Fetch tenant info (property_id + realtor_id)
-      const { data: tenant, error: tenantError } = await supabase
-        .from('tenant')
-        .select('id, property_id, realtor_id')
-        .eq('id', user.id)
-        .single()
-
-      if (tenantError || !tenant) {
-        toast.error('Tenant record not found.')
-        setLoading(false)
-        return
-      }
-
-      // ✅ Upload file (optional)
       let fileUrl: string | null = null
       if (file) {
+        const filePath = `maintenance/${user.id}-${Date.now()}-${file.name}`
         const { data: uploadedFile, error: fileError } = await supabase.storage
           .from('documents')
-          .upload(`maintenance/${user.id}-${Date.now()}-${file.name}`, file)
+          .upload(filePath, file)
 
-        if (fileError) {
+        if (fileError || !uploadedFile?.path) {
           console.error(fileError)
           toast.error('Failed to upload file')
           setLoading(false)
           return
         }
 
-        // ✅ Public URL
-        const { data: publicUrl } = supabase.storage
-          .from('documents')
-          .getPublicUrl(uploadedFile.path)
-
-        fileUrl = publicUrl.publicUrl
+        const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(uploadedFile.path)
+        fileUrl = publicUrlData.publicUrl
       }
 
-      // ✅ Create maintenance request
+      // ✅ Get AI priority from API
+      const priority = await getPriority(data.description)
+
       const { error: maintenanceError } = await supabase.from('maintenance_request').insert({
-        tenant_id: user.id,
-        property_id: tenant.property_id,
-        realtor_id: tenant.realtor_id,
+        tenant_id: tenantInfo.id,
+        property_id: tenantInfo.property_id,
+        realtor_id: tenantInfo.realtor_id,
         title: data.title,
         description: data.description,
         status: 'pending',
+        priority,
         media_url: fileUrl,
       })
 
@@ -91,18 +135,17 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
         return
       }
 
-      // ✅ Create notification for realtor
       await supabase.from('notification').insert({
         type: 'maintenance',
         message: `New maintenance request: ${data.title}`,
-        realtor_id: tenant.realtor_id,
+        realtor_id: tenantInfo.realtor_id,
         read: false,
       })
 
       toast.success('Maintenance request submitted!')
-      closeModal()
-    } catch (error: unknown) {
-      console.error(error)
+      router.push(`/tenant/${user.id}/dashboard?success=maintenance`)
+    } catch (err: unknown) {
+      console.error(err)
       toast.error('Something went wrong')
     } finally {
       setLoading(false)
@@ -112,7 +155,7 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-8 max-w-md w-full max-h-screen text-white rounded-md border-gray-300 mt-15 ml-5"
+      className="space-y-4 max-w-md w-full text-white rounded-md border-gray-300 mt-5 ml-5"
     >
       <input
         type="text"
@@ -129,6 +172,12 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
       />
       {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
 
+      {tenantInfo?.property_id && (
+        <p className="text-sm text-gray-400">
+          Linked Property ID: <span className="font-medium">{tenantInfo.property_id}</span>
+        </p>
+      )}
+
       <div className="w-full border rounded-md border-gray-300">
         <label className="block text-sm mb-2 text-gray-200 m-2">Upload Image or Video</label>
         <input
@@ -139,10 +188,20 @@ export const MaintenanceForm = ({ closeModal }: { closeModal: () => void }) => {
         />
       </div>
 
+      {previewUrl && (
+        <div className="mt-2">
+          {file?.type.startsWith('image/') ? (
+            <img src={previewUrl} alt="Preview" className="max-h-40 rounded-md" />
+          ) : (
+            <video src={previewUrl} controls className="max-h-40 rounded-md" />
+          )}
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-600 mt-10 mb-5 hover:bg-blue-500 w-full text-white px-4 py-2 rounded disabled:opacity-50"
+        className="bg-blue-600 mt-4 hover:bg-blue-500 w-full text-white px-4 py-2 rounded disabled:opacity-50"
       >
         {loading ? 'Submitting...' : 'Submit Request'}
       </button>

@@ -4,6 +4,7 @@ import { cn } from "../lib/utils";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
+import { ClerkProvider } from '@clerk/nextjs'
 
 // Use .className property when applying to body
 const inter = Inter({
@@ -25,9 +26,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className={cn("min-h-screen antialiased")}>
+        <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc'}}}>
         <Navbar />
         {children}
         <Toaster position="top-center" richColors theme="dark" />
+        </ClerkProvider>
       </body>
     </html>
   );

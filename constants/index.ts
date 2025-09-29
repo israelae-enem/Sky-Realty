@@ -38,3 +38,17 @@ export const MESSAGE_DEFAULTS = {
 export const NOTIFICATION_DEFAULTS = {
   IS_READ: false,
 };
+
+export const PLAN_LIMITS: Record<string, number> = {
+  free: 1,
+  basic: 5,
+  pro: 10,
+  premium: Infinity,
+}
+
+export const PLAN_LABELS: Record<string, string> = {
+  free: "Free",
+  basic: "Basic",
+  pro: "Pro",
+  Premium: "Premium",
+}

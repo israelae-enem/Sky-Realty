@@ -1,24 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { useUser } from '@clerk/nextjs';
 import { User, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function RealtorSignUpForm() {
   const router = useRouter();
+  const { user } = useUser(); // Clerk user
   const [form, setForm] = useState({
     full_name: '',
-    email: '',
-    password: '',
     phone_number: '',
     company_name: '',
     address: '',
     country: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // start in loading state until we check
   const [errorMsg, setErrorMsg] = useState('');
+
+  // 🚀 Auto-skip onboarding if realtor already exists
+  useEffect(() => {
+    const checkRealtor = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: existing } = await supabase
+        .from('realtors')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (existing) {
+        toast.success('Welcome back! Redirecting to your dashboard...');
+        router.push('/subscription');
+      } else {
+        setLoading(false); // show form
+      }
+    };
+
+    checkRealtor();
+  }, [user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,55 +51,48 @@ export default function RealtorSignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.error('You must be logged in to complete onboarding.');
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
 
     try {
-      // 1️⃣ Sign up user
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-      });
-      if (signUpError) throw signUpError;
-
-      // 2️⃣ Ensure session exists by signing in immediately
-      const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
-      });
-      if (signInError) throw signInError;
-
-      const user = sessionData.user;
-      if (!user) throw new Error('Failed to get user session');
-
-      // 3️⃣ Insert realtor profile into table
-      const { error: profileError } = await supabase.from('realtors').insert([
+      const { error } = await supabase.from('realtors').insert([
         {
-          user_id: user.id,
+          id: user.id,
           full_name: form.full_name,
-          email: form.email,
+          email: user.primaryEmailAddress?.emailAddress || '',
           phone_number: form.phone_number,
           company_name: form.company_name,
           address: form.address,
           country: form.country,
+          subscription_plan: null,
+          subscription_status: 'inactive',
           created_at: new Date().toISOString(),
         },
       ]);
-      if (profileError) throw profileError;
 
-      toast.success('✅ Realtor account created!');
+      if (error) throw error;
+
+      toast.success('✅ Realtor profile created!');
       router.push('/subscription');
     } catch (err: any) {
-      console.error('Signup error:', err);
-      setErrorMsg(err.message || 'Failed to sign up');
-      toast.error(err.message || 'Failed to sign up');
+      console.error('Onboarding error:', err);
+      setErrorMsg(err?.message || 'Failed to complete onboarding');
+      toast.error(err?.message || 'Failed to complete onboarding');
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) return <p className="p-8 text-center text-white">Loading...</p>;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto mt-10 mb-10">
+      {/* Full Name */}
       <div className="relative">
         <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
         <input
@@ -88,19 +106,18 @@ export default function RealtorSignUpForm() {
         />
       </div>
 
+      {/* Email (readonly) */}
       <div className="relative">
         <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
         <input
           type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          className="pl-10 w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-          required
+          value={user?.primaryEmailAddress?.emailAddress || ''}
+          disabled
+          className="pl-10 w-full px-4 py-2 border rounded-md bg-gray-700 text-gray-300 cursor-not-allowed"
         />
       </div>
 
+      {/* Phone */}
       <div className="relative">
         <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
         <input
@@ -114,6 +131,7 @@ export default function RealtorSignUpForm() {
         />
       </div>
 
+      {/* Company, Address, Country */}
       <input
         type="text"
         name="company_name"
@@ -141,15 +159,6 @@ export default function RealtorSignUpForm() {
         className="w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
         required
       />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        value={form.password}
-        onChange={handleChange}
-        className="w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-        required
-      />
 
       {errorMsg && <p className="text-red-600 text-sm">{errorMsg}</p>}
 
@@ -161,7 +170,7 @@ export default function RealtorSignUpForm() {
         {loading ? (
           <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
         ) : (
-          'Sign Up as Realtor'
+          'Complete Realtor Onboarding'
         )}
       </button>
     </form>

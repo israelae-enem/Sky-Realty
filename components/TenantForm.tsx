@@ -1,131 +1,104 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { useUser } from '@clerk/nextjs'
 import { toast } from 'sonner'
 
 const TenantForm = () => {
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const inviteId = searchParams.get('inviteId')
+  const { user } = useUser()
 
   const [loading, setLoading] = useState(true)
-  const [inviteData, setInviteData] = useState<any>(null)
-
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [realtors, setRealtors] = useState<any[]>([])
   const [properties, setProperties] = useState<any[]>([])
-  const [selectedRealtor, setSelectedRealtor] = useState('')
-  const [selectedProperty, setSelectedProperty] = useState('')
+  const [realtors, setRealtors] = useState<any[]>([])
+  const [searchProperty, setSearchProperty] = useState('')
+  const [selectedProperty, setSelectedProperty] = useState<any>(null)
+  const [searchRealtor, setSearchRealtor] = useState('')
+  const [selectedRealtor, setSelectedRealtor] = useState<any>(null)
   const [error, setError] = useState('')
 
-  // Fetch invite if present
+  // ---------------- Check if tenant already exists ----------------
   useEffect(() => {
-    const fetchInvite = async () => {
-      if (!inviteId) {
+    const checkTenant = async () => {
+      if (!user?.id) {
         setLoading(false)
         return
       }
 
-      const { data, error } = await supabase
-        .from('invites')
-        .select('*')
-        .eq('id', inviteId)
+      const { data: existing } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('id', user.id)
         .single()
 
-      if (error || !data) {
-        setError('Invalid or expired invite.')
-      } else if (data.status !== 'pending') {
-        setError('This invite has already been used or is no longer valid.')
+      if (existing) {
+        toast.success('Welcome back! Redirecting...')
+        router.push(`/tenant/${user.id}/dashboard`)
       } else {
-        setInviteData(data)
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
-    fetchInvite()
-  }, [inviteId])
+    checkTenant()
+  }, [user, router])
 
-  // Fetch Realtors
+  // ---------------- Fetch properties & realtors ----------------
   useEffect(() => {
-    const fetchRealtors = async () => {
-      const { data, error } = await supabase.from('realtors').select('*')
-      if (!error && data) setRealtors(data)
-    }
-    fetchRealtors()
-  }, [])
-
-  // Fetch properties for selected realtor
-  useEffect(() => {
-    if (!selectedRealtor) return
-    const fetchProperties = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      const { data: propertyData } = await supabase
         .from('properties')
-        .select('*')
-        .eq('realtor_id', selectedRealtor)
+        .select('id, address, title, realtor_id')
 
-      if (!error && data) setProperties(data)
+      const { data: realtorData } = await supabase
+        .from('realtors')
+        .select('id, full_name')
+
+      setProperties(propertyData || [])
+      setRealtors(realtorData || [])
     }
-    fetchProperties()
-  }, [selectedRealtor])
+
+    fetchData()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!fullName || !phone || (!inviteData && (!email || !selectedRealtor || !selectedProperty))) {
+    if (!user) {
+      toast.error('You must sign in to create a tenant account.')
+      return
+    }
+
+    if (!fullName || !phone || !selectedProperty || !selectedRealtor) {
       setError('Please fill in all fields.')
       return
     }
 
     try {
-      if (inviteData) {
-        // Accept invite
-        const { error: insertError } = await supabase.from('tenants').insert({
-          full_name: fullName,
-          phone,
-          email: inviteData.email,
-          property_id: inviteData.property_id,
-          realtor_id: inviteData.realtor_id,
-          invite_id: inviteData.id,
-          status: 'active',
-          created_at: new Date().toISOString(),
-        })
-
-        if (insertError) throw insertError
-
-        await supabase
-          .from('invites')
-          .update({ status: 'accepted', accepted_at: new Date().toISOString() })
-          .eq('id', inviteData.id)
-
-        toast.success('✅ Welcome aboard! You are now linked to your property.')
-      } else {
-        // Manual request
-        const { error: insertError } = await supabase.from('tenants').insert({
-          full_name: fullName,
-          phone,
-          email,
-          property_id: selectedProperty,
-          realtor_id: selectedRealtor,
-          status: 'pending',
-          created_at: new Date().toISOString(),
-        })
-
-        if (insertError) throw insertError
-        toast.success('✅ Request sent! Waiting for realtor approval.')
+      const tenantPayload = {
+        id: user.id,
+        fullName,
+        phone,
+        email: user.primaryEmailAddress?.emailAddress || '',
+        property: selectedProperty.id,
+        realtorId: selectedRealtor.id,
+        status: 'active',
+        created_at: new Date().toISOString(),
       }
 
-      // Redirect after success
-      router.push('/tenantdashboard')
+      const { error: insertError } = await supabase.from('tenants').insert([tenantPayload])
+      if (insertError) throw insertError
+
+      toast.success('✅ Tenant account created successfully!')
+      router.push(`/tenant/${user.id}/dashboard`)
     } catch (err: any) {
-      console.error('Tenant onboarding error:', err)
-      setError(err.message || 'Failed to complete onboarding.')
-      toast.error(err.message || 'Failed to complete onboarding.')
+      console.error('Tenant creation error:', err)
+      toast.error(err.message || 'Failed to create tenant account.')
+      setError(err.message || 'Something went wrong.')
     }
   }
 
@@ -134,69 +107,113 @@ const TenantForm = () => {
 
   return (
     <div className="max-w-md mx-auto mt-16 p-6 bg-black rounded shadow text-white">
-      <h1 className="text-2xl font-bold mb-4">Tenant Onboarding</h1>
+      <h1 className="text-2xl font-bold mb-4">Tenant Registration</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Full Name */}
         <input
           type="text"
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+          required
         />
+
+        {/* Phone */}
         <input
           type="tel"
           placeholder="Phone Number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+          required
         />
 
-        {!inviteData && (
-          <>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-            />
+        {/* Email (readonly) */}
+        <input
+          type="email"
+          value={user?.primaryEmailAddress?.emailAddress || ''}
+          disabled
+          className="w-full p-2 rounded bg-gray-700 border border-gray-500 text-gray-300 cursor-not-allowed"
+        />
 
-            <select
-              value={selectedRealtor}
-              onChange={(e) => setSelectedRealtor(e.target.value)}
-              className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-            >
-              <option value="">Select Realtor</option>
-              {realtors.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.full_name || r.email}
-                </option>
-              ))}
-            </select>
-
-            {selectedRealtor && (
-              <select
-                value={selectedProperty}
-                onChange={(e) => setSelectedProperty(e.target.value)}
-                className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-              >
-                <option value="">Select Property</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.address || p.description}
-                  </option>
+        {/* Searchable Property */}
+        <div>
+          <input
+            type="text"
+            placeholder="Search Property..."
+            value={searchProperty}
+            onChange={(e) => {
+              setSearchProperty(e.target.value)
+              setSelectedProperty(null)
+            }}
+            className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+          />
+          {searchProperty && (
+            <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
+              {properties
+                .filter(
+                  (p) =>
+                    p.address.toLowerCase().includes(searchProperty.toLowerCase()) ||
+                    p.title?.toLowerCase().includes(searchProperty.toLowerCase())
+                )
+                .map((p) => (
+                  <div
+                    key={p.id}
+                    className="p-2 hover:bg-gray-700 cursor-pointer"
+                    onClick={() => {
+                      setSelectedProperty(p)
+                      setSearchProperty(p.address || p.title)
+                    }}
+                  >
+                    {p.address || p.title}
+                  </div>
                 ))}
-              </select>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </div>
 
+        {/* Searchable Realtor */}
+        <div>
+          <input
+            type="text"
+            placeholder="Search Realtor..."
+            value={searchRealtor}
+            onChange={(e) => {
+              setSearchRealtor(e.target.value)
+              setSelectedRealtor(null)
+            }}
+            className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+          />
+          {searchRealtor && (
+            <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
+              {realtors
+                .filter((r) =>
+                  r.full_name.toLowerCase().includes(searchRealtor.toLowerCase())
+                )
+                .map((r) => (
+                  <div
+                    key={r.id}
+                    className="p-2 hover:bg-gray-700 cursor-pointer"
+                    onClick={() => {
+                      setSelectedRealtor(r)
+                      setSearchRealtor(r.full_name)
+                    }}
+                  >
+                    {r.full_name}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
           className="w-full py-2 bg-[#302cfc] hover:bg-[#241fd9] rounded text-white font-semibold"
         >
-          {inviteData ? 'Complete Onboarding' : 'Request Access'}
+          Complete Onboarding
         </button>
       </form>
     </div>
