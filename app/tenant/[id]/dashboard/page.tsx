@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Bell, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
 
 interface Tenant {
   id: string;
@@ -90,62 +91,124 @@ const TenantDashboard = () => {
   }, [isLoaded, user]);
 
   // Fetch + subscribe to chat messages
+  
+
+    // Subscribe to real-time updates
+    const conversation_id =
+    tenant && tenant.realtor_id
+      ? `${tenant.id}_${tenant.realtor_id}`
+      : null
+      
+
+
+
+  
+
+  // Fetch messages
   useEffect(() => {
-    if (!tenant || !user?.id) return;
+    if (!conversation_id || !user?.id) return
 
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('message')
         .select('*')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order('created_at', { ascending: true });
+        .eq('conversation_id', conversation_id)
+        .order('created_at', { ascending: true })
 
-      if (!error && data) {
-        setMessages(data);
-      }
-    };
+      if (!error && data) setMessages(data)
+    }
 
-    fetchMessages();
+    fetchMessages()
 
-    // Subscribe to real-time updates
+    // Real-time subscription
     const channel = supabase
-      .channel(`message-${user.id}`)
+      .channel(`conversation-${conversation_id}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'message' },
-        (payload) => {
-          if (
-            payload.new.sender_id === user.id ||
-            payload.new.receiver_id === user.id
-          ) {
-            setMessages((prev) => [...prev, payload.new]);
+        async (payload) => {
+          if (payload.new.conversation_id === conversation_id) {
+            setMessages((prev) => [...prev, payload.new])
+
+            if (user?.id !== payload.new.sender_id) {
+              const isTenant = user?.id === payload.new.tenant_id
+              const isRealtor = user?.id === payload.new.realtor_id
+
+              if (isTenant || isRealtor) {
+                const { error } = await supabase.from('notification').insert([
+                  {
+                    id: crypto.randomUUID(),
+                    type: 'message',
+                    message: isTenant
+                      ? `New message from your realtor`
+                      : `New message from your tenant`,
+                    tenant_id: payload.new.tenant_id,
+                    realtor_id: payload.new.realtor_id,
+                    read: false,
+                  },
+                ])
+
+                if (error) console.error('Failed to insert notification:', error)
+              }
+            }  
           }
         }
       )
-      .subscribe();
+      .subscribe()
 
     return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [tenant, user?.id]);
+      supabase.removeChannel(channel)
+    }
+  }, [conversation_id, user?.id])
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !tenant || !tenant.realtor_id) return;
+  // Handle send
+  const handleSendMessage = useCallback(async () => {
+    if (!newMessage.trim() || !tenant?.realtor_id || !conversation_id) return
 
-    const { error } = await supabase.from('message').insert([
-      {
-        sender_id: user?.id,
-        receiver_id: tenant.realtor_id,
-        message: newMessage.trim(),
-      },
-    ]);
+
+        // 1️⃣ Ensure conversation exists
+const { data: convData, error: convError } = await supabase
+  .from('conversation')
+  .select('id')
+  .eq('id', conversation_id)
+  .single()
+
+if (!convData) {
+  const { error: insertConvError } = await supabase
+    .from('conversation')
+    .insert([{ id: conversation_id, tenant_id: tenant.id, realtor_id: tenant.realtor_id }])
+
+  if (insertConvError) {
+    console.error('Failed to create conversation:', insertConvError)
+    toast.error('Failed to start conversation')
+    return
+  }
+}
+
+    const { data, error } = await supabase
+      .from('message')
+      .insert([
+        {
+          id: crypto.randomUUID(),
+          tenant_id: tenant.id,
+          realtor_id: tenant.realtor_id,
+          sender_id: user?.id,
+          conversation_id: conversation_id,
+          content: newMessage.trim(),
+        },
+      ])
+      .select()
 
     if (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message:', error)
+      toast.error('Failed to send message')
     } else {
-      setNewMessage('');
+      setNewMessage('')
+      setMessages((prev) => [...prev, ...data])
     }
-  };
+  }, [newMessage, tenant, user?.id, conversation_id])
+
+   
 
   const filteredRequests =
     filter === 'All'
@@ -216,7 +279,7 @@ const TenantDashboard = () => {
                           : 'bg-gray-700 text-gray-200'
                       }`}
                     >
-                      {m.message}
+                      {m.content}
                     </div>
                   ))
                 ) : (

@@ -1,5 +1,6 @@
 import FAQ from '@/components/FAQ'
 import PlanCTA from '@/components/PlanCTA'
+import Pricing from '@/components/Pricing'
 import PropertyCTA from '@/components/PropertyCTA'
 import { PricingTable } from '@clerk/nextjs'
 import Image from 'next/image'
@@ -194,7 +195,7 @@ const page = () => {
       </section>
 
       {/* CTA + Pricing Section */}
-      <section id="plans" className="bg-blue-400 py-20 px-5 md:px-20 flex flex-col md:flex-row items-center gap-10 text-gray-900">
+      <section id="plans" className="bg-gray-900 py-20 px-5 md:px-20 flex flex-col md:flex-row items-center gap-10 text-gray-900">
         <PlanCTA />
         <PropertyCTA />
       </section>
@@ -202,7 +203,7 @@ const page = () => {
       <section id="pricing" className="bg-blue-500 py-20 px-5 md:px-20 text-gray-100">
         <h2 className="text-3xl font-bold text-white mb-10 text-center">Explore Our Plans</h2>
         <div className="flex justify-center">
-          <PricingTable />
+          <Pricing />
         </div>
       </section>
 

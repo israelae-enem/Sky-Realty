@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(5, 'Please describe the issue'),
+  priority: z.enum(['low', 'medium', 'high']),
 })
 
 type MaintenanceFormData = z.infer<typeof schema>
@@ -23,7 +24,7 @@ export const MaintenanceForm = () => {
   const { user } = useUser()
   const router = useRouter()
 
-  // Auto-fetch tenant info
+  // Fetch tenant info
   const [tenantInfo, setTenantInfo] = useState<{
     id: string
     property_id: string
@@ -41,24 +42,23 @@ export const MaintenanceForm = () => {
         .single()
 
       if (error || !data) {
+        console.error('Tenant fetch error:', error)
         toast.error('Tenant record not found.')
         return
       }
+
       setTenantInfo(data)
     }
 
     fetchTenant()
   }, [user?.id])
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<MaintenanceFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<MaintenanceFormData>({
     resolver: zodResolver(schema),
+    defaultValues: { priority: 'medium' },
   })
 
-  // Preview for uploaded file
+  // Preview file
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null)
@@ -67,25 +67,8 @@ export const MaintenanceForm = () => {
 
     const url = URL.createObjectURL(file)
     setPreviewUrl(url)
-
     return () => URL.revokeObjectURL(url)
   }, [file])
-
-  // ✅ Call server-side AI triage
-  const getPriority = async (description: string) => {
-    try {
-      const res = await fetch('/api/maintenance-triage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description }),
-      })
-      const data = await res.json()
-      return data.priority || 'medium'
-    } catch (err) {
-      console.error(err)
-      return 'medium'
-    }
-  }
 
   const onSubmit = async (data: MaintenanceFormData) => {
     if (!user || !tenantInfo) {
@@ -97,6 +80,7 @@ export const MaintenanceForm = () => {
 
     try {
       let fileUrl: string | null = null
+
       if (file) {
         const filePath = `maintenance/${user.id}-${Date.now()}-${file.name}`
         const { data: uploadedFile, error: fileError } = await supabase.storage
@@ -104,48 +88,58 @@ export const MaintenanceForm = () => {
           .upload(filePath, file)
 
         if (fileError || !uploadedFile?.path) {
-          console.error(fileError)
+          console.error('File upload error:', fileError)
           toast.error('Failed to upload file')
           setLoading(false)
           return
         }
 
-        const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(uploadedFile.path)
+        const { data: publicUrlData } = supabase.storage
+          .from('documents')
+          .getPublicUrl(uploadedFile.path)
         fileUrl = publicUrlData.publicUrl
       }
 
-      // ✅ Get AI priority from API
-      const priority = await getPriority(data.description)
+      // Insert maintenance request
+      const { data: inserted, error: maintenanceError } = await supabase
+        .from('maintenance_request')
+        .insert({
+          id: crypto.randomUUID(),
+          tenant_id: tenantInfo.id,
+          property_id: tenantInfo.property_id,
+          realtor_id: tenantInfo.realtor_id,
+          title: data.title,
+          description: data.description,
+          status: 'pending',
+          priority: data.priority,
+          media_url: fileUrl,
+        })
+        .select()
 
-      const { error: maintenanceError } = await supabase.from('maintenance_request').insert({
-        tenant_id: tenantInfo.id,
-        property_id: tenantInfo.property_id,
-        realtor_id: tenantInfo.realtor_id,
-        title: data.title,
-        description: data.description,
-        status: 'pending',
-        priority,
-        media_url: fileUrl,
-      })
+      console.log('Maintenance insert result:', { inserted, maintenanceError })
 
       if (maintenanceError) {
-        console.error(maintenanceError)
         toast.error('Failed to submit request')
         setLoading(false)
         return
       }
 
-      await supabase.from('notification').insert({
+      console.log ('insert success:', inserted)
+
+      // Insert notification for realtor
+      const { error: notifError } = await supabase.from('notification').insert({
         type: 'maintenance',
         message: `New maintenance request: ${data.title}`,
         realtor_id: tenantInfo.realtor_id,
         read: false,
       })
 
+      if (notifError) console.error('Notification error:', notifError)
+
       toast.success('Maintenance request submitted!')
       router.push(`/tenant/${user.id}/dashboard?success=maintenance`)
-    } catch (err: unknown) {
-      console.error(err)
+    } catch (err) {
+      console.error('Maintenance submit error:', err)
       toast.error('Something went wrong')
     } finally {
       setLoading(false)
@@ -172,14 +166,20 @@ export const MaintenanceForm = () => {
       />
       {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
 
-      {tenantInfo?.property_id && (
-        <p className="text-sm text-gray-400">
-          Linked Property ID: <span className="font-medium">{tenantInfo.property_id}</span>
-        </p>
-      )}
+      <div>
+        <label className="block mb-1 text-gray-300">Priority</label>
+        <select
+          {...register('priority')}
+          className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
 
       <div className="w-full border rounded-md border-gray-300">
-        <label className="block text-sm mb-2 text-gray-200 m-2">Upload Image or Video</label>
+        <label className="block text-sm mb-2 text-gray-200 m-2">Upload Image or Video (optional)</label>
         <input
           type="file"
           accept="image/*,video/mp4,video/quicktime"

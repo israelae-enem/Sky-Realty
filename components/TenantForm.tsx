@@ -84,7 +84,7 @@ const TenantForm = () => {
         fullName,
         phone,
         email: user.primaryEmailAddress?.emailAddress || '',
-        property: selectedProperty.id,
+        property_id: selectedProperty.id,
         realtorId: selectedRealtor.id,
         status: 'active',
         created_at: new Date().toISOString(),

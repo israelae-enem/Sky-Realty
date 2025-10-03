@@ -11,7 +11,7 @@ const faqs = [
   {
     question: "How much does it cost?",
     answer:
-      "We offer flexible subscription plans: Basic (5 properties), Pro (10 properties), and Premium (unlimited properties). You can view full details on our Pricing page.",
+      "We offer flexible subscription plans: Basic (10 properties), Pro (20 properties), and Premium (unlimited properties). You can view full details on our Pricing page.",
   },
   {
     question: "Do tenants need an account?",
@@ -26,7 +26,7 @@ const faqs = [
   {
     question: "Is my data secure?",
     answer:
-      "Absolutely. We use Supabase for authentication and Stripe for payments, ensuring industry-standard encryption and security.",
+      "Absolutely. We use Supabase for authentication and Zinna for payment, ensuring industry-standard encryption and security.",
   },
 ];
 
