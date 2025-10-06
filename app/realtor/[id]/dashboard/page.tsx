@@ -1,32 +1,27 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabaseClient'
 import StatCard from '@/components/StatCard'
-import { Building, CheckCircle, FileText, Home, Users, Calendar, MessageCircle, Bell, RefreshCw } from 'lucide-react'
-import { RotateCw } from 'lucide-react'
+import { Building, CheckCircle, FileText, Home, Users, Calendar, Bell, RotateCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import RentAnalyticsCards from '@/components/RentAnalyticsCards'
 import RentAnalyticsChart from '@/components/RentAnalyticsChart'
 import RentReminders from '@/components/RentReminder'
-
+import { toast } from 'sonner'
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import PropertyTable from '@/components/PropertyTable'
 import AppointmentTable from '@/components/AppointmentTable'
 import TenantTable from '@/components/TenantTable'
 import RentPaymentTable from '@/components/RentPaymentTable'
 import MaintenanceTable from '@/components/MaintenanceTable'
-
-import { toast } from 'sonner'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
 import LegalDocumentsTable from '@/components/LegalDocumentTable'
 import Profile from '@/components/Profile'
+import RealtorChat from '@/components/RealtorChat'
+import TeamAccordion from '@/components/TeamAccordion'
+
 
 interface Stats {
   properties: number
@@ -39,15 +34,10 @@ type PlanType = 'free'| 'basic' | 'pro' | 'premium' | null
 interface Tenant {
   id: string
   full_name: string | null
-}
-
-interface Message {
-  id: string
-  sender_id: string
-  receiver_id: string
-  message: string
-  read: boolean
-  created_at: string
+  email: string
+  phone: string
+  property_id: string
+  realtor_id:string
 }
 
 interface Notification {
@@ -63,6 +53,8 @@ export default function RealtorDashboard() {
   const [plan, setPlan] = useState<PlanType>()
   const [propertyLimit, setPropertyLimit] = useState<number>(1)
   const [loading, setLoading] = useState(true)
+  const [tenants, setTenants] = useState<Tenant[]>([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
 
   const router = useRouter()
   const handleRefresh = async () => {
@@ -71,63 +63,48 @@ export default function RealtorDashboard() {
     setLoading(false)
   }
 
-  // ---------------- Notifications ----------------
-  const [notifications, setNotifications] = useState<Notification[]>([])
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  // ---------------- Chat ----------------
-  const [tenants, setTenants] = useState<Tenant[]>([])
-  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [newMessage, setNewMessage] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  // ---------------- Fetch plan ----------------
+  useEffect(() => {
+    if (!user?.id) return
 
-  // ---------------- Fetch subsc
-
-
-   useEffect(() => {
-  if (!user?.id) return;
-
-  const PLAN_LIMITS: Record<string, number | null> = {
-    free: 1,      // Fallback free plan
-    basic: 10,
-    pro: 20,
-    premium: Infinity, // Unlimited
-  };
-
-  const fetchPlan = async () => {
-    try {
-      const res = await fetch(`/api/ziina?user=${user.id}`);
-      if (!res.ok) throw new Error(`Failed to fetch subscription: ${res.status}`);
-      const data = await res.json();
-
-      // Ziina API returns plan IDs in lowercase: "basic", "pro", "premium"
-      const planId: string = data?.plan ?? "free"; // Fallback to free
-      const limit = PLAN_LIMITS[planId] ?? 1;
-
-      setPlan(planId as PlanType); // PlanType should include 'free', 'basic', 'pro', 'premium'
-      setPropertyLimit(limit);
-    } catch (err) {
-      console.error("❌ Failed to load subscription:", err);
-      // Fallback to Free Plan
-      setPlan("free");
-      setPropertyLimit(1);
-    } finally {
-      setLoading(false);
+    const PLAN_LIMITS: Record<string, number | null> = {
+      free: 1,
+      basic: 10,
+      pro: 20,
+      premium: Infinity,
     }
-  };
 
-  fetchPlan();
-}, [user?.id]);
+    const fetchPlan = async () => {
+      try {
+        const res = await fetch(`/api/ziina?user=${user.id}`)
+        if (!res.ok) throw new Error(`Failed to fetch subscription: ${res.status}`)
+        const data = await res.json()
 
+        const planId: string = data?.plan ?? 'free'
+        const limit = PLAN_LIMITS[planId] ?? 1
+
+        setPlan(planId as PlanType)
+        setPropertyLimit(limit)
+      } catch (err) {
+        console.error('❌ Failed to load subscription:', err)
+        setPlan('free')
+        setPropertyLimit(1)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPlan()
+  }, [user?.id])
 
   // ---------------- Fetch properties, tenants, notifications ----------------
   useEffect(() => {
     const initData = async () => {
       if (!user?.id) return
-      const realtorId = user.id
       setLoading(true)
+      const realtorId = user.id
 
       try {
         const { data: properties } = await supabase
@@ -138,8 +115,9 @@ export default function RealtorDashboard() {
 
         const { data: tenantsData, error: tenantsError } = await supabase
           .from('tenants')
-          .select('*')
+          .select('id, full_name, email, phone, property_id, realtor_id')
           .eq('realtor_id', realtorId)
+          .order('full_name', { ascending: true })
         if (!tenantsError && tenantsData) setTenants(tenantsData)
 
         const { data: notificationsData, error: notifError } = await supabase
@@ -158,50 +136,6 @@ export default function RealtorDashboard() {
     initData()
   }, [user?.id])
 
-  // ---------------- Chat with selected tenant ----------------
-  useEffect(() => {
-    if (!selectedTenant || !user?.id) return
-
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('message')
-        .select('*')
-        .or(
-          `and(sender_id.eq.${user.id},receiver_id.eq.${selectedTenant.id}),and(sender_id.eq.${selectedTenant.id},receiver_id.eq.${user.id})`
-        )
-        .order('created_at', { ascending: true })
-
-      if (!error && data) setMessages(data)
-    }
-
-    fetchMessages()
-
-    const subscription = supabase
-      .channel(`message-${user.id}-${selectedTenant.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'message' },
-        (payload) => {
-          const m = payload.new as Message
-          if (
-            (m.sender_id === user.id && m.receiver_id === selectedTenant.id) ||
-            (m.sender_id === selectedTenant.id && m.receiver_id === user.id)
-          ) {
-            setMessages((prev) => [...prev, m])
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(subscription)
-    }
-  }, [selectedTenant, user?.id])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
   const updateStats = (properties: any[]) => {
     const total = properties.length
     const occupied = properties.filter((p) => p.status === 'Occupied').length
@@ -209,18 +143,6 @@ export default function RealtorDashboard() {
       (p) => p.lease_end && new Date(p.lease_end) > new Date()
     ).length
     setStats({ properties: total, occupied, leases: activeLeases })
-  }
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedTenant) return
-    const { error } = await supabase.from('message').insert([
-      {
-        sender_id: user?.id,
-        receiver_id: selectedTenant.id,
-        message: newMessage.trim(),
-      },
-    ])
-    if (!error) setNewMessage('')
   }
 
   const markNotificationsRead = async () => {
@@ -258,10 +180,9 @@ export default function RealtorDashboard() {
           <Link href="#rent-analytics" className="hover:text-[#302cfc]">Rent Analytics</Link>          
           <Link href="/legal-doc" className="hover:text-[#302cfc]">Documents Templates</Link>
           <Link href="#legal-docs" className="hover:text-[#302cfc]">Your Documents</Link>
+          <Link href="#teams" className="hover:text-[#302cfc]">Teams</Link>
 
-
-
-
+          
         </nav>
       </aside>
 
@@ -270,14 +191,12 @@ export default function RealtorDashboard() {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
 
-         <div className='flex items-center gap-4'>
-          <button onClick={handleRefresh} className="bg-[#302cfc] hover:bg-[#241fd9] px-4 py-2 rounded flex items-center gap-4 justify-end">
-            <RotateCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh
-          </button>
-          <Profile />
+          <div className='flex items-center gap-4'>
+            <button onClick={handleRefresh} className="bg-[#302cfc] hover:bg-[#241fd9] px-4 py-2 rounded flex items-center gap-4 justify-end">
+              <RotateCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
+            <Profile />
           </div>
-
-
         </div>
 
         {/* Stats */}
@@ -291,6 +210,9 @@ export default function RealtorDashboard() {
         {/* Rent Analytics */}
         <div id="rent-analytics">
           <RentAnalyticsCards />
+        </div>
+
+          <div id="rent-analytics">
           <RentAnalyticsChart />
           <RentReminders />
         </div>
@@ -298,7 +220,7 @@ export default function RealtorDashboard() {
         {/* Accordion for tables */}
         <Accordion type="single" collapsible className="w-full mt-8 space-y-6">
           <AccordionItem value="properties">
-            <AccordionTrigger id="properties" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
               <Home size={18} /> Properties
             </AccordionTrigger>
             <AccordionContent>
@@ -307,7 +229,7 @@ export default function RealtorDashboard() {
           </AccordionItem>
 
           <AccordionItem value="tenants">
-            <AccordionTrigger id="tenants" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
               <Users size={18} /> Tenants
             </AccordionTrigger>
             <AccordionContent>
@@ -316,16 +238,16 @@ export default function RealtorDashboard() {
           </AccordionItem>
 
           <AccordionItem value="rent-payments">
-            <AccordionTrigger id="rent-payments" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
               <FileText size={18} /> Rent Payments
             </AccordionTrigger>
             <AccordionContent>
-              <RentPaymentTable />
+              <RentPaymentTable realtorId={user?.id ?? ''} />
             </AccordionContent>
           </AccordionItem>
 
-                    <AccordionItem value="maintenance">
-            <AccordionTrigger id="maintenance" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+          <AccordionItem value="maintenance">
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
               <FileText size={18} /> Maintenance Requests
             </AccordionTrigger>
             <AccordionContent>
@@ -333,8 +255,17 @@ export default function RealtorDashboard() {
             </AccordionContent>
           </AccordionItem>
 
+            <AccordionItem value="appointments">
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+              <Calendar size={18} /> Schedule Maintenance
+            </AccordionTrigger>
+            <AccordionContent>
+              <AppointmentTable realtorId={user?.id ?? ''} />
+            </AccordionContent>
+          </AccordionItem>
+
           <AccordionItem value="notifications">
-            <AccordionTrigger id="notifications" className="text-lg font-semibold text-blue-600 flex items-center gap-2" onClick={markNotificationsRead}>
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2" onClick={markNotificationsRead}>
               <Bell size={18} /> Notifications ({unreadCount})
             </AccordionTrigger>
             <AccordionContent className="space-y-2">
@@ -353,84 +284,8 @@ export default function RealtorDashboard() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="chat">
-            <AccordionTrigger id="chat" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <MessageCircle size={18} /> Chat
-            </AccordionTrigger>
-            <AccordionContent className="space-y-4">
-              <select
-                value={selectedTenant?.id || ''}
-                onChange={(e) => {
-                  const tenant = tenants.find((t) => t.id === e.target.value) ?? null
-                  setSelectedTenant(tenant)
-                  setMessages([])
-                }}
-                className="w-full sm:w-1/2 bg-gray-800 text-white p-2 rounded-md border border-gray-700 focus:outline-none"
-              >
-                <option value="">Select Tenant</option>
-                {tenants.map((t) => {
-                  const unread = messages.filter((m) => m.sender_id === t.id && !m.read).length
-                  return (
-                    <option key={t.id} value={t.id}>
-                      {t.full_name || t.id} {unread > 0 ? `(${unread})` : ''}
-                    </option>
-                  )
-                })}
-              </select>
-
-              <div className="flex flex-col h-64 sm:h-80 overflow-y-auto p-2 space-y-2 border border-gray-700 rounded-md">
-                {selectedTenant ? (
-                  messages.length > 0 ? (
-                    messages.map((m) => (
-                      <div
-                        key={m.id}
-                        className={`p-2 rounded-md text-sm max-w-[80%] ${
-                          m.sender_id === user?.id ? 'bg-[#302cfc] text-white self-end' : 'bg-gray-700 text-gray-200 self-start'
-                        }`}
-                      >
-                        {m.message}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-400 text-sm">No messages yet</p>
-                  )
-                ) : (
-                  <p className="text-gray-400 text-sm">Select a tenant to start chatting</p>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {selectedTenant && (
-                <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className="flex-1 px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none"
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    className="px-4 py-2 bg-[#302cfc] hover:bg-[#241fd9] rounded-md text-white font-semibold"
-                  >
-                    Send
-                  </button>
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="appointments">
-            <AccordionTrigger id="appointments" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <Calendar size={18} /> Appointments
-            </AccordionTrigger>
-            <AccordionContent>
-              <AppointmentTable realtorId={user?.id ?? ''} />
-            </AccordionContent>
-          </AccordionItem>
-
-             <AccordionItem value="legal-docs">
-            <AccordionTrigger id="legal-docs" className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+           <AccordionItem value="legal-docs">
+            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
               <Calendar size={18} /> Legal Documents
             </AccordionTrigger>
             <AccordionContent>
@@ -438,7 +293,31 @@ export default function RealtorDashboard() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="teams">
+          <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+           <Users size={18} /> Teams
+             </AccordionTrigger>
+             <AccordionContent>
+                {user?.id && plan ? (
+               <TeamAccordion realtorId={user.id} plan={plan} />
+               ) : (
+              <p className="text-gray-400">Loading team info...</p>
+                )}
+            </AccordionContent>
+              </AccordionItem>
 
+
+              {/* Chat Component */}
+             <Accordion type="single" collapsible className="w-full mt-8 space-y-6">
+             {/* other accordion items */}
+              {user?.id && <RealtorChat tenants={tenants} user={{ id: user.id }} />}
+             </Accordion>
+
+          
+
+        
+
+         
         </Accordion>
       </main>
     </div>

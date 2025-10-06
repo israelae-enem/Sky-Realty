@@ -6,23 +6,30 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Trash, Edit, Check, X, Plus } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Tenant {
   id: string
-  fullName: string
+  full_name: string
   email: string
   phone?: string
-  property?: string
-  realtorId: string
+  property_id?: string
+  realtor_id: string
+}
+
+interface Property {
+  id: string
+  address: string
 }
 
 interface TenantTableProps {
   realtorId: string | null
 }
 
-const TenantTable = ({ realtorId }: TenantTableProps) => {
+export default function TenantTable({ realtorId }: TenantTableProps) {
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [filteredTenants, setFilteredTenants] = useState<Tenant[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
   const [search, setSearch] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editData, setEditData] = useState<Partial<Tenant>>({})
@@ -31,46 +38,43 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
   const searchTimeout = useRef<NodeJS.Timeout | null>(null)
 
   const [newTenant, setNewTenant] = useState<Partial<Tenant>>({
-    fullName: '',
+    full_name: '',
     email: '',
     phone: '',
-    property: '',
+    property_id: '',
   })
 
   // -------------------------------
-  // Fetch tenants with realtime subscription
+  // Fetch tenants and properties
   // -------------------------------
   useEffect(() => {
     if (!realtorId) return
-
-    const fetchTenants = async () => {
+    const fetchData = async () => {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('realtorId', realtorId)
-        .order('fullName', { ascending: true })
 
-      if (!error && data) {
-        setTenants(data as Tenant[])
-        setFilteredTenants(data as Tenant[])
-      }
+      const [{ data: tenantsData }, { data: propertiesData }] = await Promise.all([
+        supabase.from('tenants').select('*').eq('realtor_id', realtorId).order('full_name'),
+        supabase.from('properties').select('id, address').eq('realtor_id', realtorId),
+      ])
+
+      setTenants(tenantsData || [])
+      setFilteredTenants(tenantsData || [])
+      setProperties(propertiesData || [])
       setLoading(false)
     }
 
-    fetchTenants()
+    fetchData()
 
+    // Realtime subscription
     const channel = supabase
-      .channel(`tenants-changes-${realtorId}`)
+      .channel(`tenants-${realtorId}`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tenants',
-          filter: `realtorId=eq.${realtorId}`,
-        },
-        () => fetchTenants()
+        { event: '*', schema: 'public', table: 'tenants', filter: `realtor_id=eq.${realtorId}` },
+        (payload) => {
+          console.log('Realtime tenant change:', payload)
+          fetchData()
+        }
       )
       .subscribe()
 
@@ -88,8 +92,8 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
     searchTimeout.current = setTimeout(() => {
       const filtered = tenants.filter(
         (t) =>
-          t.fullName.toLowerCase().includes(value.toLowerCase()) ||
-          t.email.toLowerCase().includes(value.toLowerCase())
+          t.full_name?.toLowerCase().includes(value.toLowerCase()) ||
+          t.email?.toLowerCase().includes(value.toLowerCase())
       )
       setFilteredTenants(filtered)
     }, 300)
@@ -111,95 +115,112 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
   const saveEdit = async () => {
     if (!editingId) return
     const { error } = await supabase.from('tenants').update(editData).eq('id', editingId)
-    if (!error) {
+    if (error) {
+      toast.error('Failed to save changes')
+    } else {
       cancelEdit()
-      // Refresh list
-      const updated = tenants.map((t) => (t.id === editingId ? { ...t, ...editData } : t))
-      setTenants(updated)
-      setFilteredTenants(updated)
-    } else alert('Failed to save: ' + error.message)
+      toast.success('Tenant updated')
+    }
   }
 
   // -------------------------------
-  // Delete
+  // Delete Tenant
   // -------------------------------
   const deleteTenant = async (id: string) => {
     if (!confirm('Are you sure you want to delete this tenant?')) return
     const { error } = await supabase.from('tenants').delete().eq('id', id)
-    if (!error) {
-      const updated = tenants.filter((t) => t.id !== id)
-      setTenants(updated)
-      setFilteredTenants(updated)
-    } else alert('Failed to delete: ' + error.message)
+    if (error) toast.error('Failed to delete tenant')
   }
 
   // -------------------------------
-  // Add Tenant Inline
+  // Add Tenant
   // -------------------------------
   const addTenant = async () => {
-    if (!realtorId || !newTenant.fullName || !newTenant.email) return alert('Name and Email required')
+    if (!realtorId || !newTenant.full_name || !newTenant.email) {
+      toast.error('Name and Email required')
+      return
+    }
     setAdding(true)
 
-    const tenantId = crypto.randomUUID()
+    try {
+      // Check if tenant already exists (from Clerk registration)
+      const { data: existingTenant } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('email', newTenant.email)
+        .maybeSingle()
 
-    const { data, error } = await supabase
-      .from('tenants')
-      .insert([
-        { 
-          id: tenantId,
-          fullName: newTenant.fullName,
-          email: newTenant.email,
-          phone: newTenant.phone,
-          property: newTenant.property,
-         realtorId, 
-        },
-      ])
-      .select()
+      let tenantId = existingTenant?.id || crypto.randomUUID()
 
-    if (!error && data) {
-      const updated = [data[0] as Tenant, ...tenants]
-      setTenants(updated)
-      setFilteredTenants(updated)
-      setNewTenant({ fullName: '', email: '', phone: '', property: '' })
-    } else alert('Failed to add tenant: ' + error.message)
-    setAdding(false)
+      if (existingTenant) {
+        // Update existing tenant to link to this realtor + property
+        await supabase
+          .from('tenants')
+          .update({
+            realtor_id: realtorId,
+            property_id: newTenant.property_id,
+            phone: newTenant.phone,
+          })
+          .eq('id', tenantId)
+      } else {
+        // Insert new tenant
+        await supabase.from('tenants').insert([
+          {
+            id: tenantId,
+            full_name: newTenant.full_name,
+            email: newTenant.email,
+            phone: newTenant.phone,
+            property_id: newTenant.property_id,
+            realtor_id: realtorId,
+          },
+        ])
+      }
+
+      // Also update the realtor table with tenant_id (optional)
+      await supabase.from('realtors').update({ tenant_id: tenantId }).eq('id', realtorId)
+
+      toast.success('Tenant added successfully!')
+      setNewTenant({ full_name: '', email: '', phone: '', property_id: '' })
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to add tenant')
+    } finally {
+      setAdding(false)
+    }
   }
 
   return (
-    <section className="mt-15 bg-black p-4 rounded-md border border-gray-300 shadow-md text-white">
-      <h2 className="text-2xl mb-4 text-[#302cfc] font-semibold">Your Tenants</h2>
+    <section className="mt-8 bg-gray-800 p-4 rounded-md border border-gray-700 text-white">
+      <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Your Tenants</h2>
 
       {/* Search */}
       <Input
         placeholder="Search tenants by name or email..."
         value={search}
         onChange={(e) => handleSearch(e.target.value)}
-        className="mb-4 bg-black text-white"
+        className="mb-4 bg-gray-800 text-white"
       />
 
-      <div className="overflow-x-auto rounded-md border-gray-300 border text-white bg-black">
-        <Table className="min-w-[600px] md:min-w-full rounded-md border-gray-300 border text-white">
-          <TableHeader className='text-white bg-black rounded-md border border-gray-300'>
-            <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
-            
-              <TableHead className='text-white'>Name</TableHead>
-              <TableHead className='text-white'>Email</TableHead>
-              <TableHead className='text-white'>Phone</TableHead>
-              <TableHead className='text-white'>Property</TableHead>
+      <div className="overflow-x-auto rounded-md border border-gray-700">
+        <Table className="min-w-full">
+          <TableHeader>
+            <TableRow className='hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+              <TableHead className="text-white">Name</TableHead>
+              <TableHead className="text-white">Email</TableHead>
+              <TableHead className="text-white">Phone</TableHead>
+              <TableHead className="text-white">Property</TableHead>
               <TableHead className="text-center text-white">Actions</TableHead>
             </TableRow>
           </TableHeader>
-
           <TableBody>
-            {/* Inline Add Row */}
-            <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
-            
+            {/* Add Tenant Row */}
+            <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
               <TableCell>
                 <Input
                   placeholder="Full Name"
-                  value={newTenant.fullName}
-                  onChange={(e) => setNewTenant({ ...newTenant, fullName: e.target.value })}
-                  className="bg-black text-white"
+                  value={newTenant.full_name}
+                  onChange={(e) => setNewTenant({ ...newTenant, full_name: e.target.value })}
+                  className="bg-gray-800 text-white"
                 />
               </TableCell>
               <TableCell>
@@ -207,7 +228,7 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
                   placeholder="Email"
                   value={newTenant.email}
                   onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
-                  className="bg-black text-white"
+                  className="bg-gray-800 text-white"
                 />
               </TableCell>
               <TableCell>
@@ -215,16 +236,22 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
                   placeholder="Phone"
                   value={newTenant.phone}
                   onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
-                  className="bg-black text-white"
+                  className="bg-gray-800 text-white"
                 />
               </TableCell>
               <TableCell>
-                <Input
-                  placeholder="Property"
-                  value={newTenant.property}
-                  onChange={(e) => setNewTenant({ ...newTenant, property: e.target.value })}
-                  className="bg-black text-white"
-                />
+                <select
+                  value={newTenant.property_id}
+                  onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
+                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+                >
+                  <option value="">Select property</option>
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.address}
+                    </option>
+                  ))}
+                </select>
               </TableCell>
               <TableCell className="flex justify-center gap-2">
                 <Button size="sm" onClick={addTenant} disabled={adding}>
@@ -235,9 +262,8 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
 
             {/* Existing tenants */}
             {filteredTenants.length === 0 && !loading && (
-              <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
-              
-                <TableCell colSpan={5} className="text-center text-white py-4">
+              <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+                <TableCell colSpan={5} className="text-center py-4 text-gray-400">
                   No tenants found
                 </TableCell>
               </TableRow>
@@ -245,74 +271,25 @@ const TenantTable = ({ realtorId }: TenantTableProps) => {
 
             {filteredTenants.map((tenant) => (
               <TableRow key={tenant.id}>
+                <TableCell>{tenant.full_name}</TableCell>
+                <TableCell>{tenant.email}</TableCell>
+                <TableCell>{tenant.phone || '-'}</TableCell>
                 <TableCell>
-                  {editingId === tenant.id ? (
-                    <Input
-                      value={editData.fullName || ''}
-                      onChange={(e) => setEditData({ ...editData, fullName: e.target.value })}
-                    />
-                  ) : (
-                    tenant.fullName
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingId === tenant.id ? (
-                    <Input
-                      value={editData.email || ''}
-                      onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                    />
-                  ) : (
-                    tenant.email
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingId === tenant.id ? (
-                    <Input
-                      value={editData.phone || ''}
-                      onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                    />
-                  ) : (
-                    tenant.phone || '-'
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingId === tenant.id ? (
-                    <Input
-                      value={editData.property || ''}
-                      onChange={(e) => setEditData({ ...editData, property: e.target.value })}
-                    />
-                  ) : (
-                    tenant.property || '-'
-                  )}
+                  {
+                    properties.find((p) => p.id === tenant.property_id)?.address || '—'
+                  }
                 </TableCell>
                 <TableCell className="flex justify-center gap-2">
-                  {editingId === tenant.id ? (
-                    <>
-                      <Button size="sm" onClick={saveEdit}>
-                        <Check size={16} />
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={cancelEdit}>
-                        <X size={16} />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button size="sm" onClick={() => startEdit(tenant)}>
-                        <Edit size={16} />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => deleteTenant(tenant.id)}>
-                        <Trash size={16} />
-                      </Button>
-                    </>
-                  )}
+                  <Button size="sm" variant="destructive" onClick={() => deleteTenant(tenant.id)}>
+                    <Trash size={16} />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+      {loading && <p className="text-gray-400 mt-2">Loading tenants...</p>}
     </section>
   )
 }
-
-export default TenantTable

@@ -11,7 +11,7 @@ const TenantForm = () => {
   const { user } = useUser()
 
   const [loading, setLoading] = useState(true)
-  const [fullName, setFullName] = useState('')
+  const [full_name, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [properties, setProperties] = useState<any[]>([])
   const [realtors, setRealtors] = useState<any[]>([])
@@ -31,11 +31,19 @@ const TenantForm = () => {
 
       const { data: existing } = await supabase
         .from('tenants')
-        .select('id')
-        .eq('id', user.id)
+        .select('*')
+        .or(`id.eq.${user.id},email.eq.${user.primaryEmailAddress?.emailAddress}`)
         .single()
 
       if (existing) {
+        // If Clerk id not linked yet, update row
+        if (!existing.id || existing.id !== user.id) {
+          await supabase
+            .from('tenants')
+            .update({ id: user.id })
+            .eq('email', existing.email)
+        }
+
         toast.success('Welcome back! Redirecting...')
         router.push(`/tenant/${user.id}/dashboard`)
       } else {
@@ -73,25 +81,46 @@ const TenantForm = () => {
       return
     }
 
-    if (!fullName || !phone || !selectedProperty || !selectedRealtor) {
+    if (!full_name || !phone || !selectedProperty || !selectedRealtor) {
       setError('Please fill in all fields.')
       return
     }
 
     try {
-      const tenantPayload = {
-        id: user.id,
-        fullName,
-        phone,
-        email: user.primaryEmailAddress?.emailAddress || '',
-        property_id: selectedProperty.id,
-        realtorId: selectedRealtor.id,
-        status: 'active',
-        created_at: new Date().toISOString(),
-      }
+      // Check if tenant already exists by email
+      const { data: existingTenant } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('email', user.primaryEmailAddress?.emailAddress)
+        .single()
 
-      const { error: insertError } = await supabase.from('tenants').insert([tenantPayload])
-      if (insertError) throw insertError
+      if (existingTenant) {
+        // Update existing tenant with selected property and realtor
+        await supabase
+          .from('tenants')
+          .update({
+            id: user.id, // link Clerk ID
+            full_name,
+            phone,
+            property_id: selectedProperty.id,
+            realtorId: selectedRealtor.id,
+          })
+          .eq('email', user.primaryEmailAddress?.emailAddress)
+      } else {
+        // Insert new tenant
+        await supabase.from('tenants').insert([
+          {
+            id: user.id,
+            full_name,
+            phone,
+            email: user.primaryEmailAddress?.emailAddress || '',
+            property_id: selectedProperty.id,
+            realtorId: selectedRealtor.id,
+            status: 'active',
+            created_at: new Date().toISOString(),
+          },
+        ])
+      }
 
       toast.success('✅ Tenant account created successfully!')
       router.push(`/tenant/${user.id}/dashboard`)
@@ -114,7 +143,7 @@ const TenantForm = () => {
         <input
           type="text"
           placeholder="Full Name"
-          value={fullName}
+          value={full_name}
           onChange={(e) => setFullName(e.target.value)}
           className="w-full p-2 rounded bg-black border border-gray-300 text-white"
           required
@@ -139,74 +168,72 @@ const TenantForm = () => {
         />
 
         {/* Searchable Property */}
-        <div>
-          <input
-            type="text"
-            placeholder="Search Property..."
-            value={searchProperty}
-            onChange={(e) => {
-              setSearchProperty(e.target.value)
-              setSelectedProperty(null)
-            }}
-            className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-          />
-          {searchProperty && (
-            <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
-              {properties
-                .filter(
-                  (p) =>
-                    p.address.toLowerCase().includes(searchProperty.toLowerCase()) ||
-                    p.title?.toLowerCase().includes(searchProperty.toLowerCase())
-                )
-                .map((p) => (
-                  <div
-                    key={p.id}
-                    className="p-2 hover:bg-gray-700 cursor-pointer"
-                    onClick={() => {
-                      setSelectedProperty(p)
-                      setSearchProperty(p.address || p.title)
-                    }}
-                  >
-                    {p.address || p.title}
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
+        {!selectedProperty && (
+          <div>
+            <input
+              type="text"
+              placeholder="Search Property by Property Address"
+              value={searchProperty}
+              onChange={(e) => {
+                setSearchProperty(e.target.value)
+                setSelectedProperty(null)
+              }}
+              className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+            />
+            {searchProperty && (
+              <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
+                {properties
+                  .filter(
+                    (p) =>
+                      p.address.toLowerCase().includes(searchProperty.toLowerCase()) ||
+                      p.title?.toLowerCase().includes(searchProperty.toLowerCase())
+                  )
+                  .map((p) => (
+                    <div
+                      key={p.id}
+                      className="p-2 hover:bg-gray-700 cursor-pointer"
+                      onClick={() => setSelectedProperty(p)}
+                    >
+                      {p.address || p.title}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Searchable Realtor */}
-        <div>
-          <input
-            type="text"
-            placeholder="Search Realtor..."
-            value={searchRealtor}
-            onChange={(e) => {
-              setSearchRealtor(e.target.value)
-              setSelectedRealtor(null)
-            }}
-            className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-          />
-          {searchRealtor && (
-            <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
-              {realtors
-                .filter((r) =>
-                  r.full_name.toLowerCase().includes(searchRealtor.toLowerCase())
-                )
-                .map((r) => (
-                  <div
-                    key={r.id}
-                    className="p-2 hover:bg-gray-700 cursor-pointer"
-                    onClick={() => {
-                      setSelectedRealtor(r)
-                      setSearchRealtor(r.full_name)
-                    }}
-                  >
-                    {r.full_name}
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
+        {!selectedRealtor && (
+          <div>
+            <input
+              type="text"
+              placeholder="Search Realtor by Name"
+              value={searchRealtor}
+              onChange={(e) => {
+                setSearchRealtor(e.target.value)
+                setSelectedRealtor(null)
+              }}
+              className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+            />
+            {searchRealtor && (
+              <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
+                {realtors
+                  .filter((r) =>
+                    r.full_name.toLowerCase().includes(searchRealtor.toLowerCase())
+                  )
+                  .map((r) => (
+                    <div
+                      key={r.id}
+                      className="p-2 hover:bg-gray-700 cursor-pointer"
+                      onClick={() => setSelectedRealtor(r)}
+                    >
+                      {r.full_name}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Submit */}
         <button

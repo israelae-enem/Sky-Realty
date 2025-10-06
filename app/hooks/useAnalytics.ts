@@ -1,63 +1,70 @@
-// hooks/useRentAnalytics.ts
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+'use client'
 
-export default function useRentAnalytics() {
-  const [analytics, setAnalytics] = useState({
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
+
+interface RentAnalytics {
+  total_collected: number
+  total_outstanding: number
+  total_late: number
+}
+
+export default function useRentAnalytics(realtorId?: string | null) {
+  const [analytics, setAnalytics] = useState<RentAnalytics>({
     total_collected: 0,
     total_outstanding: 0,
     total_late: 0,
-    occupied_properties: 0,
-    total_payments: 0,
-  });
-
-  const calculateAnalytics = (payments: any[]) => {
-    const total_collected = payments
-      .filter((p) => p.status === "paid")
-      .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-    const total_late = payments
-      .filter((p) => p.status === "late" || (p.status !== "paid" && new Date(p.due_date) < new Date()))
-      .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-    const total_outstanding = payments
-      .filter((p) => p.status === "pending")
-      .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
-
-    const occupied_properties = new Set(
-      payments.filter((p) => p.status === "paid").map((p) => p.lease_id)
-    ).size;
-
-    const total_payments = payments.length;
-
-    setAnalytics({ total_collected, total_outstanding, total_late, occupied_properties, total_payments });
-  };
+  })
 
   useEffect(() => {
-    const fetchPayments = async () => {
-      const { data } = await supabase.from("rent_payment").select("*");
-      if (data) calculateAnalytics(data);
-    };
+    if (!realtorId) return
 
-    fetchPayments();
+    const fetchAnalytics = async () => {
+      const { data, error } = await supabase
+        .from('rent_payment')
+        .select('amount, status')
+        .in(
+          'property_id',
+          (
+            await supabase
+              .from('properties')
+              .select('id')
+              .eq('realtor_id', realtorId)
+          ).data?.map((p) => p.id) || []
+        )
 
-    // ✅ Create a Realtime channel
+      if (error) {
+        console.error('Error fetching rent analytics:', error)
+        return
+      }
+
+      const paid = data?.filter((p) => p.status === 'Paid') ?? []
+      const pending = data?.filter((p) => p.status === 'Pending') ?? []
+      const overdue = data?.filter((p) => p.status === 'Overdue') ?? []
+
+      setAnalytics({
+        total_collected: paid.reduce((sum, p) => sum + (p.amount || 0), 0),
+        total_outstanding: pending.reduce((sum, p) => sum + (p.amount || 0), 0),
+        total_late: overdue.reduce((sum, p) => sum + (p.amount || 0), 0),
+      })
+    }
+
+    fetchAnalytics()
+
+    // Realtime updates
     const channel = supabase
-      .channel("rent_payment_channel") // any unique channel name
+      .channel(`rent-analytics-${realtorId}`)
       .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "rent_payment" },
-        () => {
-          fetchPayments();
-        }
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rent_payment' },
+        () => fetchAnalytics()
       )
-      .subscribe();
+      .subscribe()
 
-    // Cleanup
     return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+      supabase.removeChannel(channel)
+    }
+  }, [realtorId])
 
-  return analytics;
+  return analytics
 }

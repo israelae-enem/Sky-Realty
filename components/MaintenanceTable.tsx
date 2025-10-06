@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
-import { OpenAI } from 'openai'
 
 interface MaintenanceRequest {
   id: string
@@ -21,60 +20,33 @@ interface MaintenanceTableProps {
   realtorId: string
 }
 
-export default function MaintenanceTable({ realtorId}: MaintenanceTableProps) {
+export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([])
   const [loading, setLoading] = useState(false)
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
   const fetchRequests = async () => {
+    if (!realtorId) return
     setLoading(true)
     try {
+      // Fetch property IDs for this realtor
+      const { data: properties, error: propertyError } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('realtor_id', realtorId)
+
+      if (propertyError) throw propertyError
+
+      const propertyIds = properties?.map((p) => p.id) || []
+
+      // Fetch maintenance requests linked to these properties
       const { data, error } = await supabase
         .from('maintenance_request')
         .select('*')
+        .in('property_id', propertyIds)
         .order('created_at', { ascending: false })
+
       if (error) throw error
-
-      // Auto AI-priority assignment
-      const updatedRequests = await Promise.all(
-        data!.map(async (r) => {
-          if (!r.priority) {
-            try {
-              const completion = await openai.chat.completions.create({
-                model: 'gpt-4o-mini',
-                messages: [
-                  {
-                    role: 'system',
-                    content:
-                      'You are an AI assistant that classifies maintenance requests priority as High, Medium, or Low based on title and description.'
-                  },
-                  {
-                    role: 'user',
-                    content: `Title: ${r.title}\nDescription: ${r.description}\nOutput only the priority: High, Medium, or Low.`
-                  }
-                ],
-                max_tokens: 10
-              })
-
-              const priority = completion.choices?.[0].message?.content?.trim() || 'Medium'
-
-              await supabase
-                .from('maintenance_request')
-                .update({ priority })
-                .eq('id', r.id)
-
-              return { ...r, priority }
-            } catch (err) {
-              console.error('AI priority error', err)
-              return { ...r, priority: 'Medium' }
-            }
-          }
-          return r
-        })
-      )
-
-      setRequests(updatedRequests)
+      setRequests(data || [])
     } catch (err) {
       console.error(err)
       toast.error('Failed to fetch maintenance requests')
@@ -84,13 +56,38 @@ export default function MaintenanceTable({ realtorId}: MaintenanceTableProps) {
 
   useEffect(() => {
     fetchRequests()
-  }, [])
+
+    if (!realtorId) return
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel(`maintenance-${realtorId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'maintenance_request' },
+        (payload) => {
+          const newRequest = payload.new as MaintenanceRequest
+          // Only show requests for properties owned by this realtor
+          setRequests((prev) => [newRequest, ...prev])
+          toast.success(`New maintenance request: ${newRequest.title}`)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [realtorId])
 
   const updateStatus = async (id: string, status: string) => {
     setLoading(true)
     try {
-      const { error } = await supabase.from('maintenance_request').update({ status }).eq('id', id)
+      const { error } = await supabase
+        .from('maintenance_request')
+        .update({ status })
+        .eq('id', id)
       if (error) throw error
+
       setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)))
     } catch (err) {
       console.error(err)
@@ -101,6 +98,7 @@ export default function MaintenanceTable({ realtorId}: MaintenanceTableProps) {
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 text-white">
+      <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Requests</h2>
       <table className="min-w-full">
         <thead>
           <tr>

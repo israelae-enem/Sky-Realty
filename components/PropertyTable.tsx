@@ -272,7 +272,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
   // ----------------- render -----------------
   return (
-    <section className="mt-6 bg-black p-4 rounded-md border border-gray-300 text-white">
+    <section className="mt-6 bg-gray-800 p-4 rounded-md border border-gray-300 text-white">
       <h2 className="text-2xl mb-4 text-[#302cfc] font-semibold">Your Properties</h2>
 
       {/* search + plan */}
@@ -281,7 +281,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
           placeholder="Search title, address, or status..."
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
-          className="bg-black text-white md:w-1/3"
+          className=" text-white md:w-1/3"
         />
         <div className="text-sm text-gray-400">
           Your Plan: {propertyLimit === Infinity ? 'premium (unlimited)' : plan?.charAt(0).toUpperCase() + (plan ?? '').slice(1)} {propertyLimit === Infinity ? '(unlimited)' : `(Limit: ${propertyLimit})`}
@@ -289,10 +289,10 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block overflow-x-auto rounded-md border border-gray-300 bg-black">
+      <div className="hidden md:block overflow-x-auto rounded-md border border-gray-300 ">
         <Table className="min-w-full text-white">
           <TableHeader>
-            <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
+            <TableRow className='hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
               <th className="text-left p-3 text-white">Title</th>
               <th className="text-left p-3 text-white">Address</th>
               <th className="text-left p-3 text-white">Status</th>
@@ -305,14 +305,14 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
           <TableBody>
             {/* Add row */}
-            <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
+            <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
 
               <TableCell className="p-2">
                 <Input
                   placeholder="Title"
                   value={newProperty.title ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))}
-                  className="bg-black text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc]"
                 />
               </TableCell>
 
@@ -321,13 +321,13 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                   placeholder="Address"
                   value={newProperty.address ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))}
-                  className="bg-black text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc]"
                 />
               </TableCell>
 
               <TableCell className="p-2">
                 <Select value={(newProperty.status as string) ?? 'Vacant'} onValueChange={(val) => setNewProperty((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
-                  <SelectTrigger className="w-[140px] bg-black border">
+                  <SelectTrigger className="w-[140px]  border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -343,7 +343,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                   type="date"
                   value={newProperty.lease_start ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))}
-                  className="bg-black text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc]"
                 />
               </TableCell>
 
@@ -352,7 +352,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                   type="date"
                   value={newProperty.lease_end ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))}
-                  className="bg-black text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc]"
                 />
               </TableCell>
 
@@ -367,18 +367,19 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
             {/* Rows */}
             {paginated.length === 0 && !loading ? (
-              <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
+              <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
 
                 <TableCell colSpan={7} className="text-center py-6">No properties found</TableCell>
               </TableRow>
             ) : null}
 
-            {paginated.map((p) => (
-              <TableRow key={p.id} className='hover:bg-black focus:bg-black active:bg-black'>
+            {paginated.map((p) => (         
+
+              <TableRow key={p.id} className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
 
                 <TableCell className="p-2">
                   {editingId === p.id ? (
-                    <Input value={String(editData.title ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), title: e.target.value }))} className="bg-black text-white focus:ring focus:ring-[#302cfc]" />
+                    <Input value={String(editData.title ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), title: e.target.value }))} className="text-white focus:ring focus:ring-[#302cfc]" />
                   ) : (
                     p.title
                   )}
@@ -386,7 +387,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
                 <TableCell className="p-2">
                   {editingId === p.id ? (
-                    <Input value={String(editData.address ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), address: e.target.value }))} className="bg-black text-white focus:ring focus:ring-[#302cfc]" />
+                    <Input value={String(editData.address ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), address: e.target.value }))} className=" text-white focus:ring focus:ring-[#302cfc]" />
                   ) : (
                     p.address
                   )}
@@ -395,7 +396,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                 <TableCell className="p-2">
                   {editingId === p.id ? (
                     <Select value={String(editData.status ?? p.status)} onValueChange={(val) => setEditData((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
-                      <SelectTrigger className="w-[140px] bg-black border">
+                      <SelectTrigger className="w-[140px]  border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -411,7 +412,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
                 <TableCell className="p-2">
                   {editingId === p.id ? (
-                    <Input type="date" value={String(editData.lease_start ?? dateToInput(p.lease_start))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_start: e.target.value }))} className="bg-black text-white focus:ring focus:ring-[#302cfc]" />
+                    <Input type="date" value={String(editData.lease_start ?? dateToInput(p.lease_start))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_start: e.target.value }))} className=" text-white focus:ring focus:ring-[#302cfc]" />
                   ) : (
                     p.lease_start ?? '-'
                   )}
@@ -419,7 +420,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
                 <TableCell className="p-2">
                   {editingId === p.id ? (
-                    <Input type="date" value={String(editData.lease_end ?? dateToInput(p.lease_end))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_end: e.target.value }))} className="bg-black text-white focus:ring focus:ring-[#302cfc]" />
+                    <Input type="date" value={String(editData.lease_end ?? dateToInput(p.lease_end))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_end: e.target.value }))} className=" text-white focus:ring focus:ring-[#302cfc]" />
                   ) : (
                     p.lease_end ?? '-'
                   )}
@@ -467,11 +468,11 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
       {/* Mobile cards */}
       <div className="md:hidden flex flex-col gap-3">
         {/* Add card */}
-        <div className="bg-black border border-gray-300 p-3 rounded">
-          <Input placeholder="Title" value={newProperty.title ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))} className="mb-2 bg-black text-white" />
-          <Input placeholder="Address" value={newProperty.address ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))} className="mb-2 bg-black text-white" />
+        <div className=" border border-gray-300 p-3 rounded">
+          <Input placeholder="Title" value={newProperty.title ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))} className="mb-2  text-white" />
+          <Input placeholder="Address" value={newProperty.address ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))} className="mb-2 text-white" />
           <Select value={(newProperty.status as string) ?? 'Vacant'} onValueChange={(val) => setNewProperty((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
-            <SelectTrigger className="w-full bg-black border border-gray-600 mb-2"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full  border border-gray-600 mb-2"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Vacant">Vacant</SelectItem>
               <SelectItem value="Occupied">Occupied</SelectItem>
@@ -479,8 +480,8 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
             </SelectContent>
           </Select>
           <div className="flex gap-2 mb-2">
-            <Input type="date" value={newProperty.lease_start ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))} className="bg-black text-white" />
-            <Input type="date" value={newProperty.lease_end ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))} className="bg-black text-white" />
+            <Input type="date" value={newProperty.lease_start ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))} className=" text-white" />
+            <Input type="date" value={newProperty.lease_end ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))} className=" text-white" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-sm">Upload after add</span>
@@ -492,21 +493,21 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
         {paginated.length === 0 && !loading ? <div className="text-center text-white py-6">No properties found</div> : null}
 
         {paginated.map((p) => (
-          <div key={p.id} className="bg-black border border-gray-300 p-3 rounded">
+          <div key={p.id} className=" border border-gray-300 p-3 rounded">
             {editingId === p.id ? (
               <>
-                <Input className="mb-2 bg-black text-white" value={String(editData.title ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), title: e.target.value }))} />
-                <Input className="mb-2 bg-black text-white" value={String(editData.address ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), address: e.target.value }))} />
+                <Input className="mb-2  text-white" value={String(editData.title ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), title: e.target.value }))} />
+                <Input className="mb-2  text-white" value={String(editData.address ?? '')} onChange={(e) => setEditData((s) => ({ ...(s || {}), address: e.target.value }))} />
                 <Select value={String(editData.status ?? 'Vacant')} onValueChange={(val) => setEditData((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
-                  <SelectTrigger className="w-full bg-black border mb-2"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full border mb-2"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Vacant">Vacant</SelectItem>
                     <SelectItem value="Occupied">Occupied</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input type="date" className="mb-2 bg-black text-white" value={String(editData.lease_start ?? dateToInput(p.lease_start))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_start: e.target.value }))} />
-                <Input type="date" className="mb-2 bg-black text-white" value={String(editData.lease_end ?? dateToInput(p.lease_end))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_end: e.target.value }))} />
+                <Input type="date" className="mb-2  text-white" value={String(editData.lease_start ?? dateToInput(p.lease_start))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_start: e.target.value }))} />
+                <Input type="date" className="mb-2  text-white" value={String(editData.lease_end ?? dateToInput(p.lease_end))} onChange={(e) => setEditData((s) => ({ ...(s || {}), lease_end: e.target.value }))} />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={saveEdit}><Check size={14} /></Button>
                   <Button size="sm" variant="secondary" onClick={cancelEdit}><X size={14} /></Button>
@@ -552,7 +553,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
       <div className="flex flex-wrap justify-between items-center gap-3 mt-4">
         <div className="text-white">
           Rows per page:
-          <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }} className="ml-2 bg-black border border-gray-600 text-white p-1 rounded">
+          <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }} className="ml-2  border border-gray-600 text-white p-1 rounded">
             {[5, 10, 20, 50].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
