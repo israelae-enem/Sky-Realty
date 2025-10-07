@@ -299,7 +299,7 @@ export default function RealtorDashboard() {
              </AccordionTrigger>
              <AccordionContent>
                 {user?.id && plan ? (
-               <TeamAccordion realtorId={user.id} plan={plan} />
+               <TeamAccordion   />
                ) : (
               <p className="text-gray-400">Loading team info...</p>
                 )}

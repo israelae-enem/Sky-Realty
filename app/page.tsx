@@ -9,8 +9,8 @@ import { FaTwitter, FaLinkedin, FaInstagram, FaEnvelope, FaPhone } from 'react-i
 const page = () => {
   return (
     <main className="flex flex-col w-full text-gray-900 bg-blue-300">
-       <h1 className='text-4xl md:-5xl font-bold text-blue-600 items-center justify-items-center'>
-         <p>Welcome to Sky-Realty</p>
+       <h1 className='text-2xl md:-3xl font-bold text-blue-600 items-center justify-items-center'>
+         <p>Welcome to Sky-Realtyae</p>
          <p>"The Smart Way to Manage your Rental Properties"</p>
         </h1>
 
@@ -40,8 +40,36 @@ const page = () => {
         </div>
       </section>
 
+      <section className="bg-gray-900 text-white py-16 px-6 sm:px-16 lg:px-32">
+       <h1 className="text-2xl font-bold text-[#302cfc] mb-8">Get Started with Sky Realty</h1>
+  
+        <p className="mb-6 text-lg">
+        <strong>Step 1: Sign In or Create an Account</strong><br />
+        Click the <span className="text-[#302cfc] font-semibold">Sign In</span> button at the top of the page. 
+       If you already have an account, simply log in. If you're new, choose <span className="text-[#302cfc]  font-semibold">Create an Account</span> and get started instantly no long forms, no hassle.
+      </p>
+
+       <p className="mb-6 text-lg">
+       <strong>Step 2: Join Sky Realty</strong><br />
+       After signing in, click <span className="text-[#302cfc] font-semibold">Join</span> and select your role:
+       <br />• <strong>Realtor:</strong> Manage properties, tenants, leases, and maintenance requests with ease.
+       <br />• <strong>Tenant:</strong> Access your lease information, submit maintenance requests, and stay updated on your rental.
+       </p>
+
+       <p className="mb-6 text-lg">
+         <strong>Step 3: Complete Your Onboarding</strong><br />
+        Realtors will quickly set up their dashboard and first property. Tenants will connect with their realtor and access rental details. 
+        In just <span className="text-[#302cfc] font-semibold">three clicks</span>, your account is ready to explore all Sky Realty features from automated rent tracking to team collaboration tools.
+        </p>
+
+        <p className="text-lg mt-4">
+         Experience real estate management that's fast, simple, and designed just for you. Start your journey with <span className="text-[#302cfc] font-semibold">Sky Realty</span> today!
+        </p>
+       </section>
+
+
       {/* Messaging Tool Section */}
-      <section id="messaging" className="bg-blue-200 py-20 px-5 md:px-20 flex flex-col md:flex-row items-center gap-10">
+      <section id="messaging" className="bg-blue-200 py-20 px-5 md:px-20 flex flex-col md:flex-row items-center gap-10 ">
         <div className="md:w-1/2 flex justify-center">
           <Image
             src="/assets/images/profile.jpg"
@@ -87,15 +115,15 @@ const page = () => {
             Reduce phone calls, save time, and maintain professionalism effortlessly.
           </p>
         </div>
-        <div className="md:w-1/2 flex justify-center">
+        
           <Image
             src="/assets/images/maintenance-request.jpg"
             alt="maintenance"
             width={1000}
             height={1000}
-            className="rounded-lg shadow-lg w-full h-full object-cover"
+            className="md:w-1/2 flex justify-center rounded-lg shadow-lg w-full h-full object-cover"
           />
-        </div>
+        
       </section>
 
       {/* Rent Collection Section */}
@@ -298,11 +326,13 @@ const page = () => {
         <p className='flex items-center gap-2'><FaEnvelope /> <a
         href='mailto:contact@skyrealtyae.com'>contact@skyrealtyae.com</a></p>
         <p className="flex items-center gap-2"><FaPhone /> +1(469)670-8318</p>
+        
+
       
       </div>
     </div>
   </div>
-  <p className="text-center text-sm mt-10">&copy; {new Date().getFullYear()} Sky-Realty. All rights reserved.</p>
+  <p className="text-center text-sm mt-10">&copy; {new Date().getFullYear()} Sky-Realtyae. All rights reserved.</p>
 </footer>
 
             

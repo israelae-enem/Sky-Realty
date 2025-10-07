@@ -1,42 +1,32 @@
-"use client"
-import MaintenanceForm from '@/components/MaintenanceForm';
+import MaintenanceForm from '@/components/MaintenanceForm'
 import Image from 'next/image'
-import React, { useEffect, useState } from 'react';
+import React from 'react'
 
-const Maintenance = () => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setImageLoaded(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
+const Realtor = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-black text-white">
 
+      
+
       {/* Image Section */}
-      <div
-        className="w-full md:w-1/2 relative h-64 md:h-auto transition-opacity duration-1000 ease-in-out"
-        style={{ opacity: imageLoaded ? 1 : 0 }}
-      >
+      <div className="w-full md:w-1/2 relative h-64 md:h-auto flex">
         <Image
           src="/assets/images/maintenance-request.jpg"
-          alt="Maintenance"
+          alt="agent"
           fill
           className="object-cover w-full h-full"
         />
       </div>
 
-
-       {/* Form Section */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6">
+        {/* Form Section */}
+      <div className="w-full md:w-1/2 items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <MaintenanceForm  />
+          <MaintenanceForm />
         </div>
       </div>
 
     </div>
-  );
+  )
 }
 
-export default Maintenance;
+export default Realtor

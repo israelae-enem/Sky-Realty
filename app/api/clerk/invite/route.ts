@@ -1,7 +1,7 @@
 // File: /app/api/clerk/invite/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-const CLERK_API_KEY = process.env.CLERK_API_KEY!
+const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY!
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${CLERK_API_KEY}`,
+          Authorization: `Bearer ${CLERK_SECRET_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
