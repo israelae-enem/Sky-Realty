@@ -24,7 +24,7 @@ const PlanCTA = () => {
           Manage <strong className="text-blue-400">unlimited properties</strong> with our PREMIUM PLAN.
         </p>
         <p className="font-bold mt-2 hover:text-blue-300 transition-colors duration-300">
-          SKY-REALTY — the SMART WAY!
+          SKY-REALTYAE THE SMART WAY!
         </p>
       </div>
 

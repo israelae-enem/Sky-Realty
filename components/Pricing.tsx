@@ -23,7 +23,7 @@ const plans: Plan[] = [
     properties: 10,
     features: [
       "Manage up to 10 properties",
-      "7-day free trial",
+      "7-DAYS FREE TRIAL",
       "Full access to online dashboard",
       "Add and edit property details",
       "View tenant info and lease dates",
@@ -44,7 +44,7 @@ const plans: Plan[] = [
     properties: 20,
     features: [
       "Manage up to 20 properties",
-      "7-day free trial",
+      "7-DAYS FREE TRIAL",
       "Full access to online dashboard",
       "Add, edit, and remove properties",
       "View tenant info, lease dates & rent due",
@@ -67,7 +67,7 @@ const plans: Plan[] = [
     properties: null,
     features: [
       "Unlimited properties",
-      "7-day free trial",
+      "7-DAYS FREE TRIAL",
       "Full access to online dashboard",
       "Add, edit, and remove properties",
       "View tenant info, lease dates & rent due",
@@ -124,7 +124,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
-      <h1 className="text-4xl font-bold text-center mb-8">Sky Realty Plans</h1>
+      <h1 className="text-4xl font-bold text-center mb-8">Our Plans</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {plans.map((plan) => {
@@ -182,7 +182,7 @@ export default function Pricing() {
       </div>
 
       <p className="text-center mt-12 text-gray-400">
-        All plans include a 7-day free trial. Cancel anytime before trial ends.
+        ALL PLANS INCLUDE A 7-DAYS FREE TRIAL. CANCEL ANYTIME BRFORE TRIAL ENDS.
       </p>
     </div>
   );

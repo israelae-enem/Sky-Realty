@@ -4,9 +4,9 @@ import { useState } from "react";
 
 const faqs = [
   {
-    question: "What is Sky-Realty?",
+    question: "What is Sky-Realtyae?",
     answer:
-      "Sky-Realty is a property management platform built for realtors to manage properties, tenants, rent, and maintenance requests all in one place.",
+      "Sky-Realtyae is a property management platform built for realtors to manage properties, tenants, rent, and maintenance requests all in one place.",
   },
   {
     question: "How much does it cost?",
@@ -26,7 +26,7 @@ const faqs = [
   {
     question: "Is my data secure?",
     answer:
-      "Absolutely. We use Supabase for authentication and Zinna for payment, ensuring industry-standard encryption and security.",
+      "Absolutely. We use industry-standard encryption and security.",
   },
 ];
 
