@@ -17,7 +17,7 @@ const PropertyCTA = () => {
         <p>Enjoy our amazing in-app features.</p>
         <p>Manage your properties with ease.</p>
         <p>Welcome to the future.</p>
-        <p className="font-bold mt-2">SKY-REALTYAE THE SMART WAY!</p>
+        <p className="font-bold mt-2">SKY-REALTY THE SMART WAY!</p>
       </div>
 
       <Link href="/subscription" className="mt-4">

@@ -28,7 +28,7 @@ const page = () => {
          Elevate Your Real Estate Management 🚀
        </h1>
        <p className="max-w-2xl text-lg text-gray-200">
-          Simplify your property management with Sky RealtyAE built for realtors and tenants who want control, clarity, and collaboration.
+          Simplify your property management with Sky Realty built for realtors and tenants who want control, clarity, and collaboration.
          </p>
         <div className="flex gap-4">
          <a
@@ -54,14 +54,14 @@ const page = () => {
   </h2>
 
   <p className="max-w-3xl mx-auto text-gray-300 leading-relaxed text-lg">
-    Although Sky Realtyae is built to empower realtors anywhere in the world, 
+    Although Sky Realty is built to empower realtors anywhere in the world, 
     our roots and vision begin right here in the Middle East 
     where real estate is booming, innovation is reshaping the market, 
     and digital transformation is defining the future of property management.
   </p>
 
   <p className="max-w-3xl mx-auto text-gray-400 leading-relaxed text-lg">
-    Sky Realtyae brings together everything realtors need to manage their properties, 
+    Sky Realty brings together everything realtors need to manage their properties, 
     tenants, and maintenance all in one seamless, intelligent, 
     and easy-to-use platform. From lease uploads to rent tracking, 
     team collaboration, and real-time communication we're redefining 
@@ -79,7 +79,7 @@ const page = () => {
 
 
     <section className="bg-gray-900 text-white py-16 px-6 sm:px-16 lg:px-32">
-       <h1 className="text-2xl font-bold text-[#302cfc] mb-8">Get Started with Sky RealtyAE</h1>
+       <h1 className="text-2xl font-bold text-[#302cfc] mb-8">Get Started with Sky Realty</h1>
   
         <p className="mb-6 text-lg">
         <strong>Step 1: Sign In or Create an Account</strong><br />
@@ -113,7 +113,7 @@ const page = () => {
         <div className="md:w-1/2 space-y-6">
           
           <p className="text-lg md:text-xl text-gray-100">
-            Sky-RealtyAE is the all-in-one digital platform designed for <strong>property owners, landlords, and real estate agents to manage rental properties with ease</strong>.
+            Sky-Realty is the all-in-one digital platform designed for <strong>property owners, landlords, and real estate agents to manage rental properties with ease</strong>.
           </p>
           <p>
             Whether you manage one property or dozens, Sky-Realty simplifies the complex tasks of rent collection, tenant communication, maintenance scheduling, and lease management all from your phone or computer.
@@ -147,7 +147,7 @@ const page = () => {
         <div className="md:w-1/2 space-y-4">
           <h2 className="text-3xl font-bold text-blue-700">Communicate with Tenants Instantly</h2>
           <p>
-            Sky-RealtyaAE comes with an <strong>in-app messaging system</strong>. This means realtors and landlords can <strong>send messages to tenants directly inside the app</strong>. No more missed calls or lost text messages.
+            Sky-Realty comes with an <strong>in-app messaging system</strong>. This means realtors and landlords can <strong>send messages to tenants directly inside the app</strong>. No more missed calls or lost text messages.
           </p>
           <p>
             Tenants can also reply immediately, share photos of issues, or ask questions. All conversations are stored safely in your dashboard, so you have a complete record without needing to search through emails or phones.
@@ -274,10 +274,10 @@ const page = () => {
 
           {/* Optional Extra Write-up Section */}
       <section id="about" className="bg-blue-600 py-20 px-5 md:px-20 text-gray-100">
-        <h2 className="text-3xl font-bold text-white text-center mb-10">About Sky-RealtyAE</h2>
+        <h2 className="text-3xl font-bold text-white text-center mb-10">About Sky-Realty</h2>
         <div className="max-w-4xl mx-auto space-y-6 text-lg">
           <p>
-            Sky-RealtyAE is built for <strong>everyone who manages rental properties</strong>, whether you have one apartment or an entire portfolio of buildings. Our goal is to remove the headaches of property management, so you can focus on growing your business, keeping tenants happy, and maintaining steady income.
+            Sky-Realty is built for <strong>everyone who manages rental properties</strong>, whether you have one apartment or an entire portfolio of buildings. Our goal is to remove the headaches of property management, so you can focus on growing your business, keeping tenants happy, and maintaining steady income.
           </p>
           <p>
             You don't need to know about complicated software or technology. Every feature is intuitive, clearly labeled, and supported with guides. From the moment you log in, you can start managing tenants, collecting rent, tracking maintenance, and sending messages all without a single phone call.
@@ -286,13 +286,13 @@ const page = () => {
             Our <strong>in-app messaging tool</strong> ensures landlords and agents are always connected with tenants. No more chasing texts or missed phone calls. Tenants can also share photos or videos of issues, schedule appointments, and communicate securely all within the app.
           </p>
           <p>
-            Sky-RealtyAE also helps you manage leases efficiently. You can upload digital copies, set reminders for renewals, and track the status of contracts. Our dashboard gives you a complete overview of occupancy, payments, maintenance requests, and communications in one place.
+            Sky-Realty also helps you manage leases efficiently. You can upload digital copies, set reminders for renewals, and track the status of contracts. Our dashboard gives you a complete overview of occupancy, payments, maintenance requests, and communications in one place.
           </p>
           <p>
             We prioritize <strong>security, transparency, and simplicity</strong>. All documents, payments, and messages are stored safely, accessible only to you and your tenants. This reduces misunderstandings, ensures compliance, and builds trust between landlords and tenants.
           </p>
           <p>
-            Additionally, our <strong>analytics and reporting tools</strong> allow you to track income, monitor late payments, and make informed decisions to grow your property business. Even if you are not tech-savvy, Sky-RealtyAE explains everything in clear language and provides support every step of the way.
+            Additionally, our <strong>analytics and reporting tools</strong> allow you to track income, monitor late payments, and make informed decisions to grow your property business. Even if you are not tech-savvy, Sky-Realty explains everything in clear language and provides support every step of the way.
           </p>
           <p>
             Our platform is not region-specific, it is designed to work globally, adapting to different rental markets and property types. Whether you manage residential apartments, commercial units, or mixed-use buildings, We give you the tools to simplify operations and maximize efficiency.
@@ -301,7 +301,7 @@ const page = () => {
             We listen to our users and continuously improve. Every new feature, update, or enhancement is based on real feedback from landlords, agents, and tenants. When you use Sky-Realty, you're not just using software you're joining a community dedicated to making rental management easier, smarter, and stress-free.
           </p>
           <p className="font-bold text-white">
-            With Sky-RealtyAE, less hassle and more control isn't just a promise it's a reality.
+            With Sky-Realty, less hassle and more control isn't just a promise it's a reality.
           </p>
         </div>
       </section>
@@ -310,7 +310,7 @@ const page = () => {
       <section id="team" className="bg-blue-700 py-20 px-5 md:px-20 flex flex-col gap-8 text-gray-100">
         <h2 className="text-3xl font-bold text-white text-center mb-10">Meet Our Team</h2>
         <p className="text-center max-w-3xl mx-auto">
-          Sky-RealtyAE was built by a team of experts passionate about real estate, technology, and customer experience. Every feature is designed based on real landlord and agent needs.
+          Sky-Realty was built by a team of experts passionate about real estate, technology, and customer experience. Every feature is designed based on real landlord and agent needs.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-10">
@@ -337,11 +337,11 @@ const page = () => {
 
         <section className="bg-gray-900 text-white py-20 px-6 md:px-16 text-center">
   <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#302cfc]">
-    Why Realtors Love Sky RealtyAE 💙
+    Why Realtors Love Sky Realty 💙
   </h2>
 
   <p className="max-w-2xl mx-auto text-gray-300 mb-12 text-lg">
-    We've built Sky Realtyae to simplify every part of your property management journey.  
+    We've built Sky Realty to simplify every part of your property management journey.  
     Here's why realtors across the Middle East and beyond are choosing us to power their business.
   </p>
 
@@ -382,7 +382,7 @@ const page = () => {
       <h3 className="text-xl font-semibold text-[#302cfc] mb-3">👥 Team Collaboration</h3>
       <p className="text-gray-300">
         Invite team members, assign roles, and collaborate efficiently. 
-        Sky Realtyae grows with your team and your business.
+        Sky Realty grows with your team and your business.
       </p>
     </div>
 
@@ -418,7 +418,7 @@ const page = () => {
   </h2>
 
   <p className="max-w-3xl mx-auto text-lg md:text-xl text-gray-100 mb-10 leading-relaxed">
-    Sky Realtyae is redefining how realtors in the Middle East and beyond manage their properties.  
+    Sky Realty is redefining how realtors in the Middle East and beyond manage their properties.  
     Smarter tools. Seamless workflows. Total control.  
     It's time to elevate your real estate business and stay ahead of the market.
   </p>
@@ -452,7 +452,7 @@ const page = () => {
   <div className="flex flex-col md:flex-row justify-between items-start gap-8">
     {/* Brand */}
     <div className="space-y-2">
-      <h3 className="font-bold text-xl">Sky-RealtyAE</h3>
+      <h3 className="font-bold text-xl">Sky-Realty</h3>
       <p>Smarter rental management at your fingertips.</p>
     </div>
 
@@ -498,7 +498,7 @@ const page = () => {
       </div>
     </div>
   </div>
-  <p className="text-center text-sm mt-10">&copy; {new Date().getFullYear()} Sky-Realtyae. All rights reserved.</p>
+  <p className="text-center text-sm mt-10">&copy; {new Date().getFullYear()} Sky-Realty. All rights reserved.</p>
 </footer>
 
             

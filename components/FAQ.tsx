@@ -4,9 +4,9 @@ import { useState } from "react";
 
 const faqs = [
   {
-    question: "What is Sky-Realtyae?",
+    question: "What is Sky-Realty?",
     answer:
-      "Sky-Realtyae is a property management platform built for realtors to manage properties, tenants, rent, and maintenance requests all in one place.",
+      "Sky-Realty is a property management platform built for realtors to manage properties, tenants, rent, and maintenance requests all in one place.",
   },
   {
     question: "How much does it cost?",
