@@ -85,6 +85,8 @@ export default function PricingSubscription() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [propertyLimit, setPropertyLimit] = useState<number | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
 
   // GET current subscription on mount
   useEffect(() => {
@@ -92,11 +94,15 @@ export default function PricingSubscription() {
 
     const fetchSubscription = async () => {
       try {
-        const res = await fetch("/api/ziina");
+        const res = await fetch(`/api/ziina?user=${userId}`);
         const data = await res.json();
         if (res.ok && data.plan) {
           setCurrentPlan(data.plan);
           setPropertyLimit(data.propertyLimit);
+          setSubscriptionStatus(data.status);
+
+          // check if trial info returned
+          if (data.trial_ends_at) setTrialEndsAt(data.trial_ends_at);
         }
       } catch (err) {
         console.error("Failed to fetch subscription:", err);
@@ -138,12 +144,32 @@ export default function PricingSubscription() {
     }
   };
 
+  const renderTrialBanner = () => {
+    if (subscriptionStatus === "trialing" && trialEndsAt) {
+      const daysLeft = Math.ceil(
+        (new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      return (
+        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-md bg-blue-700 text-white text-center font-semibold shadow-md">
+          🎉 You’re currently enjoying a <span className="text-yellow-400">7-day free trial</span>!
+          <br />
+          Trial ends in <span className="underline">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span>.
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <h1 className="text-4xl font-bold text-center mb-6">Sky Realty Plans</h1>
 
+      {/* Trial Banner */}
+      {renderTrialBanner()}
+
       {/* Current Plan Banner */}
-      {currentPlan && (
+      {currentPlan && subscriptionStatus !== "trialing" && (
         <div className="max-w-3xl mx-auto mb-8 p-4 rounded-md bg-green-700 text-white text-center font-semibold shadow-md">
           You are currently on <span className="underline">{currentPlan.toUpperCase()}</span> plan.{" "}
           {propertyLimit ? `You can manage up to ${propertyLimit} properties.` : "Unlimited properties."}
@@ -203,16 +229,12 @@ export default function PricingSubscription() {
                   USD <span className="text-sm font-normal">/ {billingCycle}</span>
                 </p>
 
-                {/* Features list (no icons) */}
+                {/* Features list with ✔ ticks */}
                 <ul className="mb-6 space-y-2 text-gray-300">
                   {plan.features.map((feat, i) => (
-                    <li key={i}>
-                      {feat}
-                      {feat.toLowerCase().includes("property") && plan.properties && (
-                        <span className="ml-1 text-xs text-gray-400">✔
-                          ({plan.properties} properties allowed)
-                        </span>
-                      )}
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-green-400 font-bold">✔</span>
+                      <span>{feat}</span>
                     </li>
                   ))}
                 </ul>
@@ -231,7 +253,7 @@ export default function PricingSubscription() {
                   ? "Current Plan"
                   : loadingPlan === plan.id
                   ? "Processing..."
-                  : "Subscribe"}
+                  : "Start 7-Day Trial"}
               </button>
             </div>
           );
@@ -239,7 +261,7 @@ export default function PricingSubscription() {
       </div>
 
       <p className="text-center mt-12 text-gray-400 font-bold">
-        All plans include a 7-day free trial. Cancel anytime before trial ends.
+        All plans include a 7-day free trial. Cancel anytime before your trial ends.
       </p>
     </div>
   );

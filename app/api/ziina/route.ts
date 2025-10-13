@@ -30,6 +30,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
+    const { data: realtor, error: fetchError } = await supabase
+      .from("realtors")
+      .select("trial_ends_at, subscription_status")
+      .eq("id", userId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const now = new Date();
+    const hasActiveTrial = realtor?.trial_ends_at && new Date(realtor.trial_ends_at) > now;
+
+    // 2️⃣ If no active trial, start one
+    if (!hasActiveTrial && plan !== "free") {
+      const trialEnds = new Date();
+      trialEnds.setDate(trialEnds.getDate() + 7);
+
+      await supabase
+        .from("realtors")
+        .update({
+          subscription_plan: plan,
+          subscription_status: "trialing",
+          trial_ends_at: trialEnds.toISOString(),
+        })
+        .eq("id", userId);
+
+      return NextResponse.json({
+        message: "✅ 7-day free trial started",
+        redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/realtor/${userId}/dashboard`,
+      });
+    }
+
+    // 3️⃣ If trial exists or trial ended
+
     const res = await fetch("https://api-v2.ziina.com/api/payment_intent", {
       method: "POST",
       headers: {

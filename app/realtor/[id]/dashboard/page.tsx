@@ -55,6 +55,8 @@ export default function RealtorDashboard() {
   const [loading, setLoading] = useState(true)
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
+  const [expired, setExpired] = useState(false)
 
   const router = useRouter()
   const handleRefresh = async () => {
@@ -64,6 +66,47 @@ export default function RealtorDashboard() {
   }
 
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  
+  useEffect(() => {
+    if (!user?.id) return
+
+    const checkSubscription = async () => {
+      try {
+        const res = await fetch(`/api/ziina?user=${user.id}`)
+        const data = await res.json()
+
+        const now = new Date()
+        let expired = false
+        let trialRemaining = null
+
+        if (data.trial_ends_at) {
+          const trialEnd = new Date(data.trial_ends_at)
+          const diffDays = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+          trialRemaining = diffDays > 0 ? diffDays : 0
+          if (diffDays <= 0) expired = true
+        }
+
+        if (data.status === 'expired' || data.status === 'none') expired = true
+
+        if (expired) {
+          setExpired(true)
+          toast('⚠ Your subscription or trial has expired. Please renew to continue using Sky Realty.')
+          router.push('/subscription')
+        } else {
+          setTrialDaysLeft(trialRemaining)
+        }
+      } catch (err) {
+        console.error('Failed to check subscription:', err)
+
+      
+      }
+    }
+
+    checkSubscription()
+  }, [user?.id, router])
+
+
 
   // ---------------- Fetch plan ----------------
   useEffect(() => {
@@ -188,6 +231,19 @@ export default function RealtorDashboard() {
 
       {/* Main content */}
       <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-black">
+
+        {/* 🟢 Trial or subscription banner */}
+        {trialDaysLeft !== null && !expired && (
+          <div className="bg-yellow-500 text-black text-center py-2 rounded-md font-semibold">
+            {trialDaysLeft > 0
+              ? `⏳ Your trial ends in ${trialDaysLeft} day${trialDaysLeft > 1 ? 's' : ''}. Upgrade now to keep access!`
+              : '⚠ Your trial has ended. Please subscribe to continue using Sky Realty.'}
+          </div>
+        )}
+
+
+
+
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
 
