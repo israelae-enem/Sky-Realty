@@ -223,7 +223,9 @@ export default function RealtorDashboard() {
           <Link href="#rent-analytics" className="hover:text-[#302cfc]">Rent Analytics</Link>          
           <Link href="/legal-doc" className="hover:text-[#302cfc]">Documents Templates</Link>
           <Link href="#legal-docs" className="hover:text-[#302cfc]">Your Documents</Link>
-          <Link href="#teams" className="hover:text-[#302cfc]">Teams</Link>
+          <Link href="/create-organization" className="hover:text-[#302cfc]"> Create Team</Link>
+
+          <Link href="#team" className="hover:text-[#302cfc]"> My Team</Link>
 
           
         </nav>
@@ -345,13 +347,14 @@ export default function RealtorDashboard() {
               <Calendar size={18} /> Legal Documents
             </AccordionTrigger>
             <AccordionContent>
-              <LegalDocumentsTable realtorId={user?.id ?? ''} />
+              <LegalDocumentsTable  />
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="teams">
+          
+            <AccordionItem value="team">
           <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-           <Users size={18} /> Teams
+           <Users size={18} /> Team
              </AccordionTrigger>
              <AccordionContent>
                 {user?.id && plan ? (
@@ -361,6 +364,7 @@ export default function RealtorDashboard() {
                 )}
             </AccordionContent>
               </AccordionItem>
+              
 
 
               {/* Chat Component */}

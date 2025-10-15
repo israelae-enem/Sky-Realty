@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import TenantChat from '@/components/TenantChat';
 
 interface Tenant {
   id: string;
@@ -46,8 +48,7 @@ const TenantDashboard = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   // ---------------- CHAT ----------------
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -94,119 +95,6 @@ const TenantDashboard = () => {
   
 
     // Subscribe to real-time updates
-    const conversation_id =
-    tenant && tenant.realtor_id
-      ? `${tenant.id}_${tenant.realtor_id}`
-      : null
-      
-
-
-
-  
-
-  // Fetch messages
-  useEffect(() => {
-    if (!conversation_id || !user?.id) return
-
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('message')
-        .select('*')
-        .eq('conversation_id', conversation_id)
-        .order('created_at', { ascending: true })
-
-      if (!error && data) setMessages(data)
-    }
-
-    fetchMessages()
-
-    // Real-time subscription
-    const channel = supabase
-      .channel(`conversation-${conversation_id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'message' },
-        async (payload) => {
-          if (payload.new.conversation_id === conversation_id) {
-            setMessages((prev) => [...prev, payload.new])
-
-            if (user?.id !== payload.new.sender_id) {
-              const isTenant = user?.id === payload.new.tenant_id
-              const isRealtor = user?.id === payload.new.realtor_id
-
-              if (isTenant || isRealtor) {
-                const { error } = await supabase.from('notification').insert([
-                  {
-                    id: crypto.randomUUID(),
-                    type: 'message',
-                    message: isTenant
-                      ? `New message from your realtor`
-                      : `New message from your tenant`,
-                    tenant_id: payload.new.tenant_id,
-                    realtor_id: payload.new.realtor_id,
-                    read: false,
-                  },
-                ])
-
-                if (error) console.error('Failed to insert notification:', error)
-              }
-            }  
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [conversation_id, user?.id])
-
-  // Handle send
-  const handleSendMessage = useCallback(async () => {
-    if (!newMessage.trim() || !tenant?.realtor_id || !conversation_id) return
-
-
-        // 1️⃣ Ensure conversation exists
-const { data: convData, error: convError } = await supabase
-  .from('conversation')
-  .select('id')
-  .eq('id', conversation_id)
-  .single()
-
-if (!convData) {
-  const { error: insertConvError } = await supabase
-    .from('conversation')
-    .insert([{ id: conversation_id, tenant_id: tenant.id, realtor_id: tenant.realtor_id }])
-
-  if (insertConvError) {
-    console.error('Failed to create conversation:', insertConvError)
-    toast.error('Failed to start conversation')
-    return
-  }
-}
-
-    const { data, error } = await supabase
-      .from('message')
-      .insert([
-        {
-          id: crypto.randomUUID(),
-          tenant_id: tenant.id,
-          realtor_id: tenant.realtor_id,
-          sender_id: user?.id,
-          conversation_id: conversation_id,
-          content: newMessage.trim(),
-        },
-      ])
-      .select()
-
-    if (error) {
-      console.error('Error sending message:', error)
-      toast.error('Failed to send message')
-    } else {
-      setNewMessage('')
-      setMessages((prev) => [...prev, ...data])
-    }
-  }, [newMessage, tenant, user?.id, conversation_id])
 
    
 
@@ -255,56 +143,6 @@ if (!convData) {
           )}
         </div>
 
-        {/* Chat */}
-        <div className="relative">
-          <button
-            aria-haspopup="true"
-            aria-expanded={open === 'chat'}
-            onClick={() => setOpen(open === 'chat' ? null : 'chat')}
-            className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-700 bg-gray-900 hover:bg-gray-800 text-white"
-          >
-            <MessageCircle size={18} />
-            <span>Chat</span>
-          </button>
-          {open === 'chat' && (
-            <div className="absolute top-12 right-0 bg-gray-900 rounded p-4 shadow w-96 z-40 flex flex-col space-y-3">
-              <div className="flex-1 overflow-y-auto max-h-64 space-y-2">
-                {messages.length > 0 ? (
-                  messages.map((m) => (
-                    <div
-                      key={m.id}
-                      className={`p-2 rounded-md text-sm ${
-                        m.sender_id === user?.id
-                          ? 'bg-[#302cfc] text-white self-end'
-                          : 'bg-gray-700 text-gray-200'
-                      }`}
-                    >
-                      {m.content}
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-400">No messages yet</p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  className="px-4 py-2 bg-[#302cfc] hover:bg-[#241fd9] rounded-md text-white font-semibold"
-                >
-                  Send
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Welcome */}
       <h1 className="text-3xl font-bold">Welcome, {user?.firstName || user?.fullName || 'Tenant'}!</h1>
@@ -378,7 +216,19 @@ if (!convData) {
           )}
         </div>
       </section>
+       
+       <Accordion type="single">
+      <AccordionItem value="chat">
+          <AccordionTrigger>Chat with Realtor</AccordionTrigger>
+          <AccordionContent>
+            {user?.id && (
+              <TenantChat tenantId={user.id} userId={user.id} />
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
+  </div>
   );
 };
 

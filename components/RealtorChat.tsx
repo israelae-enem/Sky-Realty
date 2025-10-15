@@ -22,6 +22,7 @@ interface Message {
   realtor_id: string
   content: string
   message: string
+  file_url?: string
   read: boolean
   created_at: string
 }
@@ -35,6 +36,8 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -43,22 +46,22 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
   useEffect(() => {
     if (!selectedTenant || !user?.id) return
 
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('message')
+        const fetchMessages = async () => {
+        const { data, error } = await supabase
+       .from('message')
         .select('*')
-        .eq('tenant_id', selectedTenant.id)
-        .eq('realtor_id', user.id)
-        .order('created_at', { ascending: true })
+       .eq('tenant_id', selectedTenant.id)
+      .eq('realtor_id', user.id)
+      .order('created_at', { ascending: true })
 
       if (!error && data) {
-        const enriched = data.map((m) => ({
-          ...m,
-          message: m.content,
-        }))
-        setMessages(enriched)
-      }
-    }
+       const enriched = data.map((m) => ({
+      ...m,
+      message: m.content || (m.file_url ? `[File] ${m.file_url.split('/').pop()}` : ''),
+      }))
+    setMessages(enriched)
+   }
+  }
 
     fetchMessages()
 
@@ -66,21 +69,22 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
     const subscription = supabase
       .channel(`conversation-${selectedTenant.id}-${user.id}`)
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'message' },
-        (payload) => {
-          const m = payload.new as Message
-          if (m.tenant_id === selectedTenant.id && m.realtor_id === user.id) {
-            setMessages((prev) => [
-              ...prev,
-              {
-                ...m,
-                message: m.content,
-              },
-            ])
-          }
-        }
-      )
+  'postgres_changes',
+  { event: 'INSERT', schema: 'public', table: 'message' },
+  (payload) => {
+    const m = payload.new as Message
+    if (m.tenant_id === selectedTenant.id && m.realtor_id === user.id) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...m,
+          message: m.content || (m.file_url ? `[File] ${m.file_url.split('/').pop()}` : ''),
+        },
+      ])
+    }
+  }
+)
+      
       .subscribe()
 
     return () => {
@@ -92,37 +96,73 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
     scrollToBottom()
   }, [messages])
 
-  // ---------------- Send message ----------------
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedTenant) return
+  // ---------------- Send message + file ----------------
+  const handleSend = async () => {
+    if (!newMessage.trim() && !file) return toast.error('Enter a message or select a file')
+    if (!selectedTenant) return
 
-    const messagePayload = {
-      sender_id: user.id,
-      tenant_id: selectedTenant.id,
-      realtor_id: user.id,
-      content: newMessage.trim(),
-      message: newMessage.trim(),
-      read: false,
-    }
+    setLoading(true)
+
+    let fileUrl: string | undefined
 
     try {
-      const { data, error } = await supabase
-        .from('message')
-        .insert([messagePayload])
-        .select()
-        .single()
+      if (file) {
+        const fileName = `${Date.now()}_${file.name}`
+        const { error: uploadError } = await supabase.storage
+          .from('chat_files')
+          .upload(fileName, file)
 
+        if (uploadError) throw uploadError
+
+        fileUrl = supabase.storage.from('chat_files').getPublicUrl(fileName).data.publicUrl
+      }
+
+      const messagePayload = {
+        sender_id: user.id,
+        tenant_id: selectedTenant.id,
+        realtor_id: user.id,
+        content: newMessage.trim() || `[File] ${file?.name}`,
+        message: newMessage.trim() || `[File] ${file?.name}`,
+        file_url: fileUrl,
+        read: false,
+      }
+
+      const { data, error } = await supabase.from('message').insert([messagePayload]).select().single()
       if (error) throw error
 
-      if (data) {
-        setMessages((prev) => [...prev, data])
-        setNewMessage('')
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-      }
+      setMessages((prev) => [...prev, data])
+      setNewMessage('')
+      setFile(null)
+      scrollToBottom()
     } catch (err) {
       console.error('Send message error:', err)
       toast.error('Failed to send message')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  // ---------------- Render file preview ----------------
+  const renderFile = (url?: string) => {
+    if (!url) return null
+    const ext = url.split('.').pop()?.toLowerCase()
+    if (!ext) return null
+
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+      return <img src={url} alt="file" className="max-w-xs max-h-40 rounded-md" />
+    }
+
+    // Fallback for PDFs and other files
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline text-blue-300 flex items-center gap-1"
+      >
+        📎 View File
+      </a>
+    )
   }
 
   return (
@@ -163,6 +203,7 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
                   }`}
                 >
                   {m.message}
+                  {renderFile(m.file_url)}
                 </div>
               ))
             ) : (
@@ -184,11 +225,17 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
               placeholder="Type a message..."
               className="flex-1 px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none"
             />
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="px-2 py-2 rounded-md bg-gray-700 text-white"
+            />
             <button
-              onClick={handleSendMessage}
+              onClick={handleSend}
+              disabled={loading}
               className="px-4 py-2 bg-[#302cfc] hover:bg-[#241fd9] rounded-md text-white font-semibold"
             >
-              Send
+              {loading ? 'Sending...' : 'Send'}
             </button>
           </div>
         )}
