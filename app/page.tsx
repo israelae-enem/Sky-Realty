@@ -1,51 +1,106 @@
+"use client"
+
 import FAQ from '@/components/FAQ'
 import PlanCTA from '@/components/PlanCTA'
 import Pricing from '@/components/Pricing'
 import PropertyCTA from '@/components/PropertyCTA'
 import Image from 'next/image'
-import { FaTwitter, FaLinkedin, FaInstagram, FaEnvelope, FaPhone } from 'react-icons/fa'
+import { useState, useRef,useEffect } from 'react'
+import { FaLinkedin, FaInstagram, FaEnvelope, FaPhone } from 'react-icons/fa'
 
 const page = () => {
+  const [isVideoOpen, setIsVideoOpen] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+
+  // When video ends, auto-close the modal
+  useEffect(() => {
+    const vid = videoRef.current
+    if (!vid) return
+
+    const handleEnded = () => setIsVideoOpen(false)
+    vid.addEventListener('ended', handleEnded)
+    return () => vid.removeEventListener('ended', handleEnded)
+  }, [isVideoOpen])
+
+
+
   return (
-    <main className="flex flex-col w-full text-gray-900 bg-blue-300">
-        <section className="relative w-full h-[80vh] overflow-hidden">
-        <div>
-         <video
-         src="/assets/videos/hero.mp4"
-         autoPlay
-         loop
-         muted
-         playsInline
-         className='absolute top-0 lrft-0 w-full h-full object-cover'
-         />
-         </div>
+    <main className="flex flex-col w-full text-gray-900 bg-blue-300 cursor-pointer">
+       
+       <section className="relative w-full h-[80vh] overflow-hidden">
+      {/* Background Video */}
+      <div>
+        <video
+          src="/assets/videos/hero.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
+      </div>
 
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/50" />
 
-       <div className="absolute inset-0 bg-black/50" />
-
-       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white space-y-6 px-6">
-       <h1 className="text-4xl md:text-6xl font-bold text-[#302cfc] drop-shadow-lg">
-         Elevate Your Real Estate Management 🚀
-       </h1>
-       <p className="max-w-2xl text-lg text-gray-200">
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white space-y-6 px-6">
+        <h1 className="text-4xl md:text-6xl font-bold text-[#302cfc] drop-shadow-lg">
+          Elevate Your Real Estate Management 🚀
+        </h1>
+        <p className="max-w-2xl text-lg text-gray-200">
           Simplify your property management with Sky Realty built for realtors and tenants who want control, clarity, and collaboration.
-         </p>
+        </p>
         <div className="flex gap-4">
-         <a
-          href="/sign-in"
-         className="bg-[#302cfc] hover:bg-[#241fd9] px-6 py-3 rounded-lg font-medium transition"
-         >
-        Get Started
-      </a>
-      <a
-        href="/subscription"
-        className="border border-[#302cfc] hover:bg-[#302cfc]/10 px-6 py-3 rounded-lg font-medium transition"
-        >
-        Watch Demo
-        </a>
-       </div>
-     </div>
-   </section>
+          <a
+            href="/sign-in"
+            className="border bg-[#302cfc] hover:bg-[#241fd9]/10 px-6 py-3 rounded-lg font-medium transition"
+          >
+            Get Started
+          </a>
+           <a
+            href="/subscription"
+            className="border bg-[#302cfc] hover:bg-[#241fd9]/10 px-6 py-3 rounded-lg font-medium transition"
+          >
+            Subscribe
+          </a>
+          <button
+            onClick={() => setIsVideoOpen(true)}
+            className="border bg-[#302cfc] hover:bg-[#241fd9]/10 px-6 py-3 rounded-lg font-medium transition"
+          >
+            Watch Demo
+          </button>
+        </div>
+      </div>
+
+      {/* Demo Video Modal */}
+      {isVideoOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
+          <div className="relative w-[90%] max-w-xl rounded-lg overflow-hidden shadow-2xl">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsVideoOpen(false)}
+              className="absolute top-2 right-2 bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-500 transition"
+            >
+              ✕
+            </button>
+
+            {/* Demo Video */}
+            <video
+              ref={videoRef}
+              controls
+              autoPlay
+              className="w-full rounded-lg shadow-lg"
+            >
+              <source src="/assets/videos/demo.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      )}
+    </section>
+
+
 
    <section className='bg-blue-400'>
     <div className="bg-black text-white py-20 px-6 md:px-16 text-center space-y-6">
