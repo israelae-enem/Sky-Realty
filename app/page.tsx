@@ -41,7 +41,7 @@ const page = () => {
         href="/subscription"
         className="border border-[#302cfc] hover:bg-[#302cfc]/10 px-6 py-3 rounded-lg font-medium transition"
         >
-        Subscribe
+        Watch Demo
         </a>
        </div>
      </div>

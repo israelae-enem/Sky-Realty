@@ -27,7 +27,7 @@ const Navbar = () => {
         <NavItems/>
         <SignedOut>
             <SignInButton>
-              <button className='btn-signin'>Sign In</button>
+              <button className='btn-primary text-white'>SIGN IN</button>
             </SignInButton>
         </SignedOut>
         <SignedIn>
