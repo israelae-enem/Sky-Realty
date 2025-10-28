@@ -28,7 +28,7 @@ export default function Team() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [plan, setPlan] = useState<'free' | 'basic' | 'pro' | 'premium'>('free')
 
-  const TEAM_LIMITS = { free: 0, basic: 0, pro: 4, premium: 10 }
+  const TEAM_LIMITS = { free: 0, basic: 2, pro: 5, premium: 10 }
 
   // 🟦 Fetch subscription plan
   useEffect(() => {

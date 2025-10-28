@@ -22,7 +22,7 @@ const plans: Plan[] = [
     properties: 10,
     features: [
       "Manage up to 10 properties",
-      "7-day free trial",
+      "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add and edit property details",
       "View tenant info and lease dates",
@@ -41,7 +41,7 @@ const plans: Plan[] = [
     properties: 20,
     features: [
       "Manage up to 20 properties",
-      "7-day free trial",
+      "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add, edit, and remove properties",
       "View tenant info, lease dates & rent due",
@@ -61,7 +61,7 @@ const plans: Plan[] = [
     properties: null,
     features: [
       "Unlimited properties",
-      "7-day free trial",
+      "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add, edit, and remove properties",
       "View tenant info, lease dates & rent due",
@@ -69,7 +69,6 @@ const plans: Plan[] = [
       "Schedule and track maintenance requests",
       "Receive notifications & reminders",
       "Premium email, chat & phone support",
-      "Download and upload lease documents",
       "Advanced analytics & reporting",
       "Custom branding for your dashboard",
     ],
@@ -100,8 +99,6 @@ export default function PricingSubscription() {
           setCurrentPlan(data.plan);
           setPropertyLimit(data.propertyLimit);
           setSubscriptionStatus(data.status);
-
-          // check if trial info returned
           if (data.trial_ends_at) setTrialEndsAt(data.trial_ends_at);
         }
       } catch (err) {
@@ -120,6 +117,7 @@ export default function PricingSubscription() {
 
     try {
       setLoadingPlan(planId);
+      alert("Redirecting you to Ziina to add your card and start your 7-day trial...");
 
       const res = await fetch("/api/ziina", {
         method: "POST",
@@ -152,9 +150,11 @@ export default function PricingSubscription() {
 
       return (
         <div className="max-w-3xl mx-auto mb-6 p-4 rounded-md bg-blue-700 text-white text-center font-semibold shadow-md">
-          🎉 You’re currently enjoying a <span className="text-yellow-400">7-day free trial</span>!
+          🎉 You're currently enjoying a{" "}
+          <span className="text-yellow-400">7-day free trial</span>!
           <br />
-          Trial ends in <span className="underline">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span>.
+          Trial ends in{" "}
+          <span className="underline">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span>.
         </div>
       );
     }
@@ -165,18 +165,18 @@ export default function PricingSubscription() {
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <h1 className="text-4xl font-bold text-center mb-6">Sky Realty Plans</h1>
 
-      {/* Trial Banner */}
       {renderTrialBanner()}
 
-      {/* Current Plan Banner */}
       {currentPlan && subscriptionStatus !== "trialing" && (
         <div className="max-w-3xl mx-auto mb-8 p-4 rounded-md bg-green-700 text-white text-center font-semibold shadow-md">
-          You are currently on <span className="underline">{currentPlan.toUpperCase()}</span> plan.{" "}
-          {propertyLimit ? `You can manage up to ${propertyLimit} properties.` : "Unlimited properties."}
+          You are currently on{" "}
+          <span className="underline">{currentPlan.toUpperCase()}</span> plan.{" "}
+          {propertyLimit
+            ? `You can manage up to ${propertyLimit} properties.`
+            : "Unlimited properties."}
         </div>
       )}
 
-      {/* Billing Toggle */}
       <div className="flex justify-center mb-12 space-x-4">
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
@@ -196,7 +196,6 @@ export default function PricingSubscription() {
         </button>
       </div>
 
-      {/* Plan Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {plans.map((plan) => {
           const isFeatured = plan.badge === "Most Popular" || plan.badge === "Best Value";
@@ -209,7 +208,6 @@ export default function PricingSubscription() {
                 isFeatured ? "ring-4 ring-yellow-500" : ""
               }`}
             >
-              {/* Badge */}
               {plan.badge && (
                 <div
                   className={`absolute -mt-4 ml-4 px-4 py-1 rounded-full text-sm font-bold text-white ${
@@ -229,7 +227,6 @@ export default function PricingSubscription() {
                   USD <span className="text-sm font-normal">/ {billingCycle}</span>
                 </p>
 
-                {/* Features list with ✔ ticks */}
                 <ul className="mb-6 space-y-2 text-gray-300">
                   {plan.features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-2">
@@ -240,21 +237,28 @@ export default function PricingSubscription() {
                 </ul>
               </div>
 
-              <button
-                onClick={() => handleSubscribe(plan.id)}
-                disabled={!userId || loadingPlan === plan.id || isCurrent}
-                className={`mt-auto w-full px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
-                  isFeatured
-                    ? "bg-yellow-500 text-gray-900 hover:bg-yellow-400"
-                    : "bg-blue-500 text-white hover:bg-blue-400"
-                } disabled:opacity-50`}
-              >
-                {isCurrent
-                  ? "Current Plan"
-                  : loadingPlan === plan.id
-                  ? "Processing..."
-                  : "Start 7-Day Trial"}
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={!userId || loadingPlan === plan.id || isCurrent}
+                  className={`w-full px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
+                    isFeatured
+                      ? "bg-yellow-500 text-gray-900 hover:bg-yellow-400"
+                      : "bg-blue-500 text-white hover:bg-blue-400"
+                  } disabled:opacity-50`}
+                >
+                  {isCurrent
+                    ? "Current Plan"
+                    : loadingPlan === plan.id
+                    ? "Processing..."
+                    : "Start 7-Day Trial (Card Required)"}
+                </button>
+
+                <p className="text-sm text-gray-400 text-center">
+                  Card details collected securely by Ziina. You won't be charged
+                  until the 7-day trial ends.
+                </p>
+              </div>
             </div>
           );
         })}

@@ -223,9 +223,7 @@ export default function RealtorDashboard() {
           <Link href="#rent-analytics" className="hover:text-[#302cfc]">Rent Analytics</Link>          
           <Link href="/legal-doc" className="hover:text-[#302cfc]">Documents Templates</Link>
           <Link href="#legal-docs" className="hover:text-[#302cfc]">Your Documents</Link>
-          <Link href="/create-organization" className="hover:text-[#302cfc]"> Create Team</Link>
-
-          <Link href="#team" className="hover:text-[#302cfc]"> My Team</Link>
+          <Link href="#team" className="hover:text-[#302cfc]"> Team</Link>
 
           
         </nav>
@@ -244,8 +242,6 @@ export default function RealtorDashboard() {
         )}
 
 
-
-
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
 
@@ -259,7 +255,7 @@ export default function RealtorDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
-          <StatCard icon={<Building />} title={`Properties ${plan ? `(Plan: ${plan})` : ''}`} value={stats.properties} />
+          <StatCard icon={<Building />} title={`Total Properties ${plan ? `(Plan: ${plan})` : ''}`} value={stats.properties} />
           <StatCard icon={<CheckCircle />} title="Occupied Units" value={stats.occupied} />
           <StatCard icon={<FileText />} title="Active Leases" value={stats.leases} />
           <StatCard icon={<Bell />} title="Unread Notifications" value={unreadCount} />

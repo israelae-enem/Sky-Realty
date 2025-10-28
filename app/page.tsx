@@ -31,7 +31,7 @@ const page = () => {
       {/* Background Video */}
       <div>
         <video
-          src="/assets/videos/hero.mp4"
+          src="/assets/videos/hero1.mp4"
           autoPlay
           loop
           muted
@@ -64,40 +64,11 @@ const page = () => {
           >
             Subscribe
           </a>
-          <button
-            onClick={() => setIsVideoOpen(true)}
-            className="border bg-[#302cfc] hover:bg-[#241fd9]/10 px-6 py-3 rounded-lg font-medium transition"
-          >
-            Watch Demo
-          </button>
+        
         </div>
       </div>
 
-      {/* Demo Video Modal */}
-      {isVideoOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90">
-          <div className="relative w-[90%] max-w-xl rounded-lg overflow-hidden shadow-2xl">
-            {/* Close Button */}
-            <button
-              onClick={() => setIsVideoOpen(false)}
-              className="absolute top-2 right-2 bg-gray-800 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-500 transition"
-            >
-              ✕
-            </button>
-
-            {/* Demo Video */}
-            <video
-              ref={videoRef}
-              controls
-              autoPlay
-              className="w-full rounded-lg shadow-lg"
-            >
-              <source src="/assets/videos/demo.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        </div>
-      )}
+     
     </section>
 
 
