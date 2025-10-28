@@ -380,6 +380,165 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
         </Table>
       </div>
 
+      {/* 📱 Mobile Rent Payment View */}
+<div className="md:hidden space-y-4">
+
+  {/* Add / View Toggle */}
+  <div className="flex justify-between items-center">
+    <h3 className="text-lg font-semibold text-[#302cfc]">Rent Payments</h3>
+    <button
+      onClick={() => setAdding(!adding)}
+      className="text-sm px-3 py-1 rounded bg-[#302cfc] hover:bg-blue-700 text-white"
+    >
+      {adding ? 'View Payments' : 'Add Payment'}
+    </button>
+  </div>
+
+  {/* Add Payment Form (Collapsible) */}
+  {adding && (
+    <div className="bg-gray-700 p-4 rounded-md border border-gray-300 space-y-3 animate-slideDown">
+      <h3 className="text-lg font-semibold text-[#302cfc]">Add Rent Payment</h3>
+
+      <div>
+        <label className="block text-sm text-gray-100 mb-1">Tenant</label>
+        <select
+          value={newPayment.tenant_id}
+          onChange={(e) => {
+            const tenantId = e.target.value
+            const propertyId =
+              tenants.find((t) => t.id === tenantId)?.property_id || ''
+            setNewPayment({ ...newPayment, tenant_id: tenantId, property_id: propertyId })
+          }}
+          className="w-full bg-gray-700 text-white p-2 rounded border border-gray-700"
+        >
+          <option value="">Select tenant</option>
+          {tenants.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.full_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Property</label>
+        <input
+          type="text"
+          value={properties.find((p) => p.id === newPayment.property_id)?.address || ''}
+          disabled
+          className="w-full bg-gray-700 text-gray-100 p-2 rounded border border-gray-700 cursor-not-allowed"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-100 mb-1">Amount ($)</label>
+        <input
+          type="number"
+          placeholder="Amount"
+          value={newPayment.amount || ''}
+          onChange={(e) => setNewPayment({ ...newPayment, amount: Number(e.target.value) })}
+          className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Payment Date</label>
+        <input
+          type="date"
+          value={newPayment.payment_date || ''}
+          onChange={(e) => setNewPayment({ ...newPayment, payment_date: e.target.value })}
+          className="w-full bg-gray-700 text-white p-2 rounded border border-gray-300"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-100 mb-1">Payment Method</label>
+        <select
+          value={newPayment.method || ''}
+          onChange={(e) => setNewPayment({ ...newPayment, method: e.target.value })}
+          className="w-full bg-gray-700 text-white p-2 rounded border border-gray-300"
+        >
+          <option value="">Select method</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Cash">Cash</option>
+          <option value="Check">Check</option>
+          <option value="Online Payment">Online Payment</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm text-gray-100 mb-1">Status</label>
+        <select
+          value={newPayment.status}
+          onChange={(e) => setNewPayment({ ...newPayment, status: e.target.value })}
+          className="w-full bg-gray-700 text-white p-2 rounded border border-gray-300"
+        >
+          <option value="Pending">Pending</option>
+          <option value="Paid">Paid</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+
+      <button
+        onClick={addPayment}
+        disabled={loading}
+        className="w-full bg-[#302cfc] hover:bg-blue-700 text-white py-2 rounded-md mt-2"
+      >
+        {loading ? 'Adding...' : 'Add Payment'}
+      </button>
+    </div>
+  )}
+
+  {/* Payment Cards */}
+  {!adding && (
+    <div className="space-y-3">
+      {filteredPayments.length === 0 && !loading && (
+        <p className="text-gray-100 text-center py-4">No rent payments found</p>
+      )}
+
+      {filteredPayments.map((p) => {
+        const tenant = tenants.find((t) => t.id === p.tenant_id)
+        const property = properties.find((prop) => prop.id === p.property_id)
+        return (
+          <div
+            key={p.id}
+            className="bg-gray-700 border border-gray-300 rounded-md p-4 space-y-2"
+          >
+            <div className="flex justify-between items-center">
+              <p className="font-semibold text-white">{tenant?.full_name || 'Unknown'}</p>
+              <span
+                className={`text-xs px-2 py-1 rounded ${
+                  p.status === 'Paid'
+                    ? 'bg-green-500/20 text-green-400'
+                    : p.status === 'Overdue'
+                    ? 'bg-red-500/20 text-red-400'
+                    : 'bg-yellow-500/20 text-yellow-400'
+                }`}
+              >
+                {p.status}
+              </span>
+            </div>
+            <p className="text-gray-100 text-sm">{property?.address || '—'}</p>
+            <p className="text-gray-100 text-sm">Amount: ${p.amount.toFixed(2)}</p>
+            <p className="text-gray-100 text-sm">
+              Date: {new Date(p.payment_date).toLocaleDateString()}
+            </p>
+            <p className="text-gray-100 text-sm">
+              Method: {p.method || '—'}
+            </p>
+            <button
+              onClick={() => deletePayment(p.id)}
+              className="w-full text-red-400 text-sm mt-2 border border-red-400 rounded-md py-1 hover:bg-red-500/10"
+            >
+              Delete
+            </button>
+          </div>
+        )
+      })}
+    </div>
+  )}
+</div>
+
 
 
       {loading && <p className="text-gray-400 mt-2">Loading rent payments...</p>}

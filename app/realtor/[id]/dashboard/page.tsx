@@ -73,90 +73,86 @@ export default function RealtorDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
   const [expired, setExpired] = useState(false)
+  const [subscriptionActive, setSubscriptionActive] = useState(false);
 
   const router = useRouter()
-  const handleRefresh = async () => {
-    setLoading(true)
-    await router.refresh()
-    setLoading(false)
-  }
+ 
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
   
   useEffect(() => {
-    if (!user?.id) return
+  if (!user?.id) return;
 
-    const checkSubscription = async () => {
-      try {
-        const res = await fetch(`/api/ziina?user=${user.id}`)
-        const data = await res.json()
+  const fetchSubscription = async () => {
+    try {
+      const res = await fetch(`/api/ziina?user=${user.id}`);
+      const data = await res.json();
 
-        const now = new Date()
-        let expired = false
-        let trialRemaining = null
+      if (!res.ok) throw new Error('Failed to fetch subscription');
 
-        if (data.trial_ends_at) {
-          const trialEnd = new Date(data.trial_ends_at)
-          const diffDays = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-          trialRemaining = diffDays > 0 ? diffDays : 0
-          if (diffDays <= 0) expired = true
-        }
+      const status = data?.status || 'none';
+      const planId = data?.plan || null; // no free plan
+      const trialEndsAt = data?.trial_ends_at ? new Date(data.trial_ends_at) : null;
+      const subscriptionExpiresAt = data?.subscription_expires_at
+        ? new Date(data.subscription_expires_at)
+        : null;
 
-        if (data.status === 'expired' || data.status === 'none') expired = true
+      // Plan limits (no free plan)
+      const PLAN_LIMITS: Record<string, number | null> = {
+        basic: 10,
+        pro: 20,
+        premium: Infinity,
+      };
 
-        if (expired) {
-          setExpired(true)
-          toast('⚠ Your subscription or trial has expired. Please renew to continue using Sky Realty.')
-          router.push('/subscription')
-        } else {
-          setTrialDaysLeft(trialRemaining)
-        }
-      } catch (err) {
-        console.error('Failed to check subscription:', err)
+      let isExpired = false;
+      let trialDaysLeft: number | null = null;
+      const now = new Date();
 
-      
+      // If user has no plan at all, treat as expired
+      if (!planId) isExpired = true;
+
+      // Trial check
+      if (trialEndsAt) {
+        const diffDays = Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        trialDaysLeft = diffDays > 0 ? diffDays : 0;
+        if (diffDays <= 0) isExpired = true;
       }
-    }
 
-    checkSubscription()
-  }, [user?.id, router])
+      // Subscription expiry check
+      if (subscriptionExpiresAt && subscriptionExpiresAt <= now) isExpired = true;
 
+      // Inactive statuses
+      if (['expired', 'none', 'canceled'].includes(status)) isExpired = true;
 
+      // Update dashboard state
+      setPlan(planId as PlanType);
+      setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : 0);
+      setTrialDaysLeft(trialDaysLeft);
+      setSubscriptionActive(!isExpired);
+      setExpired(isExpired);
 
-  // ---------------- Fetch plan ----------------
-  useEffect(() => {
-    if (!user?.id) return
-
-    const PLAN_LIMITS: Record<string, number | null> = {
-      free: 1,
-      basic: 10,
-      pro: 20,
-      premium: Infinity,
-    }
-
-    const fetchPlan = async () => {
-      try {
-        const res = await fetch(`/api/ziina?user=${user.id}`)
-        if (!res.ok) throw new Error(`Failed to fetch subscription: ${res.status}`)
-        const data = await res.json()
-
-        const planId: string = data?.plan ?? 'free'
-        const limit = PLAN_LIMITS[planId] ?? 1
-
-        setPlan(planId as PlanType)
-        setPropertyLimit(limit)
-      } catch (err) {
-        console.error('❌ Failed to load subscription:', err)
-        setPlan('free')
-        setPropertyLimit(1)
-      } finally {
-        setLoading(false)
+      // Redirect if expired/no plan
+      if (isExpired) {
+        toast('⚠ You need a subscription to access the dashboard. Please subscribe.');
+        router.push('/subscription'); // stay on subscription page
       }
+    } catch (err) {
+      console.error('❌ Subscription check failed:', err);
+      setPlan(null);
+      setPropertyLimit(0);
+      setTrialDaysLeft(null);
+      setSubscriptionActive(false);
+      setExpired(true);
+      toast('⚠ Unable to verify subscription. Please subscribe.');
+      router.push('/subscription');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchPlan()
-  }, [user?.id])
+  fetchSubscription();
+}, [user?.id, router]);
 
   // ---------------- Fetch properties, tenants, notifications ----------------
   useEffect(() => {
@@ -231,6 +227,12 @@ export default function RealtorDashboard() {
       {/* Main content */}
       <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-[#222224]">
 
+
+           <div className='flex items-center gap-4'>
+            
+            <Profile />
+          </div>
+
         {/* 🟢 Trial or subscription banner */}
         {trialDaysLeft !== null && !expired && (
           <div className="bg-yellow-500 text-black text-center py-2 rounded-md font-semibold">
@@ -241,16 +243,11 @@ export default function RealtorDashboard() {
         )}
 
 
-         <div className='flex items-center gap-4'>
-            <button onClick={handleRefresh} className="bg-[#302cfc] hover:bg-[#241fd9] px-4 py-2 rounded flex items-center gap-4 justify-end">
-              <RotateCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh
-            </button>
-            <Profile />
-          </div>
+
 
 
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
+          <h1 className="text-2xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
         </div>
 
         {/* Stats */}

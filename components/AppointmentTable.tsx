@@ -266,20 +266,20 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
   }, [appointments, searchTerm])
 
   return (
-    <section className="bg-gray-950 p-6 rounded-md text-white border border-gray-700">
+    <section className="bg-gray-700 p-6 rounded-md text-white border border-gray-700">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Appointments</h2>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-700">
           <p className="text-gray-400 text-sm">Scheduled</p>
           <p className="text-yellow-400 text-xl font-semibold">{stats.scheduled}</p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-700">
           <p className="text-gray-400 text-sm">Completed</p>
           <p className="text-green-400 text-xl font-semibold">{stats.completed}</p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-700">
           <p className="text-gray-400 text-sm">Canceled</p>
           <p className="text-red-400 text-xl font-semibold">{stats.canceled}</p>
         </div>
@@ -461,6 +461,212 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Mobile card view */}
+<div className="md:hidden flex flex-col gap-4">
+  {/* Add new appointment form */}
+  <div className="bg-gray-800 p-4 rounded-md border border-gray-700 flex flex-col gap-3">
+    <h3 className="text-[#302cfc] font-semibold mb-2">Add Appointment</h3>
+
+    <div className="flex flex-col gap-2">
+      <label className="text-gray-400 text-sm">Tenant</label>
+      <select
+        value={newTenantId}
+        onChange={(e) => setNewTenantId(e.target.value)}
+        className="bg-gray-900 text-white p-2 rounded border border-gray-700"
+      >
+        <option value="">Select tenant</option>
+        {tenants.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.full_name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="flex flex-col gap-2">
+      <label className="text-gray-400 text-sm">Date</label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="text-left text-white bg-gray-900 w-full">
+            {newDate ? format(newDate, 'yyyy-MM-dd') : 'Select Date'}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="p-0 w-[90vw] sm:w-auto max-w-[100vw] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0"
+         align="center"
+          sideOffset={8}
+           >
+          <Calendar mode="single" selected={newDate} onSelect={setNewDate} />
+        </PopoverContent>
+      </Popover>
+    </div>
+
+    <div className="flex flex-col gap-2">
+      <label className="text-gray-400 text-sm">Time</label>
+      <Input
+        type="time"
+        value={newTime}
+        onChange={(e) => setNewTime(e.target.value)}
+        className="bg-gray-900 text-white"
+      />
+    </div>
+
+    <div className="flex flex-col gap-2">
+      <label className="text-gray-400 text-sm">Status</label>
+      <Select value={newStatus} onValueChange={(val) => setNewStatus(val as Appointment['status'])}>
+        <SelectTrigger className="bg-gray-900 text-white border border-gray-700">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="bg-gray-900 text-white">
+          <SelectItem value="Scheduled">Scheduled</SelectItem>
+          <SelectItem value="Completed">Completed</SelectItem>
+          <SelectItem value="Canceled">Canceled</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <Button
+      onClick={handleAddAppointment}
+      disabled={adding}
+      className="bg-[#302cfc] hover:bg-[#241fd9]"
+    >
+      {adding ? 'Adding...' : 'Add Appointment'}
+    </Button>
+  </div>
+
+  {/* Existing appointments */}
+  {filteredAppointments.map((appt) => {
+    const dateObj = new Date(appt.appointment_date)
+    const isEditing = editingId === appt.id
+    return (
+      <div
+        key={appt.id}
+        className="bg-gray-800 p-4 rounded-md border border-gray-700 flex flex-col gap-3"
+      >
+        <div className="flex flex-col gap-1">
+          <span className="text-gray-400 text-sm">Tenant</span>
+          {isEditing ? (
+            <Input
+              value={editTenantId}
+              onChange={(e) => setEditTenantId(e.target.value)}
+              className="bg-gray-900 text-white"
+            />
+          ) : (
+            <p>{appt.tenant_name}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-gray-400 text-sm">Date</span>
+          {isEditing ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full text-left text-white bg-gray-900">
+                  {editDate ? format(editDate, 'yyyy-MM-dd') : format(dateObj, 'yyyy-MM-dd')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+              className="p-0 w-[90vw] sm:w-auto max-w-[100vw] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0"
+              align="center"
+               sideOffset={8}
+                 >
+                <Calendar
+                  mode="single"
+                  selected={editDate ?? dateObj}
+                  onSelect={setEditDate}
+                />
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <p>{format(dateObj, 'yyyy-MM-dd')}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-gray-400 text-sm">Time</span>
+          {isEditing ? (
+            <Input
+              type="time"
+              value={editTime || format(dateObj, 'HH:mm')}
+              onChange={(e) => setEditTime(e.target.value)}
+              className="bg-gray-900 text-white"
+            />
+          ) : (
+            <p>{format(dateObj, 'HH:mm')}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <span className="text-gray-400 text-sm">Status</span>
+          {isEditing ? (
+            <Select
+              value={editStatus}
+              onValueChange={(val) => setEditStatus(val as Appointment['status'])}
+            >
+              <SelectTrigger className="bg-gray-900 text-white border border-gray-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 text-white">
+                <SelectItem value="Scheduled">Scheduled</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Canceled">Canceled</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <p>{appt.status}</p>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-2">
+          {isEditing ? (
+            <>
+              <Button
+                onClick={() => handleSaveEdit(appt.id)}
+                className="bg-green-600 hover:bg-green-700 flex-1"
+              >
+                Save
+              </Button>
+              <Button
+                onClick={() => setEditingId(null)}
+                className="bg-red-600 hover:bg-red-700 flex-1"
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={() => {
+                  setEditingId(appt.id)
+                  setEditTenantId(appt.tenant_id)
+                  setEditDate(new Date(appt.appointment_date))
+                  setEditTime(format(new Date(appt.appointment_date), 'HH:mm'))
+                  setEditStatus(appt.status)
+                }}
+                className="bg-[#302cfc] hover:bg-[#241fd9] flex-1"
+              >
+                Edit
+              </Button>
+              <Button
+                onClick={() => handleDelete(appt.id)}
+                className="bg-red-600 hover:bg-red-700 flex-1"
+              >
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  })}
+
+  {filteredAppointments.length === 0 && !loading && (
+    <p className="text-gray-400 text-center py-4">No appointments found</p>
+  )}
+</div>
+
+
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
       {loading && <p className="text-gray-400 mt-2">Loading appointments...</p>}

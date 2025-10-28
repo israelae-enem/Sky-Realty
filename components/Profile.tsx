@@ -61,7 +61,7 @@ export default function ProfileDropdown() {
     loadProfilePic();
   }, [isLoaded, user]);
 
-  // Fetch current plan from Ziina API
+  // Fetch current plan
   useEffect(() => {
     if (!user) return;
 
@@ -134,7 +134,7 @@ export default function ProfileDropdown() {
     }
   };
 
-  // Change plan with Ziina
+  // Change plan
   const handleChangePlan = async (planId: string) => {
     if (!user) return;
 
@@ -162,8 +162,6 @@ export default function ProfileDropdown() {
     try {
       await supabase.from("realtors").delete().eq("id", user.id);
       await supabase.from("tenants").delete().eq("id", user.id);
-
-      
       await signOut();
     } catch (err) {
       console.error("Delete account failed", err);
@@ -171,29 +169,23 @@ export default function ProfileDropdown() {
     }
   };
 
-  // Sign out
-  const handleSignOut = async () => {
-    await signOut();
-    window.location.href = "/";
-  };
-
   if (!isLoaded || !user) return null;
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-gray-900 text-white rounded-md shadow-md max-w-md">
+    <div className="flex flex-col gap-4 p-4 sm:p-6 bg-gray-700 text-white rounded-md max-w-sm mx-auto shadow-md">
       {/* Profile Section */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
         {profilePic ? (
           <img
             src={profilePic}
             alt="Profile"
-            className="w-16 h-16 rounded-full object-cover"
+            className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover"
           />
         ) : (
-          <UserCircle className="w-16 h-16 text-gray-400" />
+          <UserCircle className="w-14 h-14 sm:w-16 sm:h-16 text-gray-100" />
         )}
-        <div className="flex flex-col gap-2">
-          <label className="cursor-pointer text-sm text-blue-400 hover:underline">
+        <div className="flex flex-col gap-1 sm:gap-2 text-center sm:text-left w-full">
+          <label className="cursor-pointer text-sm sm:text-base text-blue-400 hover:underline">
             {loading ? "Uploading..." : "Upload Photo"}
             <input
               type="file"
@@ -206,7 +198,7 @@ export default function ProfileDropdown() {
           {profilePic && (
             <button
               onClick={deleteProfilePic}
-              className="flex items-center gap-1 text-red-400 text-sm hover:underline"
+              className="flex items-center justify-center sm:justify-start gap-1 text-red-400 text-sm hover:underline"
             >
               <Trash2 className="w-4 h-4" /> Delete Photo
             </button>
@@ -219,56 +211,58 @@ export default function ProfileDropdown() {
         <PopoverTrigger asChild>
           <Button className="bg-blue-600 hover:bg-blue-700 w-full">Manage Account</Button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 p-4 space-y-4">
-          <p className="font-semibold text-blue-500">Email:</p>
-          <p className="text-sm">{user.emailAddresses[0]?.emailAddress}</p>
+        <PopoverContent className="w-full max-w-xs p-4 space-y-3 sm:space-y-4 overflow-auto">
+          <div>
+            <p className="font-semibold text-blue-400 text-sm sm:text-base">Email:</p>
+            <p className="text-xs sm:text-sm truncate">{user.emailAddresses[0]?.emailAddress}</p>
+          </div>
 
-          <p className="font-semibold mt-2 text-blue-500">Current Plan:</p>
-          <p className="text-sm capitalize">{currentPlan.plan}</p>
+          <div>
+            <p className="font-semibold text-blue-400 text-sm sm:text-base">Current Plan:</p>
+            <p className="text-xs sm:text-sm capitalize">{currentPlan.plan}</p>
+          </div>
 
-          <p className="font-semibold mt-2 text-blue-500">Property Limit:</p>
-          <p className="text-sm">
-            {currentPlan.propertyLimit === null
-              ? "Unlimited"
-              : currentPlan.propertyLimit}
-          </p>
+          <div>
+            <p className="font-semibold text-blue-400 text-sm sm:text-base">Property Limit:</p>
+            <p className="text-xs sm:text-sm">
+              {currentPlan.propertyLimit === null ? "Unlimited" : currentPlan.propertyLimit}
+            </p>
+          </div>
 
-          <p className="font-semibold mt-2 text-blue-500">Change Plan:</p>
-          <Select
-            onValueChange={handleChangePlan}
-            defaultValue={currentPlan.plan}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Plan" />
-            </SelectTrigger>
-            <SelectContent>
-              {PLAN_OPTIONS.map((plan) => (
-                <SelectItem
-                  key={plan.id}
-                  value={plan.id}
-                  disabled={plan.id === currentPlan.plan}
-                >
-                  {plan.name} –{" "}
-                  {plan.propertyLimit === null ? "Unlimited" : plan.propertyLimit} Properties
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div>
+            <p className="font-semibold text-blue-400 text-sm sm:text-base">Change Plan:</p>
+            <Select onValueChange={handleChangePlan} defaultValue={currentPlan.plan}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Plan" />
+              </SelectTrigger>
+              <SelectContent>
+                {PLAN_OPTIONS.map((plan) => (
+                  <SelectItem
+                    key={plan.id}
+                    value={plan.id}
+                    disabled={plan.id === currentPlan.plan}
+                  >
+                    {plan.name} – {plan.propertyLimit === null ? "Unlimited" : plan.propertyLimit                    } Properties
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <Button
             variant="destructive"
             onClick={handleDeleteAccount}
-            className="w-full mt-2"
+            className="w-full mt-2 text-sm sm:text-base"
           >
             Delete Account
           </Button>
 
           <Button
             variant="outline"
-            onClick={handleSignOut}
-            className="w-full"
+            onClick={() => signOut()}
+            className="w-full text-sm sm:text-base flex items-center justify-center gap-2"
           >
-            <LogOut className="w-4 h-4 mr-2 inline" /> Sign Out
+            <LogOut className="w-4 h-4" /> Sign Out
           </Button>
         </PopoverContent>
       </Popover>

@@ -10,7 +10,7 @@ type StatsCardProps = {
 
 const StatsCard = ({ icon, title, value }: StatsCardProps) => {
   return (
-    <div className="bg-black rounded-lg border border-gray-300 p-8 shadow flex items-center space-x-8">
+    <div className="bg-[#222224] rounded-lg border border-gray-300 p-8 shadow flex items-center space-x-8">
       <div className="p-2 bg-[#302cfc] rounded-full text-white">{icon}</div>
       <div>
         <h4 className="text-sm text-gray-200">{title}</h4>

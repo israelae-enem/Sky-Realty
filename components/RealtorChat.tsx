@@ -179,7 +179,7 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
             setSelectedTenant(tenant)
             setMessages([])
           }}
-          className="w-full sm:w-1/2 bg-gray-800 text-white p-2 rounded-md border border-gray-700 focus:outline-none"
+          className="w-full sm:w-1/2 bg-gray-700 text-white p-2 rounded-md border border-gray-700 focus:outline-none"
         >
           <option value="">Select Tenant</option>
           {tenants.map((t) => (
@@ -190,7 +190,7 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
         </select>
 
         {/* Messages */}
-        <div className="flex flex-col h-64 sm:h-80 overflow-y-auto p-2 space-y-2 border border-gray-700 rounded-md">
+        <div className="flex flex-col h-64 sm:h-80 overflow-y-auto p-2 space-y-2 border border-gray-300 rounded-md">
           {selectedTenant ? (
             messages.length > 0 ? (
               messages.map((m) => (
@@ -207,10 +207,10 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
                 </div>
               ))
             ) : (
-              <p className="text-gray-400 text-sm">No messages yet</p>
+              <p className="text-gray-100 text-sm">No messages yet</p>
             )
           ) : (
-            <p className="text-gray-400 text-sm">Select a tenant to start chatting</p>
+            <p className="text-gray-100 text-sm">Select a tenant to start chatting</p>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -223,7 +223,7 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-700 focus:outline-none"
+              className="flex-1 px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-300 focus:outline-none"
             />
             <input
               type="file"

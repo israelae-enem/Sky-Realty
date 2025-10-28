@@ -97,16 +97,18 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 text-white ">
+    <div className="bg-gray-700 rounded-lg p-4 text-white ">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Requests</h2>
-      <table className="min-w-full">
+
+      <div className='hidden md:block overflow-x-auto'></div>
+      <table className="min-w-full border-collapse border border-gray-300">
         <thead>
-          <tr>
-            <th className="px-4 py-2">Title</th>
-            <th className="px-4 py-2">Description</th>
-            <th className="px-4 py-2">Status</th>
-            <th className="px-4 py-2">Priority</th>
-            <th className="px-4 py-2">Actions</th>
+          <tr className='bg-gray-700 text-white'>
+            <th className="px-4 py-2 border border-gray-300">Title</th>
+            <th className="px-4 py-2 border-gray-300 border">Description</th>
+            <th className="px-4 py-2 border border-gray-300">Status</th>
+            <th className="px-4 py-2 border border-gray-300">Priority</th>
+            <th className="px-4 py-2 border border-gray-300">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -141,6 +143,84 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
           ))}
         </tbody>
       </table>
+
+      {/* 📱 Mobile Cards */}
+<div className="md:hidden space-y-4">
+  {requests.map((r) => {
+    const getStatusColor = (status: string) => {
+      switch (status) {
+        case 'completed':
+          return 'bg-green-700'
+        case 'in_progress':
+          return 'bg-yellow-700'
+        default:
+          return 'bg-red-700'
+      }
+    }
+
+    return (
+      <div
+        key={r.id}
+        className="bg-gray-700 rounded-lg p-4 border border-gray-300 space-y-2"
+      >
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold text-[#302cfc]">{r.title}</h3>
+          <span
+            className={`text-xs px-2 py-1 rounded capitalize ${
+              r.status === 'completed'
+                ? 'bg-green-600'
+                : r.status === 'in_progress'
+                ? 'bg-yellow-600'
+                : 'bg-red-600'
+            }`}
+          >
+            {r.status.replace('_', ' ')}
+          </span>
+        </div>
+
+        <p className="text-white text-sm">{r.description}</p>
+
+        <p className="text-sm text-gray-400">
+          Priority:{' '}
+          <span className="text-white">{r.priority || 'Medium'}</span>
+        </p>
+
+        <div className="flex items-center justify-between mt-2">
+          {r.media_url ? (
+            <a
+              href={r.media_url}
+              target="_blank"
+              className="text-blue-400 text-sm underline"
+            >
+              View Attachment
+            </a>
+          ) : (
+            <span className="text-gray-500 text-sm">No file</span>
+          )}
+
+          <select
+            value={r.status}
+            onChange={(e) => updateStatus(r.id, e.target.value)}
+            className={`text-white text-sm px-2 py-1 rounded transition-colors ${getStatusColor(
+              r.status
+            )}`}
+          >
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+      </div>
+    )
+  })}
+
+  {!requests.length && !loading && (
+    <p className="text-gray-400 text-center">No maintenance requests yet.</p>
+  )}
+</div>
+
+
+
       {loading && <p className="mt-2 text-gray-400">Loading...</p>}
     </div>
   )

@@ -300,7 +300,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Full Name"
                   value={newTenant.full_name}
                   onChange={(e) => setNewTenant({ ...newTenant, full_name: e.target.value })}
-                  className="bg-gray-800 text-white"
+                  className="bg-gray-800 text-white mb-5"
                 />
               
               
@@ -308,7 +308,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Email"
                   value={newTenant.email}
                   onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
-                  className="bg-gray-800 text-white"
+                  className="bg-gray-800 text-white mb-5"
                 />
               
               
@@ -316,14 +316,14 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Phone"
                   value={newTenant.phone}
                   onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
-                  className="bg-gray-800 text-white"
+                  className="bg-gray-800 text-white mb-5"
                 />
               
               
                 <select
                   value={newTenant.property_id}
                   onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 mb-5"
                 >
                   <option value="">Select property</option>
                   {properties.map((p) => (
