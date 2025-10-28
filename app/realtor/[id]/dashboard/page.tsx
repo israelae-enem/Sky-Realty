@@ -21,6 +21,7 @@ import LegalDocumentsTable from '@/components/LegalDocumentTable'
 import Profile from '@/components/Profile'
 import RealtorChat from '@/components/RealtorChat'
 import TeamAccordion from '@/components/TeamAccordion'
+import Sidebar from '@/components/sidebar'
 
 
 interface Stats {
@@ -46,6 +47,21 @@ interface Notification {
   read: boolean
   created_at: string
 }
+
+
+const links = [
+  { label: 'Properties', href: '#properties' },
+  { label: 'Your Tenants', href: '#tenants' },
+  { label: 'Rent Tracking', href: '#rent-payments' },
+  { label: 'Maintenance Requests', href: '#maintenance' },
+  { label: 'Notifications', href: '#notifications' },
+  { label: 'Chats', href: '#chat' },
+  { label: 'Appointments', href: '#appointments' },
+  { label: 'Rent Analytics', href: '#rent-analytics' },
+  { label: 'Documents Templates', href: '/legal-doc' },
+  { label: 'Your Documents', href: '#legal-docs' },
+  { label: 'Team', href: '#team' },
+]
 
 export default function RealtorDashboard() {
   const { user } = useUser()
@@ -210,24 +226,7 @@ export default function RealtorDashboard() {
   return (
     <div className="flex min-h-screen bg-black text-white">
       {/* Sidebar */}
-      <aside className="w-64 bg-black border-r border-gray-700 p-4 flex flex-col">
-        <h2 className="text-xl font-bold text-[#302cfc] mb-6">Sky Realty</h2>
-        <nav className="flex flex-col gap-2">
-          <Link href="#properties" className="hover:text-[#302cfc]">Properties</Link>
-          <Link href="#tenants" className="hover:text-[#302cfc]">Your Tenants</Link>
-          <Link href="#rent-payments" className="hover:text-[#302cfc]">Rent Tracking</Link>
-          <Link href="#maintenance" className="hover:text-[#302cfc]">Maintenance Requests</Link>
-          <Link href="#notifications" className="hover:text-[#302cfc]">Notifications</Link>
-          <Link href="#chat" className="hover:text-[#302cfc]">Chats</Link>
-          <Link href="#appointments" className="hover:text-[#302cfc]">Appointments</Link>
-          <Link href="#rent-analytics" className="hover:text-[#302cfc]">Rent Analytics</Link>          
-          <Link href="/legal-doc" className="hover:text-[#302cfc]">Documents Templates</Link>
-          <Link href="#legal-docs" className="hover:text-[#302cfc]">Your Documents</Link>
-          <Link href="#team" className="hover:text-[#302cfc]"> Team</Link>
-
-          
-        </nav>
-      </aside>
+       <Sidebar links={links} />
 
       {/* Main content */}
       <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-black">
