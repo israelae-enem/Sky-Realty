@@ -48,7 +48,7 @@ export default function RentAnalyticsChart() {
   }
 
   return (
-    <div className="bg-[#222224] p-6 rounded-lg mb-6">
+    <div className="bg-[#0d0d0e] p-6 rounded-lg mb-6">
       <Bar data={data} options={options} />
     </div>
   )

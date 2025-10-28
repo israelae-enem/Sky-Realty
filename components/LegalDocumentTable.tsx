@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabaseClient'
+import Link from 'next/link'
 
 interface LegalDocument {
   id: string
@@ -21,7 +22,6 @@ export default function LegalDocumentsTable() {
   const [documents, setDocuments] = useState<LegalDocument[]>([])
   const [loading, setLoading] = useState(true)
 
-  // 🧩 Fetch all documents belonging to this realtor
   useEffect(() => {
     if (!user?.id) return
 
@@ -34,7 +34,6 @@ export default function LegalDocumentsTable() {
       if (error) {
         console.error('❌ Error fetching documents:', error)
       } else {
-        // Filter documents to only those owned by the realtor
         const filtered = (data || []).filter(
           (doc) => doc.properties?.realtor_id === user.id
         )
@@ -45,16 +44,12 @@ export default function LegalDocumentsTable() {
 
     fetchDocuments()
 
-    // 🧠 Realtime listener for new/updated/deleted legal_documents
     const channel = supabase
       .channel('legal_documents_changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'legal_documents' },
-        (payload) => {
-          console.log('📡 Realtime change detected:', payload)
-          fetchDocuments()
-        }
+        () => fetchDocuments()
       )
       .subscribe()
 
@@ -65,7 +60,7 @@ export default function LegalDocumentsTable() {
 
   if (loading) {
     return (
-      <div className="bg-gray-800 p-6 rounded-lg text-white">
+      <div className="bg-[#0d0d0e] p-6 rounded-lg text-white">
         <h2 className="text-xl font-semibold mb-4">Legal Documents</h2>
         <p className="text-gray-400">Loading documents...</p>
       </div>
@@ -74,13 +69,23 @@ export default function LegalDocumentsTable() {
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg text-white">
-      <h2 className="text-xl font-semibold mb-4">Legal Documents</h2>
+      {/* Header with button */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Legal Documents</h2>
+        <Link
+          href="/legal-doc"
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-all duration-200"
+        >
+          📄 Document Templates
+        </Link>
+      </div>
+
       {documents.length === 0 ? (
         <p className="text-gray-400">No legal documents found.</p>
       ) : (
         <table className="w-full border-collapse flex flex-col">
           <thead>
-            <tr className="border-b border-gray-700 text-left">
+            <tr className="border-b border-gray-300 text-left">
               <th className="py-2 px-3">Type</th>
               <th className="py-2 px-3">Tenant</th>
               <th className="py-2 px-3">Property</th>
@@ -90,7 +95,10 @@ export default function LegalDocumentsTable() {
           </thead>
           <tbody>
             {documents.map((doc) => (
-              <tr key={doc.id} className="border-b border-gray-700 hover:bg-gray-700/50">
+              <tr
+                key={doc.id}
+                className="border-b border-gray-300 hover:bg-black/50"
+              >
                 <td className="py-2 px-3 capitalize">{doc.type}</td>
                 <td className="py-2 px-3">{doc.tenants?.full_name || '—'}</td>
                 <td className="py-2 px-3">{doc.properties?.address || '—'}</td>

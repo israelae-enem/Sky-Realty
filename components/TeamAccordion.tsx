@@ -97,7 +97,7 @@ export default function Team() {
   const limit = TEAM_LIMITS[plan]
 
   return (
-    <div className="bg-gray-700 rounded-lg p-4 sm:p-6 space-y-6 text-white w-full max-w-3xl mx-auto">
+    <div className="bg-[#0d0d0e] rounded-lg p-4 sm:p-6 space-y-6 text-white w-full max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
         <h2 className="text-xl sm:text-2xl font-semibold text-blue-400 flex items-center gap-2">
@@ -120,7 +120,7 @@ export default function Team() {
       {canInvite && (
         <div className="space-y-2">
           <button
-            className="flex justify-between items-center w-full bg-gray-700 p-3 rounded-md"
+            className="flex justify-between items-center w-full bg-[#0d0d0e] p-3 rounded-md"
             onClick={() => setInviteCollapsed((prev) => !prev)}
           >
             <span className="font-medium text-white">Invite Member</span>
@@ -132,7 +132,7 @@ export default function Team() {
                 placeholder="Enter email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-gray-700 text-white flex-1"
+                className="bg-[#0d0d0e] text-white flex-1"
               />
               <Button
                 onClick={handleInvite}
@@ -148,7 +148,7 @@ export default function Team() {
       )}
 
       {!canInvite && (
-        <div className="p-4 bg-gray-700 rounded text-center text-gray-100">
+        <div className="p-4 bg-[#0d0d0e] rounded text-center text-gray-100">
           Upgrade to <span className="text-blue-400">Basic</span>,{' '}
           <span className="text-blue-400">Pro</span> or{' '}
           <span className="text-blue-400">Premium</span> to add team members.
@@ -158,7 +158,7 @@ export default function Team() {
       {/* Members Section */}
       <div className="space-y-2">
         <button
-          className="flex justify-between items-center w-full bg-gray-100 p-3 rounded-md"
+          className="flex justify-between items-center w-full bg-[#0d0d0e] p-3 rounded-md"
           onClick={() => setMembersCollapsed((prev) => !prev)}
         >
           <span className="font-medium text-white">Your Team</span>
@@ -170,13 +170,13 @@ export default function Team() {
               memberships.data.map((member) => (
                 <li
                   key={member.id}
-                  className="bg-gray-100 p-4 rounded-md flex flex-col justify-between space-y-2"
+                  className="bg-[#0d0d0e] p-4 rounded-md flex flex-col justify-between space-y-2"
                 >
                   <div>
                     <p className="font-medium text-white truncate">
                       {member.publicUserData?.identifier || 'Unknown'}
                     </p>
-                    <p className="text-sm text-gray-400">{member.role}</p>
+                    <p className="text-sm text-gray-100">{member.role}</p>
                   </div>
                   {member.role !== 'org:admin' && (
                     <Button
@@ -204,7 +204,7 @@ export default function Team() {
       {invitations?.data?.length ? (
         <div className="space-y-2">
           <button
-            className="flex justify-between items-center w-full bg-gray-700 p-3 rounded-md"
+            className="flex justify-between items-center w-full bg-[#0d0d0e] p-3 rounded-md"
             onClick={() => setInvitationsCollapsed((prev) => !prev)}
           >
             <span className="font-medium text-white">Pending Invitations</span>
@@ -215,7 +215,7 @@ export default function Team() {
               {invitations.data.map((inv) => (
                 <li
                   key={inv.id}
-                  className="flex flex-col sm:flex-row justify-between sm:items-center bg-gray-700 p-4 rounded-md"
+                  className="flex flex-col sm:flex-row justify-between sm:items-center bg-[#0d0d0e] p-4 rounded-md"
                 >
                   <p className="text-gray-300 mb-2 sm:mb-0">{inv.emailAddress}</p>
                   <Button

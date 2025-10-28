@@ -97,13 +97,13 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
   }
 
   return (
-    <div className="bg-gray-700 rounded-lg p-4 text-white ">
+    <div className="bg-[#0d0d0e] rounded-lg p-4 text-white ">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Requests</h2>
 
       <div className='hidden md:block overflow-x-auto'></div>
       <table className="min-w-full border-collapse border border-gray-300">
         <thead>
-          <tr className='bg-gray-700 text-white'>
+          <tr className='bg-[#0d0d0e] text-white'>
             <th className="px-4 py-2 border border-gray-300">Title</th>
             <th className="px-4 py-2 border-gray-300 border">Description</th>
             <th className="px-4 py-2 border border-gray-300">Status</th>
@@ -113,14 +113,14 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
         </thead>
         <tbody>
           {requests.map((r) => (
-            <tr key={r.id} className="hover:bg-gray-700">
+            <tr key={r.id} className="hover:bg-black">
               <td className="border px-4 py-2">{r.title}</td>
               <td className="border px-4 py-2">{r.description}</td>
               <td className="border px-4 py-2">
                 <select
                   value={r.status}
                   onChange={(e) => updateStatus(r.id, e.target.value)}
-                  className="w-full bg-gray-700 text-white px-2 py-1 rounded"
+                  className="w-full bg-[#0d0d0e] text-white px-2 py-1 rounded"
                 >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In Progress</option>
@@ -145,9 +145,9 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
       </table>
 
       {/* 📱 Mobile Cards */}
-<div className="md:hidden space-y-4">
-  {requests.map((r) => {
-    const getStatusColor = (status: string) => {
+   <div className="md:hidden flex flex-col space-y-4">
+      {requests.map((r) => {
+       const getStatusColor = (status: string) => {
       switch (status) {
         case 'completed':
           return 'bg-green-700'
@@ -161,7 +161,7 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
     return (
       <div
         key={r.id}
-        className="bg-gray-700 rounded-lg p-4 border border-gray-300 space-y-2"
+        className="bg-[#0d0d0e] rounded-lg p-4 border border-gray-300 space-y-2"
       >
         <div className="flex justify-between items-center">
           <h3 className="font-semibold text-[#302cfc]">{r.title}</h3>

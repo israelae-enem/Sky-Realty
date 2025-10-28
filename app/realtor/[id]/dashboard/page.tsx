@@ -49,19 +49,9 @@ interface Notification {
 }
 
 
-const links = [
-  { label: 'Properties', href: '#properties' },
-  { label: ' Tenants', href: '#tenants' },
-  { label: 'Rent Tracking', href: '#rent-payments' },
-  { label: 'Maintenance Requests', href: '#maintenance' },
-  { label: 'Notifications', href: '#notifications' },
-  { label: 'Chats', href: '#chat' },
-  { label: 'Appointments', href: '#appointments' },
-  { label: 'Rent Analytics', href: '#rent-analytics' },
-  { label: 'Documents Templates', href: '/legal-doc' },
-  { label: 'Your Documents', href: '#legal-docs' },
-  { label: 'Team', href: '#team' },
-]
+
+
+
 
 export default function RealtorDashboard() {
   const { user } = useUser()
@@ -220,15 +210,13 @@ export default function RealtorDashboard() {
   if (loading) return <p className="p-8 text-center text-white">Loading dashboard...</p>
 
   return (
-    <div className="flex min-h-screen bg-[#222224] text-white">
+    <div className="flex min-h-screen bg-black text-white">
       {/* Sidebar */}
-       <Sidebar links={links} />
+       
 
       {/* Main content */}
-      <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-[#222224]">
-
-
-           <div className='flex items-center gap-4'>
+      <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-black">
+           <div className='ml-auto'>
             
             <Profile />
           </div>
@@ -359,17 +347,11 @@ export default function RealtorDashboard() {
               </AccordionItem>
               
 
-
               {/* Chat Component */}
              <Accordion type="single" collapsible className="w-full mt-8 space-y-6">
              {/* other accordion items */}
               {user?.id && <RealtorChat tenants={tenants} user={{ id: user.id }} />}
              </Accordion>
-
-          
-
-        
-
          
         </Accordion>
       </main>

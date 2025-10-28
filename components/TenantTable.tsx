@@ -190,7 +190,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
   }
 
   return (
-    <section className="mt-8 bg-gray-800 p-4 rounded-md border border-gray-700 text-white">
+    <section className="mt-8 bg-[#0d0d0e] p-4 rounded-md border border-gray-300 text-white">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Your Tenants</h2>
 
       {/* Search */}
@@ -198,13 +198,13 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
         placeholder="Search tenants by name or email..."
         value={search}
         onChange={(e) => handleSearch(e.target.value)}
-        className="mb-4 bg-gray-800 text-white"
+        className="mb-4 bg-[#0d0d0e] text-white"
       />
 
-      <div className="overflow-x-auto rounded-md border border-gray-700 hidden md:block">
+      <div className="overflow-x-auto rounded-md border border-gray-300 hidden md:block">
         <Table className="min-w-full text-white">
           <TableHeader>
-            <TableRow className='hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+            <TableRow className='hover:bg-black focus:bg-black active:bg-black'>
               <TableHead className="text-white">Name</TableHead>
               <TableHead className="text-white">Email</TableHead>
               <TableHead className="text-white">Phone</TableHead>
@@ -214,7 +214,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
           </TableHeader>
           <TableBody>
             {/* Add Tenant Row */}
-            <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+            <TableRow className=' hover:bg-black focus:bg-black active:bg-black'>
               <TableCell>
                 <Input
                   placeholder="Full Name"
@@ -228,7 +228,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Email"
                   value={newTenant.email}
                   onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
-                  className="bg-gray-800 text-white"
+                  className="bg-[#0d0d0e] text-white"
                 />
               </TableCell>
               <TableCell>
@@ -236,14 +236,14 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Phone"
                   value={newTenant.phone}
                   onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
-                  className="bg-gray-800 text-white"
+                  className="bg-[#0d0d0e] text-white"
                 />
               </TableCell>
               <TableCell>
                 <select
                   value={newTenant.property_id}
                   onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+                  className="w-full bg-[#0d0d0e] text-white p-2 rounded border border-gray-300"
                 >
                   <option value="">Select property</option>
                   {properties.map((p) => (
@@ -262,7 +262,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
 
             {/* Existing tenants */}
             {filteredTenants.length === 0 && !loading && (
-              <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+              <TableRow className=' hover:bg-black focus:bg-black active:bg-black'>
                 <TableCell colSpan={5} className="text-center py-4 text-gray-400">
                   No tenants found
                 </TableCell>
@@ -300,7 +300,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Full Name"
                   value={newTenant.full_name}
                   onChange={(e) => setNewTenant({ ...newTenant, full_name: e.target.value })}
-                  className="bg-gray-800 text-white mb-5"
+                  className="bg-[#0d0d0e] text-white mb-5"
                 />
               
               
@@ -308,7 +308,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Email"
                   value={newTenant.email}
                   onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
-                  className="bg-gray-800 text-white mb-5"
+                  className="bg-[#0d0d0e] text-white mb-5"
                 />
               
               
@@ -316,14 +316,14 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
                   placeholder="Phone"
                   value={newTenant.phone}
                   onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
-                  className="bg-gray-800 text-white mb-5"
+                  className="bg-[#0d0d0e] text-white mb-5"
                 />
               
               
                 <select
                   value={newTenant.property_id}
                   onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700 mb-5"
+                  className="w-full bg-[#0d0d0e] text-white p-2 rounded border border-gray-300 mb-5"
                 >
                   <option value="">Select property</option>
                   {properties.map((p) => (

@@ -266,20 +266,20 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
   }, [appointments, searchTerm])
 
   return (
-    <section className="bg-gray-700 p-6 rounded-md text-white border border-gray-700">
+    <section className="bg-[#0d0d0e] p-6 rounded-md text-white border border-gray-300">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Appointments</h2>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-300">
           <p className="text-gray-400 text-sm">Scheduled</p>
           <p className="text-yellow-400 text-xl font-semibold">{stats.scheduled}</p>
         </div>
-        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-300">
           <p className="text-gray-400 text-sm">Completed</p>
           <p className="text-green-400 text-xl font-semibold">{stats.completed}</p>
         </div>
-        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-[#222224] p-4 rounded-md text-center border border-gray-300">
           <p className="text-gray-400 text-sm">Canceled</p>
           <p className="text-red-400 text-xl font-semibold">{stats.canceled}</p>
         </div>
@@ -290,13 +290,13 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
         placeholder="Search tenant..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="mb-4 bg-gray-800 text-white"
+        className="mb-4 bg-[#0d0d0e] text-white"
       />
 
-      <div className="overflow-x-auto">
-        <Table className="min-w-full hover:bg-gray-800">
+      <div className="overflow-x-auto hidden md:block rounded-md border">
+        <Table className="min-w-full hover:black">
           <TableHeader>
-            <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+            <TableRow className=' hover:bg-black focus:bg-black active:bg-black'>
               <TableHead className='text-white'>Tenant</TableHead>
               <TableHead className='text-white'>Date</TableHead>
               <TableHead className='text-white'>Time</TableHead>
@@ -306,12 +306,12 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
           </TableHeader>
           <TableBody>
             {/* Add row */}
-            <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+            <TableRow className=' hover:bg-black focus:bg-black active:bg-black'>
               <TableCell>
                <select
                value={newTenantId}
                 onChange={(e) => setNewTenantId(e.target.value)}
-               className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+               className="w-full bg-[#0d0d0e] text-white p-2 rounded border border-gray-300"
                 >
                <option value="">Select tenant</option>
                {tenants.map((t) => (
@@ -325,7 +325,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
               <TableCell>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full text-left text-white bg-gray-800">
+                    <Button variant="outline" className="w-full text-left text-white bg-[#0d0d0e]">
                       {newDate ? format(newDate, 'yyyy-MM-dd') : 'Select Date'}
                     </Button>
                   </PopoverTrigger>
@@ -339,10 +339,10 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
               </TableCell>
               <TableCell>
                 <Select value={newStatus} onValueChange={val => setNewStatus(val as Appointment['status'])}>
-                  <SelectTrigger className="bg-gray-800 text-white w-32 border border-gray-700">
+                  <SelectTrigger className="bg-[#0d0d0e] text-white w-32 border border-gray-300">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 text-white">
+                  <SelectContent className="bg-[#0d0d0e] text-white">
                     <SelectItem value="Scheduled">Scheduled</SelectItem>
                     <SelectItem value="Completed">Completed</SelectItem>
                     <SelectItem value="Canceled">Canceled</SelectItem>
@@ -361,10 +361,10 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
               const isEditing = editingId === appt.id
               const dateObj = new Date(appt.appointment_date)
               return (
-                <TableRow key={appt.id} className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+                <TableRow key={appt.id} className=' hover:bg-black focus:bg-black active:bg-black'>
                   <TableCell>
                     {isEditing ? (
-                      <Input value={editTenantId} onChange={e => setEditTenantId(e.target.value)} list="tenant-list" className="bg-gray-800 text-white"/>
+                      <Input value={editTenantId} onChange={e => setEditTenantId(e.target.value)} list="tenant-list" className="bg-[#0d0d0e] text-white"/>
                     ) : (
                       appt.tenant_name
                     )}
@@ -373,7 +373,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
                     {isEditing ? (
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full text-left text-white bg-gray-800">
+                          <Button variant="outline" className="w-full text-left text-white bg-[#0d0d0e]">
                             {editDate ? format(editDate, 'yyyy-MM-dd') : format(dateObj, 'yyyy-MM-dd')}
                           </Button>
                         </PopoverTrigger>
@@ -387,7 +387,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
                   </TableCell>
                   <TableCell>
                     {isEditing ? (
-                      <Input type="time" value={editTime || format(dateObj, 'HH:mm')} onChange={e => setEditTime(e.target.value)} className="bg-gray-800 text-white"/>
+                      <Input type="time" value={editTime || format(dateObj, 'HH:mm')} onChange={e => setEditTime(e.target.value)} className="bg-[#0d0d0e] text-white"/>
                     ) : (
                       format(dateObj, 'HH:mm')
                     )}
@@ -395,10 +395,10 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
                   <TableCell>
                     {isEditing ? (
                       <Select value={editStatus} onValueChange={val => setEditStatus(val as Appointment['status'])}>
-                        <SelectTrigger className="bg-gray-800 text-white w-32 border border-gray-700">
+                        <SelectTrigger className="bg-[#0d0d0e] text-white w-32 border border-gray-300">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 text-white">
+                        <SelectContent className="bg-[#0d0d0e] text-white">
                           <SelectItem value="Scheduled">Scheduled</SelectItem>
                                                     <SelectItem value="Completed">Completed</SelectItem>
                           <SelectItem value="Canceled">Canceled</SelectItem>
@@ -465,15 +465,15 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
       {/* Mobile card view */}
 <div className="md:hidden flex flex-col gap-4">
   {/* Add new appointment form */}
-  <div className="bg-gray-800 p-4 rounded-md border border-gray-700 flex flex-col gap-3">
+  <div className=" rounded-md border border-gray-300 gap-3">
     <h3 className="text-[#302cfc] font-semibold mb-2">Add Appointment</h3>
 
-    <div className="flex flex-col gap-2">
+    <div className="flex gap-2">
       <label className="text-gray-400 text-sm">Tenant</label>
       <select
         value={newTenantId}
         onChange={(e) => setNewTenantId(e.target.value)}
-        className="bg-gray-900 text-white p-2 rounded border border-gray-700"
+        className="bg-[#0d0d0e] text-white p-2 rounded border border-gray-300"
       >
         <option value="">Select tenant</option>
         {tenants.map((t) => (
@@ -484,7 +484,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
       </select>
     </div>
 
-    <div className="flex flex-col gap-2">
+    <div className="flex gap-2">
       <label className="text-gray-400 text-sm">Date</label>
       <Popover>
         <PopoverTrigger asChild>
@@ -502,23 +502,23 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
       </Popover>
     </div>
 
-    <div className="flex flex-col gap-2">
+    <div className="flex gap-2">
       <label className="text-gray-400 text-sm">Time</label>
       <Input
         type="time"
         value={newTime}
         onChange={(e) => setNewTime(e.target.value)}
-        className="bg-gray-900 text-white"
+        className="bg-[#0d0d0e] text-white"
       />
     </div>
 
-    <div className="flex flex-col gap-2">
+    <div className="flex gap-2">
       <label className="text-gray-400 text-sm">Status</label>
       <Select value={newStatus} onValueChange={(val) => setNewStatus(val as Appointment['status'])}>
-        <SelectTrigger className="bg-gray-900 text-white border border-gray-700">
+        <SelectTrigger className="bg-[#0d0d0e] text-white border border-gray-300">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="bg-gray-900 text-white">
+        <SelectContent className="bg-[#0d0d0e] text-white">
           <SelectItem value="Scheduled">Scheduled</SelectItem>
           <SelectItem value="Completed">Completed</SelectItem>
           <SelectItem value="Canceled">Canceled</SelectItem>
@@ -542,27 +542,27 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
     return (
       <div
         key={appt.id}
-        className="bg-gray-800 p-4 rounded-md border border-gray-700 flex flex-col gap-3"
+        className="bg-[#0d0d0e] p-4 rounded-md border border-gray-300 flex gap-3"
       >
-        <div className="flex flex-col gap-1">
+        <div className="flex gap-1">
           <span className="text-gray-400 text-sm">Tenant</span>
           {isEditing ? (
             <Input
               value={editTenantId}
               onChange={(e) => setEditTenantId(e.target.value)}
-              className="bg-gray-900 text-white"
+              className="bg-[#0d0d0e]  text-white"
             />
           ) : (
             <p>{appt.tenant_name}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex gap-1">
           <span className="text-gray-400 text-sm">Date</span>
           {isEditing ? (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full text-left text-white bg-gray-900">
+                <Button variant="outline" className="w-full text-left text-white bg-[#0d0d0e]">
                   {editDate ? format(editDate, 'yyyy-MM-dd') : format(dateObj, 'yyyy-MM-dd')}
                 </Button>
               </PopoverTrigger>
@@ -583,31 +583,31 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
           )}
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex gap-1">
           <span className="text-gray-400 text-sm">Time</span>
           {isEditing ? (
             <Input
               type="time"
               value={editTime || format(dateObj, 'HH:mm')}
               onChange={(e) => setEditTime(e.target.value)}
-              className="bg-gray-900 text-white"
+              className=" bg-[#0d0d0e] text-white"
             />
           ) : (
             <p>{format(dateObj, 'HH:mm')}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex gap-1">
           <span className="text-gray-400 text-sm">Status</span>
           {isEditing ? (
             <Select
               value={editStatus}
               onValueChange={(val) => setEditStatus(val as Appointment['status'])}
             >
-              <SelectTrigger className="bg-gray-900 text-white border border-gray-700">
+              <SelectTrigger className="bg-[#0d0d0e] text-white border border-gray-300">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-gray-900 text-white">
+              <SelectContent className="bg-[#0d0d0e] text-white">
                 <SelectItem value="Scheduled">Scheduled</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
                 <SelectItem value="Canceled">Canceled</SelectItem>
