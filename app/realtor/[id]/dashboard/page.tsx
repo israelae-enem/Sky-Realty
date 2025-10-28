@@ -21,7 +21,7 @@ import LegalDocumentsTable from '@/components/LegalDocumentTable'
 import Profile from '@/components/Profile'
 import RealtorChat from '@/components/RealtorChat'
 import TeamAccordion from '@/components/TeamAccordion'
-import Sidebar from '@/components/sidebar'
+import Sidebar from '@/components/Bar'
 
 
 interface Stats {
