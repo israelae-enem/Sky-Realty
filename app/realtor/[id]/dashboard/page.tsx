@@ -51,7 +51,7 @@ interface Notification {
 
 const links = [
   { label: 'Properties', href: '#properties' },
-  { label: 'Your Tenants', href: '#tenants' },
+  { label: ' Tenants', href: '#tenants' },
   { label: 'Rent Tracking', href: '#rent-payments' },
   { label: 'Maintenance Requests', href: '#maintenance' },
   { label: 'Notifications', href: '#notifications' },
@@ -241,15 +241,16 @@ export default function RealtorDashboard() {
         )}
 
 
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
-
-          <div className='flex items-center gap-4'>
+         <div className='flex items-center gap-4'>
             <button onClick={handleRefresh} className="bg-[#302cfc] hover:bg-[#241fd9] px-4 py-2 rounded flex items-center gap-4 justify-end">
               <RotateCw size={16} className={loading ? 'animate-spin' : ''} /> Refresh
             </button>
             <Profile />
           </div>
+
+
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
         </div>
 
         {/* Stats */}

@@ -272,7 +272,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
   // ----------------- render -----------------
   return (
-    <section className="mt-6 bg-gray-800 p-4 rounded-md border border-gray-300 text-white">
+    <section className="mt-6 bg-gray-950 p-4 rounded-md border border-gray-300 text-white">
       <h2 className="text-2xl mb-4 text-[#302cfc] font-semibold">Your Properties</h2>
 
       {/* search + plan */}
@@ -307,7 +307,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
             {/* Add row */}
             <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
 
-              <TableCell className="p-2">
+              <TableCell className="p-2 bg-gray-900">
                 <Input
                   placeholder="Title"
                   value={newProperty.title ?? ''}
@@ -316,7 +316,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                 />
               </TableCell>
 
-              <TableCell className="p-2">
+              <TableCell className="p-2 bg-gray-900">
                 <Input
                   placeholder="Address"
                   value={newProperty.address ?? ''}
@@ -325,7 +325,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                 />
               </TableCell>
 
-              <TableCell className="p-2">
+              <TableCell className="p-2 bg-gray-900">
                 <Select value={(newProperty.status as string) ?? 'Vacant'} onValueChange={(val) => setNewProperty((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
                   <SelectTrigger className="w-[140px]  border">
                     <SelectValue />
@@ -338,18 +338,20 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                 </Select>
               </TableCell>
 
-              <TableCell className="p-2">
+              <TableCell className="p-2 bg-gray-900">
                 <Input
                   type="date"
+                  placeholder='Start Date'
                   value={newProperty.lease_start ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))}
                   className=" text-white focus:ring focus:ring-[#302cfc]"
                 />
               </TableCell>
 
-              <TableCell className="p-2">
+              <TableCell className="p-2 bg-gray-900">
                 <Input
                   type="date"
+                  placeholder='End Date'
                   value={newProperty.lease_end ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))}
                   className=" text-white focus:ring focus:ring-[#302cfc]"
