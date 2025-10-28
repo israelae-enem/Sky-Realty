@@ -78,7 +78,7 @@ export default function LegalDocumentsTable() {
       {documents.length === 0 ? (
         <p className="text-gray-400">No legal documents found.</p>
       ) : (
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse flex flex-col">
           <thead>
             <tr className="border-b border-gray-700 text-left">
               <th className="py-2 px-3">Type</th>

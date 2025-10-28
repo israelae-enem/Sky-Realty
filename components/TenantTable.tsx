@@ -201,8 +201,8 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
         className="mb-4 bg-gray-800 text-white"
       />
 
-      <div className="overflow-x-auto rounded-md border border-gray-700">
-        <Table className="min-w-full">
+      <div className="overflow-x-auto rounded-md border border-gray-700 hidden md:block">
+        <Table className="min-w-full text-white">
           <TableHeader>
             <TableRow className='hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
               <TableHead className="text-white">Name</TableHead>
@@ -289,6 +289,61 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
           </TableBody>
         </Table>
       </div>
+
+             {/* mobile view */}
+
+      <div className='md:hidden flex flex-col gap-3'>
+        <div className='border border-gray-300 p-3 rounded'>
+
+          
+                <Input
+                  placeholder="Full Name"
+                  value={newTenant.full_name}
+                  onChange={(e) => setNewTenant({ ...newTenant, full_name: e.target.value })}
+                  className="bg-gray-800 text-white"
+                />
+              
+              
+                <Input
+                  placeholder="Email"
+                  value={newTenant.email}
+                  onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
+                  className="bg-gray-800 text-white"
+                />
+              
+              
+                <Input
+                  placeholder="Phone"
+                  value={newTenant.phone}
+                  onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
+                  className="bg-gray-800 text-white"
+                />
+              
+              
+                <select
+                  value={newTenant.property_id}
+                  onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
+                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+                >
+                  <option value="">Select property</option>
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.address}
+                    </option>
+                  ))}
+                </select>
+
+
+               <Button size="sm" onClick={addTenant} disabled={adding}>
+                  <Plus size={16} />
+                </Button>
+              
+
+        </div>
+
+      </div>
+
+
       {loading && <p className="text-gray-400 mt-2">Loading tenants...</p>}
     </section>
   )

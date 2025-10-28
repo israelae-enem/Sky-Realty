@@ -224,12 +224,12 @@ export default function RealtorDashboard() {
   if (loading) return <p className="p-8 text-center text-white">Loading dashboard...</p>
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <div className="flex min-h-screen bg-[#222224] text-white">
       {/* Sidebar */}
        <Sidebar links={links} />
 
       {/* Main content */}
-      <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-black">
+      <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-[#222224]">
 
         {/* 🟢 Trial or subscription banner */}
         {trialDaysLeft !== null && !expired && (

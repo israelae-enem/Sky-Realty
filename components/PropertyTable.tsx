@@ -272,7 +272,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
   // ----------------- render -----------------
   return (
-    <section className="mt-6 bg-gray-950 p-4 rounded-md border border-gray-300 text-white">
+    <section className="mt-6 bg-gray-850 p-4 rounded-md border border-gray-300 text-white">
       <h2 className="text-2xl mb-4 text-[#302cfc] font-semibold">Your Properties</h2>
 
       {/* search + plan */}
@@ -471,8 +471,8 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
       <div className="md:hidden flex flex-col gap-3">
         {/* Add card */}
         <div className=" border border-gray-300 p-3 rounded">
-          <Input placeholder="Title" value={newProperty.title ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))} className="mb-2  text-white" />
-          <Input placeholder="Address" value={newProperty.address ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))} className="mb-2 text-white" />
+          <Input placeholder="Title" value={newProperty.title ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))} className="mb-2  text-white bg-gray-900" />
+          <Input placeholder="Address" value={newProperty.address ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))} className="mb-2 text-white bg-gray-900" />
           <Select value={(newProperty.status as string) ?? 'Vacant'} onValueChange={(val) => setNewProperty((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
             <SelectTrigger className="w-full  border border-gray-600 mb-2"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -482,8 +482,8 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
             </SelectContent>
           </Select>
           <div className="flex gap-2 mb-2">
-            <Input type="date" value={newProperty.lease_start ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))} className=" text-white" />
-            <Input type="date" value={newProperty.lease_end ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))} className=" text-white" />
+            <Input type="date" placeholder='Start Date' value={newProperty.lease_start ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))} className=" text-white bg-gray-900" />
+            <Input type="date" placeholder='End Date' value={newProperty.lease_end ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))} className=" text-white bg-gray-900" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-400 text-sm">Upload after add</span>

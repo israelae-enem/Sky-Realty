@@ -97,7 +97,7 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 text-white">
+    <div className="bg-gray-800 rounded-lg p-4 text-white ">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Requests</h2>
       <table className="min-w-full">
         <thead>

@@ -136,7 +136,7 @@ export default function TenantChat({ tenantId, userId }: TenantChatProps) {
             <div
               key={m.id}
               className={`p-2 rounded-md text-sm max-w-[80%] ${
-                m.sender_id === userId ? 'bg-[#302cfc] text-white self-end' : 'bg-gray-700 text-gray-200 self-start'
+                m.sender_id === userId ? 'bg-[#302cfc] text-white self-end' : 'bg-gray-700 text-gray-100 self-start'
               }`}
             >
               {m.file_url && (

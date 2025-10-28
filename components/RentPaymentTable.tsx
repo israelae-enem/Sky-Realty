@@ -193,20 +193,20 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
   }
 
   return (
-    <section className="mt-8 bg-gray-900 p-4 rounded-md border border-gray-700 text-white hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800">
+    <section className="mt-8 bg-gray-700 p-4 rounded-md border border-gray-300 text-white hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700">
       <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Rent Payments</h2>
 
       {/* ✅ Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-300">
           <p className="text-gray-400 text-sm">Total Paid</p>
           <p className="text-green-400 text-xl font-semibold">${stats.paid.toFixed(2)}</p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-300">
           <p className="text-gray-400 text-sm">Pending</p>
           <p className="text-yellow-400 text-xl font-semibold">${stats.pending.toFixed(2)}</p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-700">
+        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-300">
           <p className="text-gray-400 text-sm">Overdue</p>
           <p className="text-red-400 text-xl font-semibold">${stats.overdue.toFixed(2)}</p>
         </div>
@@ -219,11 +219,11 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
         className="mb-4 bg-gray-800 text-white"
       />
 
-      <div className="overflow-x-auto border border-gray-700 rounded-md">
-        <Table className="min-w-full hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800
+      <div className="overflow-x-auto border border-gray-300 rounded-md flex flex-col">
+        <Table className="min-w-full hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700
          ">
           <TableHeader>
-            <TableRow className='hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+            <TableRow className='hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700'>
              
               <TableHead className="text-white">Tenant</TableHead>
               <TableHead className="text-white">Property</TableHead>
@@ -238,7 +238,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
 
           <TableBody>
             {/* Add Row */}
-            <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
+            <TableRow className=' hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700'>
               <TableCell>
                 <select
                   value={newPayment.tenant_id}
@@ -248,7 +248,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
                       tenants.find((t) => t.id === tenantId)?.property_id || ''
                     setNewPayment({ ...newPayment, tenant_id: tenantId, property_id: propertyId })
                   }}
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700             hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800"
+                  className="w-full bg-gray-700 text-white p-2 rounded border border-gray-700             hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700"
 
                 >
                   <option value="">Select tenant</option>
@@ -264,7 +264,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
                 <Input
                   value={properties.find((p) => p.id === newPayment.property_id)?.address || ''}
                   disabled
-                  className="bg-gray-700 text-gray-300 cursor-not-allowed hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800"
+                  className="bg-gray-700 text-gray-300 cursor-not-allowed hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700"
 
                 />
               </TableCell>
@@ -292,7 +292,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
                   placeholder="Amount"
                   value={newPayment.amount || ''}
                   onChange={(e) => setNewPayment({ ...newPayment, amount: Number(e.target.value) })}
-                  className="bg-gray-800 text-white hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800"
+                  className="bg-gray-700 text-white hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700"
 
                 />
               </TableCell>
@@ -302,7 +302,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
                   type="date"
                   value={newPayment.payment_date || ''}
                   onChange={(e) => setNewPayment({ ...newPayment, payment_date: e.target.value })}
-                  className="bg-gray-800 text-white hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800"
+                  className="bg-gray-700 text-white hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700"
 
                 />
               </TableCell>
@@ -311,7 +311,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
                 <select
                   value={newPayment.method || ''}
                   onChange={(e) => setNewPayment({ ...newPayment, method: e.target.value })}
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700"
+                  className="w-full bg-gray-700 text-white p-2 rounded border border-gray-700"
                 >
                   <option value="">Select method</option>
                   <option value="Bank Transfer">Bank Transfer</option>
@@ -325,7 +325,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
                 <select
                   value={newPayment.status}
                   onChange={(e) => setNewPayment({ ...newPayment, status: e.target.value })}
-                  className="w-full bg-gray-800 text-white p-2 rounded border border-gray-700             hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800"
+                  className="w-full bg-gray-700 text-white p-2 rounded border border-gray-700             hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700"
 
                 >
                   <option value="Pending">Pending</option>
@@ -343,8 +343,8 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
 
             {/* Existing payments */}
             {filteredPayments.length === 0 && !loading && (
-              <TableRow className=' hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800'>
-                <TableCell colSpan={8} className="text-center py-4 text-gray-400 hover:bg-gray-800 focus:bg-gray-800 active:bg-gray-800">
+              <TableRow className=' hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700'>
+                <TableCell colSpan={8} className="text-center py-4 text-gray-700 hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-700">
                   No rent payments found
                 </TableCell>
               </TableRow>
@@ -379,6 +379,8 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
           </TableBody>
         </Table>
       </div>
+
+
 
       {loading && <p className="text-gray-400 mt-2">Loading rent payments...</p>}
     </section>
