@@ -23,6 +23,8 @@ interface MaintenanceTableProps {
 export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([])
   const [loading, setLoading] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
 
   const fetchRequests = async () => {
     if (!realtorId) return
@@ -145,9 +147,11 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
       </table>
 
       {/* 📱 Mobile Cards */}
-   <div className="md:hidden flex flex-col space-y-4">
-      {requests.map((r) => {
-       const getStatusColor = (status: string) => {
+
+      <div className="md:hidden flex flex-col space-y-4">
+  {requests.map((r) => {
+    const isOpen = expandedId === r.id
+    const getStatusColor = (status: string) => {
       switch (status) {
         case 'completed':
           return 'bg-green-700'
@@ -161,10 +165,14 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
     return (
       <div
         key={r.id}
-        className="bg-[#0d0d0e] rounded-lg p-4 border border-gray-300 space-y-2"
+        className="bg-[#0d0d0e] rounded-lg border border-gray-300 overflow-hidden transition-all duration-300"
       >
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-[#302cfc]">{r.title}</h3>
+        {/* Collapsible Header */}
+        <button
+          onClick={() => setExpandedId(isOpen ? null : r.id)}
+          className="w-full flex justify-between items-center p-4 text-white"
+        >
+          <h3 className="font-semibold text-[#302cfc] text-left">{r.title}</h3>
           <span
             className={`text-xs px-2 py-1 rounded capitalize ${
               r.status === 'completed'
@@ -176,40 +184,49 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
           >
             {r.status.replace('_', ' ')}
           </span>
-        </div>
+        </button>
 
-        <p className="text-white text-sm">{r.description}</p>
+        {/* Expanded Section */}
+        {isOpen && (
+          <div className="flex flex-col space-y-3 p-4 pt-0 border-t border-gray-300">
+            <p className="text-white text-sm">{r.description}</p>
 
-        <p className="text-sm text-gray-400">
-          Priority:{' '}
-          <span className="text-white">{r.priority || 'Medium'}</span>
-        </p>
+            <div className="flex flex-col">
+              <span className="text-gray-400 text-sm">Priority:</span>
+              <span className="text-white text-sm">{r.priority || 'Medium'}</span>
+            </div>
 
-        <div className="flex items-center justify-between mt-2">
-          {r.media_url ? (
-            <a
-              href={r.media_url}
-              target="_blank"
-              className="text-blue-400 text-sm underline"
-            >
-              View Attachment
-            </a>
-          ) : (
-            <span className="text-gray-500 text-sm">No file</span>
-          )}
+            <div className="flex flex-col">
+              <span className="text-gray-400 text-sm">Attachment:</span>
+              {r.media_url ? (
+                <a
+                  href={r.media_url}
+                  target="_blank"
+                  className="text-blue-400 text-sm underline"
+                >
+                  View Attachment
+                </a>
+              ) : (
+                <span className="text-gray-500 text-sm">No file</span>
+              )}
+            </div>
 
-          <select
-            value={r.status}
-            onChange={(e) => updateStatus(r.id, e.target.value)}
-            className={`text-white text-sm px-2 py-1 rounded transition-colors ${getStatusColor(
-              r.status
-            )}`}
-          >
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
+            <div className="flex flex-col">
+              <span className="text-gray-400 text-sm">Status:</span>
+              <select
+                value={r.status}
+                onChange={(e) => updateStatus(r.id, e.target.value)}
+                className={`text-white text-sm px-2 py-1 rounded mt-1 transition-colors ${getStatusColor(
+                  r.status
+                )}`}
+              >
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
     )
   })}
@@ -219,9 +236,7 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
   )}
 </div>
 
-
-
-      {loading && <p className="mt-2 text-gray-400">Loading...</p>}
+         {loading && <p className="mt-2 text-gray-400">Loading...</p>}
     </div>
   )
 }

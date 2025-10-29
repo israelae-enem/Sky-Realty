@@ -290,60 +290,181 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
         </Table>
       </div>
 
-             {/* mobile view */}
+             
+             {/* 📱 Mobile View */}
+<div className="md:hidden flex flex-col gap-4">
+  {/* Toggle Add Tenant Form */}
+  <button
+    onClick={() => setAdding((prev) => !prev)}
+    className="flex items-center justify-center gap-2 bg-[#302cfc] text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-700 transition"
+  >
+    {adding ? <X size={18} /> : <Plus size={18} />}
+    {adding ? 'Cancel' : 'Add Tenant'}
+  </button>
 
-      <div className='md:hidden flex flex-col gap-3'>
-        <div className='border border-gray-300 p-3 rounded'>
+  {/* Add Tenant Form (collapsible) */}
+  {adding && (
+    <div className="bg-[#0d0d0e] p-4 rounded-md border border-gray-300 animate-fadeIn">
+      <h3 className="text-lg font-semibold mb-3 text-[#302cfc]">Add New Tenant</h3>
+      <div className="space-y-3">
+        <Input
+          placeholder="Full Name"
+          value={newTenant.full_name}
+          onChange={(e) => setNewTenant({ ...newTenant, full_name: e.target.value })}
+          className="bg-[#0d0d0e] text-white"
+        />
+        <Input
+          placeholder="Email"
+          value={newTenant.email}
+          onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
+          className="bg-[#0d0d0e] text-white"
+        />
+        <Input
+          placeholder="Phone"
+          value={newTenant.phone}
+          onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
+          className="bg-[#0d0d0e] text-white"
+        />
+        <select
+          value={newTenant.property_id}
+          onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
+          className="w-full bg-[#0d0d0e] text-white p-2 rounded border border-gray-600"
+        >
+          <option value="">Select property</option>
+          {properties.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.address}
+            </option>
+          ))}
+        </select>
 
-          
-                <Input
-                  placeholder="Full Name"
-                  value={newTenant.full_name}
-                  onChange={(e) => setNewTenant({ ...newTenant, full_name: e.target.value })}
-                  className="bg-[#0d0d0e] text-white mb-5"
-                />
-              
-              
-                <Input
-                  placeholder="Email"
-                  value={newTenant.email}
-                  onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
-                  className="bg-[#0d0d0e] text-white mb-5"
-                />
-              
-              
-                <Input
-                  placeholder="Phone"
-                  value={newTenant.phone}
-                  onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
-                  className="bg-[#0d0d0e] text-white mb-5"
-                />
-              
-              
-                <select
-                  value={newTenant.property_id}
-                  onChange={(e) => setNewTenant({ ...newTenant, property_id: e.target.value })}
-                  className="w-full bg-[#0d0d0e] text-white p-2 rounded border border-gray-300 mb-5"
-                >
-                  <option value="">Select property</option>
-                  {properties.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.address}
-                    </option>
-                  ))}
-                </select>
-
-
-               <Button size="sm" onClick={addTenant} disabled={adding}>
-                  <Plus size={16} />
-                </Button>
-              
-
-        </div>
-
+        <Button
+          onClick={addTenant}
+          className="w-full bg-[#302cfc] hover:bg-blue-700 text-white"
+        >
+          <Plus size={16} className="mr-2" /> Add Tenant
+        </Button>
       </div>
+    </div>
+  )}
 
+  {/* No Tenants */}
+  {filteredTenants.length === 0 && !loading && (
+    <p className="text-center text-gray-400 mt-4">No tenants found</p>
+  )}
 
+  {/* Tenant Cards */}
+  {filteredTenants.map((tenant) => (
+    <div
+      key={tenant.id}
+      className="bg-[#0d0d0e] p-4 rounded-md border border-gray-300 shadow-md"
+    >
+      {editingId === tenant.id ? (
+        <>
+          {/* Edit Mode */}
+          <h3 className="text-lg font-semibold text-[#302cfc] mb-3">
+            Edit Tenant
+          </h3>
+          <div className="space-y-3">
+            <Input
+              placeholder="Full Name"
+              value={editData.full_name ?? ''}
+              onChange={(e) =>
+                setEditData({ ...editData, full_name: e.target.value })
+              }
+              className="bg-[#0d0d0e] text-white"
+            />
+            <Input
+              placeholder="Email"
+              value={editData.email ?? ''}
+              onChange={(e) =>
+                setEditData({ ...editData, email: e.target.value })
+              }
+              className="bg-[#0d0d0e] text-white"
+            />
+            <Input
+              placeholder="Phone"
+              value={editData.phone ?? ''}
+              onChange={(e) =>
+                setEditData({ ...editData, phone: e.target.value })
+              }
+              className="bg-[#0d0d0e] text-white"
+            />
+            <select
+              value={editData.property_id ?? ''}
+              onChange={(e) =>
+                setEditData({ ...editData, property_id: e.target.value })
+              }
+              className="w-full bg-[#0d0d0e] text-white p-2 rounded border border-gray-300"
+            >
+              <option value="">Select property</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.address}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={cancelEdit}
+                className="bg-gray-700 text-white hover:bg-gray-600"
+              >
+                <X size={14} className="mr-1" /> Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={saveEdit}
+                className="bg-[#302cfc] hover:bg-blue-700 text-white"
+              >
+                <Check size={14} className="mr-1" /> Save
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* View Mode */}
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-lg font-semibold text-[#302cfc]">
+                {tenant.full_name}
+              </h3>
+              <p className="text-gray-300 text-sm">{tenant.email}</p>
+              <p className="text-gray-400 text-sm">{tenant.phone || 'No phone provided'}</p>
+              <p className="text-gray-400 text-sm mt-1">
+                <span className="font-medium">Property:</span>{' '}
+                {properties.find((p) => p.id === tenant.property_id)?.address || '—'}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 items-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => startEdit(tenant)}
+                className="border border-blue-500 text-blue-400 hover:bg-blue-800"
+              >
+                <Edit size={16} />
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => deleteTenant(tenant.id)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash size={16} />
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  ))}
+</div>
+
+      
       {loading && <p className="text-gray-400 mt-2">Loading tenants...</p>}
     </section>
   )

@@ -465,199 +465,229 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
       {/* Mobile card view */}
 <div className="md:hidden flex flex-col gap-4">
   {/* Add new appointment form */}
-  <div className=" rounded-md border border-gray-300 gap-3">
-    <h3 className="text-[#302cfc] font-semibold mb-2">Add Appointment</h3>
+  <details className="bg-[#0d0d0e] rounded-md border border-gray-300 p-4 space-y-3">
+    <summary className="cursor-pointer text-[#302cfc] font-semibold mb-2">
+      ➕ Add Appointment
+    </summary>
 
-    <div className="flex gap-2">
-      <label className="text-gray-400 text-sm">Tenant</label>
-      <select
-        value={newTenantId}
-        onChange={(e) => setNewTenantId(e.target.value)}
-        className="bg-[#0d0d0e] text-white p-2 rounded border border-gray-300"
+    <div className="flex flex-col space-y-3">
+      {/* Tenant */}
+      <div className="flex flex-col">
+        <label className="text-gray-400 text-sm mb-1">Tenant</label>
+        <select
+          value={newTenantId}
+          onChange={(e) => setNewTenantId(e.target.value)}
+          className="bg-[#0d0d0e] text-white p-2 rounded border border-gray-300"
+        >
+          <option value="">Select tenant</option>
+          {tenants.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.full_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Date */}
+      <div className="flex flex-col">
+        <label className="text-gray-400 text-sm mb-1">Date</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="text-left text-white bg-[#0d0d0e] border border-gray-300 w-full"
+            >
+              {newDate ? format(newDate, 'yyyy-MM-dd') : 'Select Date'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            className="p-0 w-[90vw] sm:w-auto max-w-[100vw] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0"
+            align="center"
+            sideOffset={8}
+          >
+            <Calendar mode="single" selected={newDate} onSelect={setNewDate} />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Time */}
+      <div className="flex flex-col">
+        <label className="text-gray-400 text-sm mb-1">Time</label>
+        <Input
+          type="time"
+          value={newTime}
+          onChange={(e) => setNewTime(e.target.value)}
+          className="bg-[#0d0d0e] text-white border border-gray-300"
+        />
+      </div>
+
+      {/* Status */}
+      <div className="flex flex-col">
+        <label className="text-gray-400 text-sm mb-1">Status</label>
+        <Select
+          value={newStatus}
+          onValueChange={(val) => setNewStatus(val as Appointment['status'])}
+        >
+          <SelectTrigger className="bg-[#0d0d0e] text-white border border-gray-300">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent className="bg-[#0d0d0e] text-white">
+            <SelectItem value="Scheduled">Scheduled</SelectItem>
+            <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Canceled">Canceled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Button
+        onClick={handleAddAppointment}
+        disabled={adding}
+        className="bg-[#302cfc] hover:bg-[#241fd9] w-full"
       >
-        <option value="">Select tenant</option>
-        {tenants.map((t) => (
-          <option key={t.id} value={t.id}>
-            {t.full_name}
-          </option>
-        ))}
-      </select>
+        {adding ? 'Adding...' : 'Add Appointment'}
+      </Button>
     </div>
-
-    <div className="flex gap-2">
-      <label className="text-gray-400 text-sm">Date</label>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="text-left text-white bg-gray-900 w-full">
-            {newDate ? format(newDate, 'yyyy-MM-dd') : 'Select Date'}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="p-0 w-[90vw] sm:w-auto max-w-[100vw] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0"
-         align="center"
-          sideOffset={8}
-           >
-          <Calendar mode="single" selected={newDate} onSelect={setNewDate} />
-        </PopoverContent>
-      </Popover>
-    </div>
-
-    <div className="flex gap-2">
-      <label className="text-gray-400 text-sm">Time</label>
-      <Input
-        type="time"
-        value={newTime}
-        onChange={(e) => setNewTime(e.target.value)}
-        className="bg-[#0d0d0e] text-white"
-      />
-    </div>
-
-    <div className="flex gap-2">
-      <label className="text-gray-400 text-sm">Status</label>
-      <Select value={newStatus} onValueChange={(val) => setNewStatus(val as Appointment['status'])}>
-        <SelectTrigger className="bg-[#0d0d0e] text-white border border-gray-300">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="bg-[#0d0d0e] text-white">
-          <SelectItem value="Scheduled">Scheduled</SelectItem>
-          <SelectItem value="Completed">Completed</SelectItem>
-          <SelectItem value="Canceled">Canceled</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-
-    <Button
-      onClick={handleAddAppointment}
-      disabled={adding}
-      className="bg-[#302cfc] hover:bg-[#241fd9]"
-    >
-      {adding ? 'Adding...' : 'Add Appointment'}
-    </Button>
-  </div>
+  </details>
 
   {/* Existing appointments */}
   {filteredAppointments.map((appt) => {
     const dateObj = new Date(appt.appointment_date)
     const isEditing = editingId === appt.id
+
     return (
-      <div
+      <details
         key={appt.id}
-        className="bg-[#0d0d0e] p-4 rounded-md border border-gray-300 flex gap-3"
+        className="bg-[#0d0d0e] rounded-md border border-gray-300 p-4"
       >
-        <div className="flex gap-1">
-          <span className="text-gray-400 text-sm">Tenant</span>
-          {isEditing ? (
-            <Input
-              value={editTenantId}
-              onChange={(e) => setEditTenantId(e.target.value)}
-              className="bg-[#0d0d0e]  text-white"
-            />
-          ) : (
-            <p>{appt.tenant_name}</p>
-          )}
-        </div>
+        <summary className="cursor-pointer text-white font-medium flex justify-between items-center">
+          <span>{appt.tenant_name}</span>
+          <span className="text-sm text-gray-400">{format(dateObj, 'yyyy-MM-dd')}</span>
+        </summary>
 
-        <div className="flex gap-1">
-          <span className="text-gray-400 text-sm">Date</span>
-          {isEditing ? (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full text-left text-white bg-[#0d0d0e]">
-                  {editDate ? format(editDate, 'yyyy-MM-dd') : format(dateObj, 'yyyy-MM-dd')}
+        <div className="mt-3 space-y-3">
+          {/* Tenant */}
+          <div className="flex flex-col">
+            <label className="text-gray-400 text-sm mb-1">Tenant</label>
+            {isEditing ? (
+              <Input
+                value={editTenantId}
+                onChange={(e) => setEditTenantId(e.target.value)}
+                className="bg-[#0d0d0e] text-white border border-gray-300"
+              />
+            ) : (
+              <p>{appt.tenant_name}</p>
+            )}
+          </div>
+
+          {/* Date */}
+          <div className="flex flex-col">
+            <label className="text-gray-400 text-sm mb-1">Date</label>
+            {isEditing ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="text-left text-white bg-[#0d0d0e] border border-gray-300"
+                  >
+                    {editDate ? format(editDate, 'yyyy-MM-dd') : format(dateObj, 'yyyy-MM-dd')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="p-0 w-[90vw] sm:w-auto max-w-[100vw] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0"
+                  align="center"
+                  sideOffset={8}
+                >
+                  <Calendar
+                    mode="single"
+                    selected={editDate ?? dateObj}
+                    onSelect={setEditDate}
+                  />
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <p>{format(dateObj, 'yyyy-MM-dd')}</p>
+            )}
+          </div>
+
+          {/* Time */}
+          <div className="flex flex-col">
+            <label className="text-gray-400 text-sm mb-1">Time</label>
+            {isEditing ? (
+              <Input
+                type="time"
+                value={editTime || format(dateObj, 'HH:mm')}
+                onChange={(e) => setEditTime(e.target.value)}
+                className="bg-[#0d0d0e] text-white border border-gray-300"
+              />
+            ) : (
+              <p>{format(dateObj, 'HH:mm')}</p>
+            )}
+          </div>
+
+          {/* Status */}
+          <div className="flex flex-col">
+            <label className="text-gray-400 text-sm mb-1">Status</label>
+            {isEditing ? (
+              <Select
+                value={editStatus}
+                onValueChange={(val) => setEditStatus(val as Appointment['status'])}
+              >
+                <SelectTrigger className="bg-[#0d0d0e] text-white border border-gray-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0d0d0e] text-white">
+                  <SelectItem value="Scheduled">Scheduled</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Canceled">Canceled</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <p>{appt.status}</p>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 mt-3">
+            {isEditing ? (
+              <>
+                <Button
+                  onClick={() => handleSaveEdit(appt.id)}
+                  className="bg-green-600 hover:bg-green-700 flex-1"
+                >
+                  Save
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent
-              className="p-0 w-[90vw] sm:w-auto max-w-[100vw] left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0"
-              align="center"
-               sideOffset={8}
-                 >
-                <Calendar
-                  mode="single"
-                  selected={editDate ?? dateObj}
-                  onSelect={setEditDate}
-                />
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <p>{format(dateObj, 'yyyy-MM-dd')}</p>
-          )}
+                <Button
+                  onClick={() => setEditingId(null)}
+                  className="bg-red-600 hover:bg-red-700 flex-1"
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => {
+                    setEditingId(appt.id)
+                    setEditTenantId(appt.tenant_id)
+                    setEditDate(new Date(appt.appointment_date))
+                    setEditTime(format(new Date(appt.appointment_date), 'HH:mm'))
+                    setEditStatus(appt.status)
+                  }}
+                  className="bg-[#302cfc] hover:bg-[#241fd9] flex-1"
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={() => handleDelete(appt.id)}
+                  className="bg-red-600 hover:bg-red-700 flex-1"
+                >
+                  Delete
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-
-        <div className="flex gap-1">
-          <span className="text-gray-400 text-sm">Time</span>
-          {isEditing ? (
-            <Input
-              type="time"
-              value={editTime || format(dateObj, 'HH:mm')}
-              onChange={(e) => setEditTime(e.target.value)}
-              className=" bg-[#0d0d0e] text-white"
-            />
-          ) : (
-            <p>{format(dateObj, 'HH:mm')}</p>
-          )}
-        </div>
-
-        <div className="flex gap-1">
-          <span className="text-gray-400 text-sm">Status</span>
-          {isEditing ? (
-            <Select
-              value={editStatus}
-              onValueChange={(val) => setEditStatus(val as Appointment['status'])}
-            >
-              <SelectTrigger className="bg-[#0d0d0e] text-white border border-gray-300">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-[#0d0d0e] text-white">
-                <SelectItem value="Scheduled">Scheduled</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Canceled">Canceled</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : (
-            <p>{appt.status}</p>
-          )}
-        </div>
-
-        <div className="flex gap-2 mt-2">
-          {isEditing ? (
-            <>
-              <Button
-                onClick={() => handleSaveEdit(appt.id)}
-                className="bg-green-600 hover:bg-green-700 flex-1"
-              >
-                Save
-              </Button>
-              <Button
-                onClick={() => setEditingId(null)}
-                className="bg-red-600 hover:bg-red-700 flex-1"
-              >
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                onClick={() => {
-                  setEditingId(appt.id)
-                  setEditTenantId(appt.tenant_id)
-                  setEditDate(new Date(appt.appointment_date))
-                  setEditTime(format(new Date(appt.appointment_date), 'HH:mm'))
-                  setEditStatus(appt.status)
-                }}
-                className="bg-[#302cfc] hover:bg-[#241fd9] flex-1"
-              >
-                Edit
-              </Button>
-              <Button
-                onClick={() => handleDelete(appt.id)}
-                className="bg-red-600 hover:bg-red-700 flex-1"
-              >
-                Delete
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+      </details>
     )
   })}
 
@@ -665,6 +695,8 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
     <p className="text-gray-400 text-center py-4">No appointments found</p>
   )}
 </div>
+
+     
 
 
 
