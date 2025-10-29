@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabaseClient'
@@ -21,8 +21,7 @@ import LegalDocumentsTable from '@/components/LegalDocumentTable'
 import Profile from '@/components/Profile'
 import RealtorChat from '@/components/RealtorChat'
 import TeamAccordion from '@/components/TeamAccordion'
-import Sidebar from '@/components/Bar'
-
+// Sidebar removed from layout to make dashboard responsive by default
 
 interface Stats {
   properties: number
@@ -30,7 +29,7 @@ interface Stats {
   leases: number
 }
 
-type PlanType = 'free'| 'basic' | 'pro' | 'premium' | null
+type PlanType = 'free' | 'basic' | 'pro' | 'premium' | null
 
 interface Tenant {
   id: string
@@ -38,7 +37,7 @@ interface Tenant {
   email: string
   phone: string
   property_id: string
-  realtor_id:string
+  realtor_id: string
 }
 
 interface Notification {
@@ -48,101 +47,169 @@ interface Notification {
   created_at: string
 }
 
-
-
-
-
-
 export default function RealtorDashboard() {
   const { user } = useUser()
   const [stats, setStats] = useState<Stats>({ properties: 0, occupied: 0, leases: 0 })
-  const [plan, setPlan] = useState<PlanType>()
-  const [propertyLimit, setPropertyLimit] = useState<number>(1)
+  const [plan, setPlan] = useState<PlanType>(null)
+  const [propertyLimit, setPropertyLimit] = useState<number | null>(1)
   const [loading, setLoading] = useState(true)
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
+  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null)
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<Date | null>(null)
+  const [countdown, setCountdown] = useState<string | null>(null)
   const [expired, setExpired] = useState(false)
-  const [subscriptionActive, setSubscriptionActive] = useState(false);
+  const [subscriptionActive, setSubscriptionActive] = useState(false)
 
   const router = useRouter()
- 
+  const intervalRef = useRef<number | null>(null)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  
+  // Helper to format milliseconds into D:H:M:S
+  const formatDuration = (ms: number) => {
+    if (ms <= 0) return '00:00:00:00'
+    const totalSec = Math.floor(ms / 1000)
+    const days = Math.floor(totalSec / (24 * 3600))
+    const hours = Math.floor((totalSec % (24 * 3600)) / 3600)
+    const minutes = Math.floor((totalSec % 3600) / 60)
+    const seconds = totalSec % 60
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
+  }
+
+  // Fetch subscription info and start live countdown
   useEffect(() => {
-  if (!user?.id) return;
+    if (!user?.id) return
+    let mounted = true
 
-  const fetchSubscription = async () => {
-    try {
-      const res = await fetch(`/api/ziina?user=${user.id}`);
-      const data = await res.json();
-
-      if (!res.ok) throw new Error('Failed to fetch subscription');
-
-      const status = data?.status || 'none';
-      const planId = data?.plan || null; // no free plan
-      const trialEndsAt = data?.trial_ends_at ? new Date(data.trial_ends_at) : null;
-      const subscriptionExpiresAt = data?.subscription_expires_at
-        ? new Date(data.subscription_expires_at)
-        : null;
-
-      // Plan limits (no free plan)
-      const PLAN_LIMITS: Record<string, number | null> = {
-        basic: 10,
-        pro: 20,
-        premium: Infinity,
-      };
-
-      let isExpired = false;
-      let trialDaysLeft: number | null = null;
-      const now = new Date();
-
-      // If user has no plan at all, treat as expired
-      if (!planId) isExpired = true;
-
-      // Trial check
-      if (trialEndsAt) {
-        const diffDays = Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        trialDaysLeft = diffDays > 0 ? diffDays : 0;
-        if (diffDays <= 0) isExpired = true;
+    const startCountdown = (targetDate: Date | null, fallbackDate: Date | null) => {
+      // clear previous
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current)
+        intervalRef.current = null
       }
 
-      // Subscription expiry check
-      if (subscriptionExpiresAt && subscriptionExpiresAt <= now) isExpired = true;
+      intervalRef.current = window.setInterval(() => {
+        const now = new Date().getTime()
 
-      // Inactive statuses
-      if (['expired', 'none', 'canceled'].includes(status)) isExpired = true;
+        // Prefer trial expiry while present, otherwise subscription expiry
+        const target = targetDate?.getTime() ?? fallbackDate?.getTime() ?? null
+        if (!target) {
+          setCountdown(null)
+          return
+        }
 
-      // Update dashboard state
-      setPlan(planId as PlanType);
-      setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : 0);
-      setTrialDaysLeft(trialDaysLeft);
-      setSubscriptionActive(!isExpired);
-      setExpired(isExpired);
+        const diff = target - now
+        if (diff <= 0) {
+          // expired — mark and redirect
+          setCountdown('00:00:00:00')
+          setExpired(true)
+          setSubscriptionActive(false)
+          toast('⚠ Your trial or subscription has expired. Redirecting to subscription page...')
+          window.clearInterval(intervalRef.current!)
+          intervalRef.current = null
+          // small timeout to allow toast to show
+          setTimeout(() => {
+            router.push('/subscription')
+          }, 500)
+          return
+        }
 
-      // Redirect if expired/no plan
-      if (isExpired) {
-        toast('⚠ You need a subscription to access the dashboard. Please subscribe.');
-        router.push('/subscription'); // stay on subscription page
-      }
-    } catch (err) {
-      console.error('❌ Subscription check failed:', err);
-      setPlan(null);
-      setPropertyLimit(0);
-      setTrialDaysLeft(null);
-      setSubscriptionActive(false);
-      setExpired(true);
-      toast('⚠ Unable to verify subscription. Please subscribe.');
-      router.push('/subscription');
-    } finally {
-      setLoading(false);
+        setCountdown(formatDuration(diff))
+      }, 1000)
     }
-  };
 
-  fetchSubscription();
-}, [user?.id, router]);
+    const fetchSub = async () => {
+      try {
+        const res = await fetch(`/api/ziina?user=${user.id}`)
+        const data = await res.json()
+
+        // Expect data.plan, data.status, data.trial_ends_at, data.subscription_expires_at
+        const status: string = data?.status ?? 'none'
+        const planId: PlanType = data?.plan ?? null
+
+        const trial = data?.trial_ends_at ? new Date(data.trial_ends_at) : null
+        const subExpires = data?.subscription_expires_at ? new Date(data.subscription_expires_at) : null
+
+        // plan limits (if you want to add 'free' later, add here)
+        const PLAN_LIMITS: Record<string, number | null> = {
+          free: 1,
+          basic: 10,
+          pro: 20,
+          premium: Infinity,
+        }
+
+        // Determine active state
+        let isExpired = false
+        const now = new Date()
+        // If no plan and no trial, expired (you disallowed free)
+        if (!planId && !trial) isExpired = true
+
+        // Trial check
+        if (trial && trial <= now) {
+          // trial ended -> consider expired until subscription active
+          isExpired = true
+        }
+
+        // Subscription expiry check
+        if (subExpires && subExpires <= now) isExpired = true
+
+        // status checks (server may provide explicit statuses)
+        if (['expired', 'none', 'canceled'].includes(status)) {
+          // treat as expired unless trial present and in future
+          if (!(trial && trial > now)) isExpired = true
+        }
+
+        if (!mounted) return
+
+        setPlan(planId)
+        setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : (trial ? 0 : 0))
+        setTrialEndsAt(trial)
+        setSubscriptionExpiresAt(subExpires)
+        setSubscriptionActive(!isExpired)
+        setExpired(isExpired)
+
+        // Start countdown:
+        // - if trial exists and is in future => countdown to trial end
+        // - else if subscription expires date exists => countdown to subscription expiry
+        // - else if no dates and no plan => no countdown (but will redirect above)
+        if (trial && trial > now) {
+          startCountdown(trial, subExpires)
+        } else if (subExpires && subExpires > now) {
+          startCountdown(subExpires, null)
+        } else {
+          // nothing to count — if expired, redirect
+          if (isExpired) {
+            toast('⚠ You need a subscription to access the dashboard. Redirecting to subscription page...')
+            setTimeout(() => router.push('/subscription'), 500)
+          } else {
+            setCountdown(null)
+          }
+        }
+      } catch (err) {
+        console.error('❌ Subscription check failed:', err)
+        toast('⚠ Unable to verify subscription. Redirecting to subscription page...')
+        setPlan(null)
+        setPropertyLimit(0)
+        setSubscriptionActive(false)
+        setExpired(true)
+        setTimeout(() => router.push('/subscription'), 500)
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    fetchSub()
+
+    return () => {
+      mounted = false
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [user?.id, router])
 
   // ---------------- Fetch properties, tenants, notifications ----------------
   useEffect(() => {
@@ -207,32 +274,33 @@ export default function RealtorDashboard() {
     }
   }
 
+
+
   if (loading) return <p className="p-8 text-center text-white">Loading dashboard...</p>
 
   return (
     <div className="flex min-h-screen bg-black text-white">
-      {/* Sidebar */}
-       
-
+      
       {/* Main content */}
       <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-black">
            <div className='ml-auto'>
-            
             <Profile />
           </div>
 
-        {/* 🟢 Trial or subscription banner */}
-        {trialDaysLeft !== null && !expired && (
+        
+        {/* 🟢 Trial or subscription banner (real-time) */}
+        {!expired && countdown && (
           <div className="bg-yellow-500 text-black text-center py-2 rounded-md font-semibold">
-            {trialDaysLeft > 0
-              ? `⏳ Your trial ends in ${trialDaysLeft} day${trialDaysLeft > 1 ? 's' : ''}. Upgrade now to keep access!`
-              : '⚠ Your trial has ended. Please subscribe to continue using Sky Realty.'}
+            ⏳ Trial / Subscription countdown — <span className="font-mono">{countdown}</span>
           </div>
         )}
 
-
-
-
+        {/* expired case handled by redirect; but show warning briefly if expired false */}
+        {expired && (
+          <div className="bg-red-600 text-white text-center py-2 rounded-md font-semibold">
+            ⚠ Your trial or subscription has expired — redirecting to subscription page...
+          </div>
+        )}
 
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
@@ -263,7 +331,7 @@ export default function RealtorDashboard() {
               <Home size={18} /> Properties
             </AccordionTrigger>
             <AccordionContent>
-              <PropertyTable plan={plan ?? null} propertyLimit={propertyLimit} realtorId={user?.id!} />
+              <PropertyTable plan={plan ?? null} propertyLimit={propertyLimit ?? 0} realtorId={user?.id!} />
             </AccordionContent>
           </AccordionItem>
 
