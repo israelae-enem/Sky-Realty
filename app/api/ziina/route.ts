@@ -125,19 +125,19 @@ export async function GET(req: NextRequest) {
           .eq("id", userId);
 
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/realtor/${userId}/dashboard`
+          `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${userId}/dashboard`
         );
       }
 
       if (status === "cancel") {
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/subscription?status=cancelled`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=cancelled`
         );
       }
 
       if (status === "failure") {
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/subscription?status=failed`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=failed`
         );
       }
     }
