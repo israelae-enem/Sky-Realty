@@ -115,7 +115,7 @@ export default function LegalDocumentManager() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* 📝 Form */}
-      <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg text-white space-y-4 mb-6 ">
+      <form onSubmit={handleSubmit} className="bg-[#0d0d0e] p-6 rounded-lg text-white space-y-4 mb-6 ">
         <h2 className="text-xl font-semibold">New Legal Document</h2>
 
         <div>

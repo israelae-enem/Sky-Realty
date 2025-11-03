@@ -470,7 +470,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
       {/* Mobile cards */}
       <div className="md:hidden flex flex-col gap-3">
         {/* Add card */}
-        <div className=" border border-gray-300 p-3 rounded">
+        <div className=" border border-gray-300 p-3 rounded bg-[#0d0d0e]">
           <Input placeholder="Title" value={newProperty.title ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))} className="mb-2  text-white bg-[#0d0d0e]" />
           <Input placeholder="Address" value={newProperty.address ?? ''} onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))} className="mb-2 text-white bg-[#0d0d0e]" />
           <Select value={(newProperty.status as string) ?? 'Vacant'} onValueChange={(val) => setNewProperty((s) => ({ ...(s || {}), status: val as PropertyStatus }))}>
