@@ -134,7 +134,7 @@ export default function RealtorDashboard() {
 
         // plan limits (if you want to add 'free' later, add here)
         const PLAN_LIMITS: Record<string, number | null> = {
-          free: 1,
+          free: 0,
           basic: 10,
           pro: 20,
           premium: Infinity,
