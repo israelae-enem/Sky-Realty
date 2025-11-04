@@ -36,7 +36,7 @@ export default function RealtorSignUpForm() {
 
       if (existing) {
         toast.success('Welcome back! Redirecting to your dashboard...');
-        router.push('/subscription');
+        router.push(`/realtor/${user.id}/dashboard`);
       } else {
         setLoading(false); // show form
       }

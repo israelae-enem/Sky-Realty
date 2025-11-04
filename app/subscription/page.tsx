@@ -132,7 +132,7 @@ export default function PricingSubscription() {
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl; // Ziina checkout
       } else {
-        window.location.href = '/success';
+        window.location.href = `/realtor/${userId}/dashboard`;
       }
     } catch (err: any) {
       console.error("❌ Subscribe error:", err.message);

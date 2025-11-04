@@ -109,10 +109,7 @@ export default function RealtorDashboard() {
           toast('⚠ Your trial or subscription has expired. Redirecting to subscription page...')
           window.clearInterval(intervalRef.current!)
           intervalRef.current = null
-          // small timeout to allow toast to show
-          setTimeout(() => {
-            router.push('/subscription')
-          }, 500)
+          
           return
         }
 
@@ -189,12 +186,12 @@ export default function RealtorDashboard() {
         }
       } catch (err) {
         console.error('❌ Subscription check failed:', err)
-        toast('⚠ Unable to verify subscription. Redirecting to subscription page...')
+        toast('⚠ Unable to verify subscription. You can view the dashboard, but adding nrw peoperties is disableduntil you subscribe.')
         setPlan(null)
         setPropertyLimit(0)
         setSubscriptionActive(false)
         setExpired(true)
-        setTimeout(() => router.push('/subscription'), 500)
+        
       } finally {
         if (mounted) setLoading(false)
       }
