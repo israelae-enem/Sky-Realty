@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
           .eq("id", userId);
 
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${userId}/dashboard`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription/success?plan=${plan}`
         );
       }
 
