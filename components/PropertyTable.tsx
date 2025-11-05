@@ -23,7 +23,7 @@ import {
 import { Trash, Edit, Check, X, Upload } from 'lucide-react'
 
 export type PlanKey = 'free'| 'basic' | 'pro' | 'premium'
-const PLAN_LIMITS: Record<PlanKey, number | null> = { free: 1, basic: 10, pro: 20, premium: null }
+const PLAN_LIMITS: Record<PlanKey, number | null> = { free: 0, basic: 10, pro: 20, premium: null }
 
 export type PropertyStatus = 'Vacant' | 'Occupied' | 'Pending'
 
@@ -309,10 +309,10 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
 
               <TableCell className="p-2 bg-[#0d0d0e]">
                 <Input
-                  placeholder="Title"
+                  placeholder="Title/Type of Property"
                   value={newProperty.title ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), title: e.target.value }))}
-                  className=" text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc] bg-[#0d0d0e]"
                 />
               </TableCell>
 
@@ -321,7 +321,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                   placeholder="Address"
                   value={newProperty.address ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), address: e.target.value }))}
-                  className=" text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc] bg-[#0d0d0e]"
                 />
               </TableCell>
 
@@ -344,7 +344,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                   placeholder='Start Date'
                   value={newProperty.lease_start ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))}
-                  className=" text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc] bg-[#0d0d0e] "
                 />
               </TableCell>
 
@@ -354,7 +354,7 @@ export default function PropertyTable({ plan, propertyLimit}: PropertyTableProps
                   placeholder='End Date'
                   value={newProperty.lease_end ?? ''}
                   onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))}
-                  className=" text-white focus:ring focus:ring-[#302cfc]"
+                  className=" text-white focus:ring focus:ring-[#302cfc] bg-[#0d0d0e]"
                 />
               </TableCell>
 

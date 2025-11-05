@@ -106,7 +106,7 @@ export default function RealtorDashboard() {
           setCountdown('00:00:00:00')
           setExpired(true)
           setSubscriptionActive(false)
-          toast('⚠ Your trial or subscription has expired. Redirecting to subscription page...')
+          toast('⚠ Your trial or subscription has expired. Please renew to regain dashboard access.')
           window.clearInterval(intervalRef.current!)
           intervalRef.current = null
           
@@ -168,21 +168,14 @@ export default function RealtorDashboard() {
         setExpired(isExpired)
 
         // Start countdown:
-        // - if trial exists and is in future => countdown to trial end
-        // - else if subscription expires date exists => countdown to subscription expiry
-        // - else if no dates and no plan => no countdown (but will redirect above)
+        
         if (trial && trial > now) {
           startCountdown(trial, subExpires)
         } else if (subExpires && subExpires > now) {
           startCountdown(subExpires, null)
         } else {
-          // nothing to count — if expired, redirect
-          if (isExpired) {
-            toast('⚠ You need a subscription to access the dashboard. Redirecting to subscription page...')
-            setTimeout(() => router.push('/subscription'), 500)
-          } else {
             setCountdown(null)
-          }
+          
         }
       } catch (err) {
         console.error('❌ Subscription check failed:', err)
@@ -292,12 +285,25 @@ export default function RealtorDashboard() {
           </div>
         )}
 
-        {/* expired case handled by redirect; but show warning briefly if expired false */}
-        {expired && (
-          <div className="bg-red-600 text-white text-center py-2 rounded-md font-semibold">
-            ⚠ Your trial or subscription has expired — redirecting to subscription page...
-          </div>
-        )}
+        
+        {/* 🔴 Expired subscription — show renewal screen */}
+      {expired ? (
+        <div className="flex flex-col items-center justify-center h-[80vh] text-center space-y-6">
+          <h2 className="text-2xl font-semibold text-red-500">
+            Your subscription has expired
+          </h2>
+          <p className="text-gray-400 max-w-md">
+            To continue managing your properties and tenants, please renew your plan.
+          </p>
+          <button
+            onClick={() => router.push('/subscription')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md transition"
+          >
+            Renew Subscription
+          </button>
+        </div>
+      ) : (
+        <>
 
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
@@ -419,6 +425,8 @@ export default function RealtorDashboard() {
              </Accordion>
          
         </Accordion>
+        </>
+      )}
       </main>
     </div>
   )

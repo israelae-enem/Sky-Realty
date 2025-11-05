@@ -68,7 +68,7 @@ export default function LegalDocumentsTable() {
   }
 
   return (
-    <div className="bg-gray-800 p-6 rounded-lg text-white">
+    <div className="bg-[#0d0d0e] p-6 rounded-lg text-white">
       {/* Header with button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Legal Documents</h2>

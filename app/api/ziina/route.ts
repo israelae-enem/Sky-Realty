@@ -131,13 +131,13 @@ export async function GET(req: NextRequest) {
 
       if (status === "cancel") {
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=cancelled`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=cancelled?plan=${plan}&user=${userId}`
         );
       }
 
       if (status === "failure") {
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=failed`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=failed?plan=${plan}&user=${userId}`
         );
       }
     }

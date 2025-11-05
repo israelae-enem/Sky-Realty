@@ -47,6 +47,7 @@ const page = () => {
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white space-y-6 px-6">
         <h1 className="text-4xl md:text-6xl font-bold text-[#302cfc] drop-shadow-lg">
           Elevate Your Real Estate Management 🚀
+          
         </h1>
         <p className="max-w-2xl text-lg text-gray-200">
           Simplify your property management with Sky Realty built for realtors and tenants who want control, clarity, and collaboration.
@@ -56,13 +57,13 @@ const page = () => {
             href="/sign-in"
             className="border bg-[#302cfc] hover:bg-[#241fd9]/10 px-6 py-3 rounded-lg font-medium transition"
           >
-            Get Started
+            Get Started 
           </a>
            <a
             href="/subscription"
             className="border bg-[#302cfc] hover:bg-[#241fd9]/10 px-6 py-3 rounded-lg font-medium transition"
           >
-            Subscribe
+            Subscribe Now
           </a>
         
         </div>
