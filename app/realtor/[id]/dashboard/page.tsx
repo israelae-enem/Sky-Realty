@@ -285,9 +285,24 @@ export default function RealtorDashboard() {
           </div>
         )}
 
-        
-        {/* 🔴 Expired subscription — show renewal screen */}
-      {expired ? (
+        {/* 🟠 If no plan and no trial yet — show Welcome message */}
+      {!plan && !trialEndsAt && !subscriptionExpiresAt ? (
+        <div className="flex flex-col items-center justify-center h-[80vh] text-center space-y-6">
+          <h2 className="text-2xl font-semibold text-[#302cfc]">
+            Welcome to your dashboard, {user?.firstName || 'Realtor'}!
+          </h2>
+          <p className="text-gray-400 max-w-md">
+            You don't have an active subscription yet. Subscribe now to start adding properties, tenants, and managing rent payments.
+          </p>
+          <button
+            onClick={() => router.push('/subscription')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md transition"
+          >
+            Subscribe to Get Started
+          </button>
+        </div>
+      
+      ): expired ? (
         <div className="flex flex-col items-center justify-center h-[80vh] text-center space-y-6">
           <h2 className="text-2xl font-semibold text-red-500">
             Your subscription has expired
