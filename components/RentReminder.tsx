@@ -159,23 +159,23 @@ export default function RentReminders() {
   }, [fetchReminders, realtorId])
 
   return (
-    <div className="bg-[#0d0d0e] rounded-lg p-6 text-white grid grid-cols-1 lg:grid-cols-[3fr-1fr] gap-8">
+    <div className="bg-gray-300 rounded-lg p-6 text-gray-800 grid grid-cols-1 lg:grid-cols-[3fr-1fr] gap-8">
       {/* Table view */}
       <div className="overflow-x-auto">
         <h2 className="text-lg font-semibold mb-3">Upcoming Rent Reminders</h2>
         <table className="min-w-full table-auto">
           <thead>
             <tr>
-              <th className="px-4 py-2 border border-gray-300">Tenant</th>
-              <th className="px-4 py-2 border border-gray-300">Property</th>
-              <th className="px-4 py-2 border border-gray-300">Due Date</th>
-              <th className="px-4 py-2 border border-gray-300">Status</th>
-              <th className="px-4 py-2 border border-gray-300">Action</th>
+              <th className="px-4 py-2 border border-gray-800">Tenant</th>
+              <th className="px-4 py-2 border border-gray-800">Property</th>
+              <th className="px-4 py-2 border border-gray-800">Due Date</th>
+              <th className="px-4 py-2 border border-gray-800">Status</th>
+              <th className="px-4 py-2 border border-gray-800">Action</th>
             </tr>
           </thead>
           <tbody>
             {reminders.length ? reminders.map(r => (
-              <tr key={r.id} className={`${getRowColor(r.status, r.due_date)} hover:bg-black`}>
+              <tr key={r.id} className={`${getRowColor(r.status, r.due_date)}`}>
                 <td className="border px-4 py-2">{r.tenant_name}</td>
                 <td className="border px-4 py-2">{r.property_address}</td>
                 <td className="border px-4 py-2">{new Date(r.due_date).toLocaleDateString()}</td>

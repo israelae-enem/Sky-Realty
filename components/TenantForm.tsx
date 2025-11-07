@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { useUser } from '@clerk/nextjs'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
 const TenantForm = () => {
   const router = useRouter()
@@ -21,7 +22,7 @@ const TenantForm = () => {
   const [selectedRealtor, setSelectedRealtor] = useState<any>(null)
   const [error, setError] = useState('')
 
-  // ---------------- Check if tenant already exists ----------------
+  // Check if tenant exists
   useEffect(() => {
     const checkTenant = async () => {
       if (!user?.id) {
@@ -36,14 +37,9 @@ const TenantForm = () => {
         .single()
 
       if (existing) {
-        // If Clerk id not linked yet, update row
         if (!existing.id || existing.id !== user.id) {
-          await supabase
-            .from('tenants')
-            .update({ id: user.id })
-            .eq('email', existing.email)
+          await supabase.from('tenants').update({ id: user.id }).eq('email', existing.email)
         }
-
         toast.success('Welcome back! Redirecting...')
         router.push(`/tenant/${user.id}/dashboard`)
       } else {
@@ -54,7 +50,7 @@ const TenantForm = () => {
     checkTenant()
   }, [user, router])
 
-  // ---------------- Fetch properties & realtors ----------------
+  // Fetch properties & realtors
   useEffect(() => {
     const fetchData = async () => {
       const { data: propertyData } = await supabase
@@ -87,7 +83,6 @@ const TenantForm = () => {
     }
 
     try {
-      // Check if tenant already exists by email
       const { data: existingTenant } = await supabase
         .from('tenants')
         .select('*')
@@ -95,31 +90,24 @@ const TenantForm = () => {
         .single()
 
       if (existingTenant) {
-        // Update existing tenant with selected property and realtor
-        await supabase
-          .from('tenants')
-          .update({
-            id: user.id, // link Clerk ID
-            full_name,
-            phone,
-            property_id: selectedProperty.id,
-            realtorId: selectedRealtor.id,
-          })
-          .eq('email', user.primaryEmailAddress?.emailAddress)
+        await supabase.from('tenants').update({
+          id: user.id,
+          full_name,
+          phone,
+          property_id: selectedProperty.id,
+          realtorId: selectedRealtor.id,
+        }).eq('email', user.primaryEmailAddress?.emailAddress)
       } else {
-        // Insert new tenant
-        await supabase.from('tenants').insert([
-          {
-            id: user.id,
-            full_name,
-            phone,
-            email: user.primaryEmailAddress?.emailAddress || '',
-            property_id: selectedProperty.id,
-            realtorId: selectedRealtor.id,
-            status: 'active',
-            created_at: new Date().toISOString(),
-          },
-        ])
+        await supabase.from('tenants').insert([{
+          id: user.id,
+          full_name,
+          phone,
+          email: user.primaryEmailAddress?.emailAddress || '',
+          property_id: selectedProperty.id,
+          realtorId: selectedRealtor.id,
+          status: 'active',
+          created_at: new Date().toISOString(),
+        }])
       }
 
       toast.success('✅ Tenant account created successfully!')
@@ -131,67 +119,84 @@ const TenantForm = () => {
     }
   }
 
-  if (loading) return <p className="p-8 text-center text-white">Loading...</p>
+  if (loading) return <p className="p-8 text-center text-gray-700">Loading...</p>
   if (error) return <p className="p-8 text-center text-red-500">{error}</p>
 
+  const fadeUpVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.5 },
+    }),
+  }
+
   return (
-    <div className="max-w-md mx-auto mt-16 p-6 bg-black rounded shadow text-white">
-      <h1 className="text-2xl font-bold mb-4">Tenant Registration</h1>
+    <motion.div
+      className="max-w-md mx-auto mt-16 p-8 bg-white rounded-xl shadow-lg"
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.h1
+        className="text-2xl font-bold mb-4 text-gray-900"
+        custom={0}
+        variants={fadeUpVariant}
+      >
+        Tenant Registration
+      </motion.h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={full_name}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-          required
-        />
+        {[
+          { label: 'Full Name', value: full_name, set: setFullName, type: 'text' },
+          { label: 'Phone Number', value: phone, set: setPhone, type: 'tel' },
+        ].map((field, idx) => (
+          <motion.input
+            key={field.label}
+            type={field.type}
+            placeholder={field.label}
+            value={field.value}
+            onChange={(e) => field.set(e.target.value)}
+            className="w-full p-2 rounded border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+            custom={idx + 1}
+            variants={fadeUpVariant}
+          />
+        ))}
 
-        {/* Phone */}
-        <input
-          type="tel"
-          placeholder="Phone Number"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full p-2 rounded bg-black border border-gray-300 text-white"
-          required
-        />
-
-        {/* Email (readonly) */}
-        <input
+        {/* Email readonly */}
+        <motion.input
           type="email"
           value={user?.primaryEmailAddress?.emailAddress || ''}
           disabled
-          className="w-full p-2 rounded bg-gray-700 border border-gray-500 text-gray-300 cursor-not-allowed"
+          className="w-full p-2 rounded border border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed"
+          custom={3}
+          variants={fadeUpVariant}
         />
 
-        {/* Searchable Property */}
+        {/* Search Property */}
         {!selectedProperty && (
-          <div>
+          <motion.div custom={4} variants={fadeUpVariant}>
             <input
               type="text"
-              placeholder="Search Property by Property Address"
+              placeholder="Search Property by Address"
               value={searchProperty}
               onChange={(e) => {
                 setSearchProperty(e.target.value)
                 setSelectedProperty(null)
               }}
-              className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+              className="w-full p-2 rounded border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {searchProperty && (
-              <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
+              <div className="bg-gray-100 border border-gray-300 mt-1 rounded max-h-40 overflow-y-auto">
                 {properties
-                  .filter(
-                    (p) =>
-                      p.address.toLowerCase().includes(searchProperty.toLowerCase()) ||
-                      p.title?.toLowerCase().includes(searchProperty.toLowerCase())
+                  .filter((p) =>
+                    p.address.toLowerCase().includes(searchProperty.toLowerCase()) ||
+                    p.title?.toLowerCase().includes(searchProperty.toLowerCase())
                   )
                   .map((p) => (
                     <div
                       key={p.id}
-                      className="p-2 hover:bg-gray-700 cursor-pointer"
+                      className="p-2 hover:bg-gray-200 cursor-pointer"
                       onClick={() => setSelectedProperty(p)}
                     >
                       {p.address || p.title}
@@ -199,12 +204,12 @@ const TenantForm = () => {
                   ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
-        {/* Searchable Realtor */}
+        {/* Search Realtor */}
         {!selectedRealtor && (
-          <div>
+          <motion.div custom={5} variants={fadeUpVariant}>
             <input
               type="text"
               placeholder="Search Realtor by Name"
@@ -213,18 +218,16 @@ const TenantForm = () => {
                 setSearchRealtor(e.target.value)
                 setSelectedRealtor(null)
               }}
-              className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+              className="w-full p-2 rounded border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {searchRealtor && (
-              <div className="bg-gray-800 border border-gray-600 mt-1 rounded max-h-40 overflow-y-auto">
+              <div className="bg-gray-100 border border-gray-300 mt-1 rounded max-h-40 overflow-y-auto">
                 {realtors
-                  .filter((r) =>
-                    r.full_name.toLowerCase().includes(searchRealtor.toLowerCase())
-                  )
+                  .filter((r) => r.full_name.toLowerCase().includes(searchRealtor.toLowerCase()))
                   .map((r) => (
                     <div
                       key={r.id}
-                      className="p-2 hover:bg-gray-700 cursor-pointer"
+                      className="p-2 hover:bg-gray-200 cursor-pointer"
                       onClick={() => setSelectedRealtor(r)}
                     >
                       {r.full_name}
@@ -232,18 +235,20 @@ const TenantForm = () => {
                   ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Submit */}
-        <button
+        <motion.button
           type="submit"
           className="w-full py-2 bg-[#302cfc] hover:bg-[#241fd9] rounded text-white font-semibold"
+          custom={6}
+          variants={fadeUpVariant}
         >
           Complete Onboarding
-        </button>
+        </motion.button>
       </form>
-    </div>
+    </motion.div>
   )
 }
 

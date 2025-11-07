@@ -13,7 +13,7 @@ const PLAN_PRICES: Record<string, number> = {
 
 // ✅ Property limits
 const PLAN_LIMITS: Record<string, number | null> = {
-  free: 0,
+  free: 1,
   basic: 10,
   pro: 20,
   premium: null,
@@ -192,7 +192,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error("❌ Ziina GET error:", err);
     return NextResponse.json(
-      { plan: "free", propertyLimit: 0, status: "none" },
+      { plan: "free", propertyLimit: 1, status: "none" },
       { status: 500 }
     );
   }

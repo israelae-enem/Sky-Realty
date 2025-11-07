@@ -1,44 +1,48 @@
-import React from 'react'
-import  Image from "next/image"
-import Link from 'next/link'
-import NavItems from '@/components/NavItems'
-import { SignInButton, SignUp, SignUpButton, SignedIn, SignedOut,UserButton, } from '@clerk/nextjs'
+"use client";
 
-
-
-
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from "@clerk/nextjs";
+import { FiMenu } from "react-icons/fi";
+import MenuOverlay from "./MenuOverlay";
 
 const Navbar = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <nav className="navbar text-blue-600 bg-blue-200">
-      <Link href="/">
-      <div className="flex items-center gap-2.5 cursor-pointer ml-0 text-gray-600 font-semi-bold">
-        <Image
-        src="/assets/icons/sky-logo.jpg"
-        alt="logo"
-        width={140}
-        height={30}
-        className='logo'
-        />
-      </div>
+    <>
+      {/* Navbar */}
+      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 sm:px-10 py-4 bg-transparent backdrop-blur-md">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
+          <Image
+            src="/assets/icons/sky-logo.jpg"
+            alt="logo"
+            width={140}
+            height={30}
+            className="object-contain"
+          />
+        </Link>
 
-      </Link>
-      <div className="flex items-center gap-8 text-gray-600">
-        <NavItems/>
-  
-        <SignedOut>
-            <SignInButton>
-              <button className='btn-primary text-white'>Sign In</button>
-            </SignInButton>
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
-        
-  
-      </div>
-    </nav>
-  )
-}
+        {/* Hamburger (shown on all screens) */}
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="text-white text-3xl hover:scale-110 transition-transform"
+        >
+          <FiMenu />
+        </button>
+      </nav>
 
-export default Navbar
+      {/* Menu Overlay */}
+      {menuOpen && <MenuOverlay onClose={() => setMenuOpen(false)} />}
+    </>
+  );
+};
+
+export default Navbar;

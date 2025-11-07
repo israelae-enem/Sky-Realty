@@ -1,27 +1,26 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabaseClient'
-import StatCard from '@/components/StatCard'
-import { Building, CheckCircle, FileText, Home, Users, Calendar, Bell, RotateCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import RentAnalyticsCards from '@/components/RentAnalyticsCards'
-import RentAnalyticsChart from '@/components/RentAnalyticsChart'
-import RentReminders from '@/components/RentReminder'
 import { toast } from 'sonner'
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import PropertyTable from '@/components/PropertyTable'
-import AppointmentTable from '@/components/AppointmentTable'
 import TenantTable from '@/components/TenantTable'
 import RentPaymentTable from '@/components/RentPaymentTable'
 import MaintenanceTable from '@/components/MaintenanceTable'
+import AppointmentTable from '@/components/AppointmentTable'
 import LegalDocumentsTable from '@/components/LegalDocumentTable'
 import Profile from '@/components/Profile'
 import RealtorChat from '@/components/RealtorChat'
+import StatCard from '@/components/StatCard'
+import RentAnalyticsCards from '@/components/RentAnalyticsCards'
+import RentAnalyticsChart from '@/components/RentAnalyticsChart'
+import RentReminders from '@/components/RentReminder'
 import TeamAccordion from '@/components/TeamAccordion'
-// Sidebar removed from layout to make dashboard responsive by default
+import { Building, CheckCircle, FileText, Home, Users, Calendar, Bell } from 'lucide-react'
+import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface Stats {
   properties: number
@@ -49,10 +48,12 @@ interface Notification {
 
 export default function RealtorDashboard() {
   const { user } = useUser()
-  const [stats, setStats] = useState<Stats>({ properties: 0, occupied: 0, leases: 0 })
+  const router = useRouter()
+
+  const [loading, setLoading] = useState(true)
   const [plan, setPlan] = useState<PlanType>(null)
   const [propertyLimit, setPropertyLimit] = useState<number | null>(1)
-  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<Stats>({ properties: 0, occupied: 0, leases: 0 })
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null)
@@ -61,12 +62,13 @@ export default function RealtorDashboard() {
   const [expired, setExpired] = useState(false)
   const [subscriptionActive, setSubscriptionActive] = useState(false)
 
-  const router = useRouter()
+  const [activeSection, setActiveSection] = useState('Home')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const intervalRef = useRef<number | null>(null)
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
-  // Helper to format milliseconds into D:H:M:S
+  // Format countdown
   const formatDuration = (ms: number) => {
     if (ms <= 0) return '00:00:00:00'
     const totalSec = Math.floor(ms / 1000)
@@ -78,41 +80,31 @@ export default function RealtorDashboard() {
     return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
   }
 
-  // Fetch subscription info and start live countdown
+  // Fetch subscription info & start countdown
   useEffect(() => {
     if (!user?.id) return
     let mounted = true
 
-    const startCountdown = (targetDate: Date | null, fallbackDate: Date | null) => {
-      // clear previous
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
+    const startCountdown = (targetDate: Date | null) => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current)
 
       intervalRef.current = window.setInterval(() => {
         const now = new Date().getTime()
-
-        // Prefer trial expiry while present, otherwise subscription expiry
-        const target = targetDate?.getTime() ?? fallbackDate?.getTime() ?? null
+        const target = targetDate?.getTime() ?? null
         if (!target) {
           setCountdown(null)
           return
         }
-
         const diff = target - now
         if (diff <= 0) {
-          // expired — mark and redirect
           setCountdown('00:00:00:00')
           setExpired(true)
           setSubscriptionActive(false)
-          toast('⚠ Your trial or subscription has expired. Please renew to regain dashboard access.')
+          toast('⚠ Your trial or subscription has expired. Please renew.')
           window.clearInterval(intervalRef.current!)
           intervalRef.current = null
-          
           return
         }
-
         setCountdown(formatDuration(diff))
       }, 1000)
     }
@@ -122,128 +114,94 @@ export default function RealtorDashboard() {
         const res = await fetch(`/api/ziina?user=${user.id}`)
         const data = await res.json()
 
-        // Expect data.plan, data.status, data.trial_ends_at, data.subscription_expires_at
         const status: string = data?.status ?? 'none'
         const planId: PlanType = data?.plan ?? null
-
         const trial = data?.trial_ends_at ? new Date(data.trial_ends_at) : null
         const subExpires = data?.subscription_expires_at ? new Date(data.subscription_expires_at) : null
 
-        // plan limits (if you want to add 'free' later, add here)
         const PLAN_LIMITS: Record<string, number | null> = {
-          free: 0,
+          free: 1,
           basic: 10,
           pro: 20,
           premium: Infinity,
         }
 
-        // Determine active state
         let isExpired = false
         const now = new Date()
-        // If no plan and no trial, expired (you disallowed free)
         if (!planId && !trial) isExpired = true
-
-        // Trial check
-        if (trial && trial <= now) {
-          // trial ended -> consider expired until subscription active
-          isExpired = true
-        }
-
-        // Subscription expiry check
+        if (trial && trial <= now) isExpired = true
         if (subExpires && subExpires <= now) isExpired = true
-
-        // status checks (server may provide explicit statuses)
-        if (['expired', 'none', 'canceled'].includes(status)) {
-          // treat as expired unless trial present and in future
-          if (!(trial && trial > now)) isExpired = true
-        }
+        if (['expired', 'none', 'canceled'].includes(status) && !(trial && trial > now)) isExpired = true
 
         if (!mounted) return
-
         setPlan(planId)
         setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : (trial ? 0 : 0))
         setTrialEndsAt(trial)
         setSubscriptionExpiresAt(subExpires)
-        setSubscriptionActive(!isExpired)
+        setSubscriptionActive(true)
         setExpired(isExpired)
 
-        // Start countdown:
-        
-        if (trial && trial > now) {
-          startCountdown(trial, subExpires)
-        } else if (subExpires && subExpires > now) {
-          startCountdown(subExpires, null)
-        } else {
-            setCountdown(null)
-          
-        }
+        if (trial && trial > now) startCountdown(trial)
+        else if (subExpires && subExpires > now) startCountdown(subExpires)
+        else setCountdown(null)
       } catch (err) {
-        console.error('❌ Subscription check failed:', err)
-        toast('⚠ Unable to verify subscription. You can view the dashboard, but adding nrw peoperties is disableduntil you subscribe.')
+        console.error(err)
+        toast('⚠ Unable to verify subscription. Some actions may be disabled.')
         setPlan(null)
-        setPropertyLimit(0)
+        setPropertyLimit(1)
         setSubscriptionActive(false)
         setExpired(true)
-        
       } finally {
         if (mounted) setLoading(false)
       }
     }
 
     fetchSub()
-
     return () => {
       mounted = false
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
+      if (intervalRef.current) window.clearInterval(intervalRef.current)
     }
-  }, [user?.id, router])
+  }, [user?.id])
 
-  // ---------------- Fetch properties, tenants, notifications ----------------
+  // Fetch dashboard data
   useEffect(() => {
     const initData = async () => {
       if (!user?.id) return
       setLoading(true)
-      const realtorId = user.id
-
       try {
         const { data: properties } = await supabase
           .from('properties')
           .select('*')
-          .eq('realtor_id', realtorId)
+          .eq('realtor_id', user.id)
+
         updateStats(properties ?? [])
 
-        const { data: tenantsData, error: tenantsError } = await supabase
+        const { data: tenantsData } = await supabase
           .from('tenants')
-          .select('id, full_name, email, phone, property_id, realtor_id')
-          .eq('realtor_id', realtorId)
+          .select('*')
+          .eq('realtor_id', user.id)
           .order('full_name', { ascending: true })
-        if (!tenantsError && tenantsData) setTenants(tenantsData)
+        if (tenantsData) setTenants(tenantsData)
 
-        const { data: notificationsData, error: notifError } = await supabase
+        const { data: notificationsData } = await supabase
           .from('notification')
           .select('*')
-          .eq('realtor_id', realtorId)
+          .eq('realtor_id', user.id)
           .order('created_at', { ascending: false })
-        if (!notifError && notificationsData) setNotifications(notificationsData)
+        if (notificationsData) setNotifications(notificationsData)
       } catch (err) {
-        console.error('Error fetching dashboard data:', err)
+        console.error(err)
       } finally {
         setLoading(false)
       }
     }
-
     initData()
   }, [user?.id])
 
   const updateStats = (properties: any[]) => {
     const total = properties.length
     const occupied = properties.filter((p) => p.status === 'Occupied').length
-    const activeLeases = properties.filter(
-      (p) => p.lease_end && new Date(p.lease_end) > new Date()
-    ).length
+    const activeLeases = properties.filter((p) => p.lease_end && new Date(p.lease_end) > new Date()).length
     setStats({ properties: total, occupied, leases: activeLeases })
   }
 
@@ -251,197 +209,185 @@ export default function RealtorDashboard() {
     if (!user?.id) return
     const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
     if (unreadIds.length === 0) return
-
-    const { error } = await supabase
-      .from('notification')
-      .update({ read: true })
-      .in('id', unreadIds)
-
-    if (!error) {
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      )
-    }
+    const { error } = await supabase.from('notification').update({ read: true }).in('id', unreadIds)
+    if (!error) setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }
 
+  if (loading) return <p className="p-8 text-center text-gray-800">Loading dashboard...</p>
 
+   const navItems = [
+  { name: 'Home', icon: <Home size={18} /> },
+  { name: 'Properties', icon: <Building size={18} /> },
+  { name: 'Tenants', icon: <Users size={18} /> },
+  { name: 'Rent Payments', icon: <FileText size={18} /> },
+  { name: 'Maintenance', icon: <FileText size={18} /> },
+  { name: 'Appointments', icon: <Calendar size={18} /> },
+  { name: 'Notifications', icon: <Bell size={18} /> },
+  { name: 'Legal Documents', icon: <Calendar size={18} /> },
+  { name: 'Team', icon: <Users size={18} /> },
+  { name: 'Chat', icon: <Users size={18} /> },
+]
 
-  if (loading) return <p className="p-8 text-center text-white">Loading dashboard...</p>
-
-  return (
-    <div className="flex min-h-screen bg-black text-white">
+return (
+  <div className="flex min-h-screen bg-gray-100 text-gray-800">
+    {/* Sidebar */}
+    <aside className={clsx(
+      'fixed top-0 left-0 h-full w-64 backdrop-blur-md bg-[#e8ecf1]/80 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
+      sidebarOpen ? 'translate-x-0' : '-translate-x-64',
+      'md:translate-x-0'
+    )}>
       
-      {/* Main content */}
-      <main className="flex-1 p-6 space-y-8 overflow-y-auto bg-black">
-           <div className='ml-auto'>
-            <Profile />
-          </div>
+      {/* Top section: Profile and heading */}
+      <div className="flex flex-col space-y-4 sticky top-0 z-10">
+        {/* Profile */}
+        <Profile />
 
-        
-        {/* 🟢 Trial or subscription banner (real-time) */}
-        {!expired && countdown && (
-          <div className="bg-yellow-500 text-black text-center py-2 rounded-md font-semibold">
-            ⏳ Trial / Subscription countdown — <span className="font-mono">{countdown}</span>
-          </div>
-        )}
+        {/* Dashboard heading */}
+        <h1 className="text-2xl font-bold text-[#302cfc]">Dashboard</h1>
+      </div>
 
-        {/* 🟠 If no plan and no trial yet — show Welcome message */}
-      {!plan && !trialEndsAt && !subscriptionExpiresAt ? (
-        <div className="flex flex-col items-center justify-center h-[80vh] text-center space-y-6">
-          <h2 className="text-2xl font-semibold text-[#302cfc]">
-            Welcome to your dashboard, {user?.firstName || 'Realtor'}!
-          </h2>
-          <p className="text-gray-400 max-w-md">
-            You don't have an active subscription yet. Subscribe now to start adding properties, tenants, and managing rent payments.
-          </p>
+      {/* Navigation items */}
+      <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
+        {navItems.map((item) => (
           <button
-            onClick={() => router.push('/subscription')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md transition"
+            key={item.name}
+            onClick={() => setActiveSection(item.name)}
+            className={clsx(
+              'flex items-center p-2 rounded-lg transition-colors duration-200',
+              activeSection === item.name ? 'bg-[#dbe2ff] text-[#302cfc]' : 'hover:bg-[#dbe2ff]'
+            )}
           >
-            Subscribe to Get Started
+            <span className="mr-3">{item.icon}</span>
+            {item.name}
           </button>
-        </div>
-      
-      ): expired ? (
-        <div className="flex flex-col items-center justify-center h-[80vh] text-center space-y-6">
-          <h2 className="text-2xl font-semibold text-red-500">
-            Your subscription has expired
-          </h2>
-          <p className="text-gray-400 max-w-md">
-            To continue managing your properties and tenants, please renew your plan.
-          </p>
-          <button
-            onClick={() => router.push('/subscription')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md transition"
-          >
-            Renew Subscription
-          </button>
-        </div>
-      ) : (
-        <>
+        ))}
+      </nav>
+    </aside>
+  
 
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
-        </div>
+      {/* Mobile Hamburger */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-md bg-white shadow-md"
+        >
+          <span className="block w-6 h-0.5 bg-gray-800 mb-1"></span>
+          <span className="block w-6 h-0.5 bg-gray-800 mb-1"></span>
+          <span className="block w-6 h-0.5 bg-gray-800"></span>
+        </button>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
-          <StatCard icon={<Building />} title={`Total Properties ${plan ? `(Plan: ${plan})` : ''}`} value={stats.properties} />
-          <StatCard icon={<CheckCircle />} title="Occupied Units" value={stats.occupied} />
-          <StatCard icon={<FileText />} title="Active Leases" value={stats.leases} />
-          <StatCard icon={<Bell />} title="Unread Notifications" value={unreadCount} />
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col ml-0 md:ml-64 transition-all duration-300">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between h-16 px-6 bg-white shadow-sm">
+          <h2 className="text-lg font-semibold">{activeSection}</h2>
+          
         </div>
 
-        {/* Rent Analytics */}
-        <div id="rent-analytics">
-          <RentAnalyticsCards />
-        </div>
+        <div className="flex-1 p-6 overflow-auto">
+          {/* Countdown banner */}
+          {!expired && countdown && (
+            <div className="bg-yellow-500 text-black text-center py-2 rounded-md font-semibold mb-4">
+              ⏳ Trial / Subscription countdown — <span className="font-mono">{countdown}</span>
+            </div>
+          )}
 
-          <div id="rent-analytics">
-          <RentAnalyticsChart />
-          <RentReminders />
-        </div>
+          <AnimatePresence mode="wait">
+            {activeSection === 'Home' && (
+              <motion.div
+                key="home"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-6"
+              >
+                <h1 className="text-2xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+                  <StatCard icon={<Building />} title={`Total Properties ${plan ? `(Plan: ${plan})` : ''}`} value={stats.properties} />
+                  <StatCard icon={<CheckCircle />} title="Occupied Units" value={stats.occupied} />
+                  <StatCard icon={<FileText />} title="Active Leases" value={stats.leases} />
+                  <StatCard icon={<Bell />} title="Unread Notifications" value={unreadCount} />
+                </div>
+                <RentAnalyticsCards />
+                <RentAnalyticsChart />
+                <RentReminders />
+              </motion.div>
+            )}
 
-        {/* Accordion for tables */}
-        <Accordion type="single" collapsible className="w-full mt-8 space-y-6">
-          <AccordionItem value="properties">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <Home size={18} /> Properties
-            </AccordionTrigger>
-            <AccordionContent>
-              <PropertyTable plan={plan ?? null} propertyLimit={propertyLimit ?? 0} realtorId={user?.id!} />
-            </AccordionContent>
-          </AccordionItem>
+            {activeSection === 'Properties' && (
+              <motion.div
+                key="properties"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <PropertyTable plan={plan ?? null} propertyLimit={propertyLimit ?? 0} realtorId={user?.id!} />
+              </motion.div>
+            )}
 
-          <AccordionItem value="tenants">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <Users size={18} /> Tenants
-            </AccordionTrigger>
-            <AccordionContent>
-              <TenantTable realtorId={user?.id ?? ''} />
-            </AccordionContent>
-          </AccordionItem>
+            {activeSection === 'Tenants' && (
+              <motion.div
+                key="tenants"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <TenantTable realtorId={user?.id ?? ''} />
+              </motion.div>
+            )}
 
-          <AccordionItem value="rent-payments">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <FileText size={18} /> Rent Payments
-            </AccordionTrigger>
-            <AccordionContent>
-              <RentPaymentTable realtorId={user?.id ?? ''} />
-            </AccordionContent>
-          </AccordionItem>
+            {activeSection === 'Rent Payments' && (
+              <motion.div key="rentpayments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <RentPaymentTable realtorId={user?.id ?? ''} />
+              </motion.div>
+            )}
 
-          <AccordionItem value="maintenance">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <FileText size={18} /> Maintenance Requests
-            </AccordionTrigger>
-            <AccordionContent>
-              <MaintenanceTable realtorId={user?.id ?? ''} />
-            </AccordionContent>
-          </AccordionItem>
+            {activeSection === 'Maintenance' && (
+              <motion.div key="maintenance" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <MaintenanceTable realtorId={user?.id ?? ''} />
+              </motion.div>
+            )}
 
-            <AccordionItem value="appointments">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <Calendar size={18} /> Schedule Maintenance
-            </AccordionTrigger>
-            <AccordionContent>
-              <AppointmentTable realtorId={user?.id ?? ''} />
-            </AccordionContent>
-          </AccordionItem>
+            {activeSection === 'Appointments' && (
+              <motion.div key="appointments" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <AppointmentTable realtorId={user?.id ?? ''} />
+              </motion.div>
+            )}
 
-          <AccordionItem value="notifications">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2" onClick={markNotificationsRead}>
-              <Bell size={18} /> Notifications ({unreadCount})
-            </AccordionTrigger>
-            <AccordionContent className="space-y-2">
-              {notifications.length > 0 ? (
-                notifications.map((n) => (
-                  <p
-                    key={n.id}
-                    className={`p-2 rounded-md ${n.read ? 'bg-gray-800 text-gray-400' : 'bg-[#302cfc] text-white'}`}
-                  >
+            {activeSection === 'Notifications' && (
+              <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <button onClick={markNotificationsRead} className="mb-2 text-blue-600 underline">Mark all read</button>
+                {notifications.length > 0 ? notifications.map((n) => (
+                  <p key={n.id} className={clsx('p-2 rounded-md', n.read ? 'bg-gray-200 text-gray-600' : 'bg-[#302cfc] text-white')}>
                     {n.message}
                   </p>
-                ))
-              ) : (
-                <p className="text-gray-400">No notifications</p>
-              )}
-            </AccordionContent>
-          </AccordionItem>
+                )) : <p className="text-gray-400">No notifications</p>}
+              </motion.div>
+            )}
 
-           <AccordionItem value="legal-docs">
-            <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-              <Calendar size={18} /> Legal Documents
-            </AccordionTrigger>
-            <AccordionContent>
-              <LegalDocumentsTable  />
-            </AccordionContent>
-          </AccordionItem>
+            {activeSection === 'Legal Documents' && (
+              <motion.div key="legal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <LegalDocumentsTable />
+              </motion.div>
+            )}
 
-          
-            <AccordionItem value="team">
-          <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-           <Users size={18} /> Team
-             </AccordionTrigger>
-             <AccordionContent>
-                {user?.id && plan ? (
-               <TeamAccordion   />
-               ) : (
-              <p className="text-gray-400">Loading team info...</p>
-                )}
-            </AccordionContent>
-              </AccordionItem>
-              
+            {activeSection === 'Team' && (
+              <motion.div key="team" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <TeamAccordion />
+              </motion.div>
+            )}
 
-              {/* Chat Component */}
-             <Accordion type="single" collapsible className="w-full mt-8 space-y-6">
-             {/* other accordion items */}
-              {user?.id && <RealtorChat tenants={tenants} user={{ id: user.id }} />}
-             </Accordion>
-         
-        </Accordion>
-        </>
-      )}
+            {activeSection === 'Chat' && (
+              <motion.div key="chat" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                {user ? <RealtorChat tenants={tenants} user={{ id: user.id }} /> : null}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
     </div>
   )

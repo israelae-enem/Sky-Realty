@@ -60,7 +60,7 @@ export default function LegalDocumentsTable() {
 
   if (loading) {
     return (
-      <div className="bg-[#0d0d0e] p-6 rounded-lg text-white">
+      <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
         <h2 className="text-xl font-semibold mb-4">Legal Documents</h2>
         <p className="text-gray-400">Loading documents...</p>
       </div>
@@ -68,7 +68,7 @@ export default function LegalDocumentsTable() {
   }
 
   return (
-    <div className="bg-[#0d0d0e] p-6 rounded-lg text-white">
+    <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
       {/* Header with button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Legal Documents</h2>
@@ -97,7 +97,7 @@ export default function LegalDocumentsTable() {
             {documents.map((doc) => (
               <tr
                 key={doc.id}
-                className="border-b border-gray-300 hover:bg-black/50"
+                className="border-b border-gray-300 hover:bg-gray/50"
               >
                 <td className="py-2 px-3 capitalize">{doc.type}</td>
                 <td className="py-2 px-3">{doc.tenants?.full_name || '—'}</td>
@@ -112,10 +112,10 @@ export default function LegalDocumentsTable() {
                       View / Download
                     </a>
                   ) : (
-                    <span className="text-gray-400">No file</span>
+                    <span className="text-gray-800">No file</span>
                   )}
                 </td>
-                <td className="py-2 px-3 text-gray-400 text-sm">
+                <td className="py-2 px-3 text-gray-800 text-sm">
                   {new Date(doc.created_at).toLocaleDateString()}
                 </td>
               </tr>

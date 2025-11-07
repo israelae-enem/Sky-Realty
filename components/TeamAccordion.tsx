@@ -14,7 +14,7 @@ export default function Team() {
     invitations: { pageSize: 10 },
     memberships: { pageSize: 10 },
   })
-  const { userMemberships, isLoaded: orgListLoaded } = useOrganizationList({
+  const { isLoaded: orgListLoaded } = useOrganizationList({
     userMemberships: { infinite: true },
   })
 
@@ -90,27 +90,29 @@ export default function Team() {
   }
 
   if (!isLoaded || !orgListLoaded)
-    return <p className="text-gray-400">Loading team...</p>
+    return <p className="text-gray-500 text-center mt-10">Loading team...</p>
 
-  const canInvite = plan === 'basic' || plan === 'pro' || plan === 'premium'
+  const canInvite = plan !== 'free'
   const memberCount = memberships?.data?.length || 0
   const limit = TEAM_LIMITS[plan]
 
   return (
-    <div className="bg-[#0d0d0e] rounded-lg p-4 sm:p-6 space-y-6 text-white w-full max-w-3xl mx-auto">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6 text-gray-900 w-full max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-        <h2 className="text-xl sm:text-2xl font-semibold text-blue-400 flex items-center gap-2">
-          <Users size={20} /> Team Management
+        <h2 className="text-2xl font-semibold text-blue-700 flex items-center gap-2">
+          <Users size={22} /> Team Management
         </h2>
-        <div className="text-sm text-gray-100 sm:text-right">
+        <div className="text-sm text-gray-700 sm:text-right">
           <p>
-            Plan: <span className="text-blue-400 capitalize">{plan}</span>
+            Plan:{' '}
+            <span className="text-blue-600 font-medium capitalize">{plan}</span>
           </p>
           {plan !== 'free' && (
             <p>
-              Members: <span className="text-blue-400">{memberCount}</span> /{' '}
-              <span className="text-blue-400">{limit}</span>
+              Members:{' '}
+              <span className="text-blue-600 font-medium">{memberCount}</span> /{' '}
+              <span className="text-blue-600 font-medium">{limit}</span>
             </p>
           )}
         </div>
@@ -120,11 +122,15 @@ export default function Team() {
       {canInvite && (
         <div className="space-y-2">
           <button
-            className="flex justify-between items-center w-full bg-[#0d0d0e] p-3 rounded-md"
+            className="flex justify-between items-center w-full bg-gray-50 hover:bg-gray-100 p-3 rounded-md border border-gray-200 transition"
             onClick={() => setInviteCollapsed((prev) => !prev)}
           >
-            <span className="font-medium text-white">Invite Member</span>
-            {inviteCollapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            <span className="font-medium text-gray-900">Invite Member</span>
+            {inviteCollapsed ? (
+              <ChevronUp size={18} className="text-blue-600" />
+            ) : (
+              <ChevronDown size={18} className="text-blue-600" />
+            )}
           </button>
           {!inviteCollapsed && (
             <div className="flex flex-col sm:flex-row gap-2 mt-2">
@@ -132,12 +138,12 @@ export default function Team() {
                 placeholder="Enter email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#0d0d0e] text-white flex-1"
+                className="bg-gray-50 text-gray-900 flex-1 border border-gray-300"
               />
               <Button
                 onClick={handleInvite}
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-500 w-full sm:w-auto"
+                className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
               >
                 <PlusCircle size={16} className="mr-2" />
                 {loading ? 'Inviting...' : 'Invite'}
@@ -148,35 +154,42 @@ export default function Team() {
       )}
 
       {!canInvite && (
-        <div className="p-4 bg-[#0d0d0e] rounded text-center text-gray-100">
-          Upgrade to <span className="text-blue-400">Basic</span>,{' '}
-          <span className="text-blue-400">Pro</span> or{' '}
-          <span className="text-blue-400">Premium</span> to add team members.
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded text-center text-gray-700">
+          Upgrade to <span className="text-blue-600 font-medium">Basic</span>,{' '}
+          <span className="text-blue-600 font-medium">Pro</span> or{' '}
+          <span className="text-blue-600 font-medium">Premium</span> to add team members.
         </div>
       )}
 
       {/* Members Section */}
       <div className="space-y-2">
         <button
-          className="flex justify-between items-center w-full bg-[#0d0d0e] p-3 rounded-md"
+          className="flex justify-between items-center w-full bg-gray-50 hover:bg-gray-100 p-3 rounded-md border border-gray-200 transition"
           onClick={() => setMembersCollapsed((prev) => !prev)}
         >
-          <span className="font-medium text-white">Your Team</span>
-          {membersCollapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          <span className="font-medium text-gray-900">Your Team</span>
+          {membersCollapsed ? (
+            <ChevronUp size={18} className="text-blue-600" />
+          ) : (
+            <ChevronDown size={18} className="text-blue-600" />
+          )}
         </button>
+
         {!membersCollapsed && (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
             {memberships?.data?.length ? (
               memberships.data.map((member) => (
                 <li
                   key={member.id}
-                  className="bg-[#0d0d0e] p-4 rounded-md flex flex-col justify-between space-y-2"
+                  className="bg-white border border-gray-200 rounded-md shadow-sm p-4 flex flex-col justify-between space-y-2 hover:shadow-md transition"
                 >
                   <div>
-                    <p className="font-medium text-white truncate">
+                    <p className="font-medium text-gray-900 truncate">
                       {member.publicUserData?.identifier || 'Unknown'}
                     </p>
-                    <p className="text-sm text-gray-100">{member.role}</p>
+                    <p className="text-sm text-gray-600 capitalize">
+                      {member.role?.replace('org:', '')}
+                    </p>
                   </div>
                   {member.role !== 'org:admin' && (
                     <Button
@@ -184,7 +197,7 @@ export default function Team() {
                       onClick={() =>
                         handleRemove(member.publicUserData?.identifier || '')
                       }
-                      className="bg-red-600 hover:bg-red-500 mt-2 w-full"
+                      className="bg-red-600 hover:bg-red-700 text-white mt-2 w-full"
                     >
                       <UserMinus size={14} className="mr-1" /> Remove
                     </Button>
@@ -204,27 +217,33 @@ export default function Team() {
       {invitations?.data?.length ? (
         <div className="space-y-2">
           <button
-            className="flex justify-between items-center w-full bg-[#0d0d0e] p-3 rounded-md"
+            className="flex justify-between items-center w-full bg-gray-50 hover:bg-gray-100 p-3 rounded-md border border-gray-200 transition"
             onClick={() => setInvitationsCollapsed((prev) => !prev)}
           >
-            <span className="font-medium text-white">Pending Invitations</span>
-            {invitationsCollapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            <span className="font-medium text-gray-900">Pending Invitations</span>
+            {invitationsCollapsed ? (
+              <ChevronUp size={18} className="text-blue-600" />
+            ) : (
+              <ChevronDown size={18} className="text-blue-600" />
+            )}
           </button>
           {!invitationsCollapsed && (
             <ul className="space-y-2 mt-2">
               {invitations.data.map((inv) => (
                 <li
                   key={inv.id}
-                  className="flex flex-col sm:flex-row justify-between sm:items-center bg-[#0d0d0e] p-4 rounded-md"
+                  className="flex flex-col sm:flex-row justify-between sm:items-center bg-white border border-gray-200 rounded-md p-4 shadow-sm hover:shadow-md transition"
                 >
-                  <p className="text-gray-300 mb-2 sm:mb-0">{inv.emailAddress}</p>
+                  <p className="text-gray-700 mb-2 sm:mb-0">
+                    {inv.emailAddress}
+                  </p>
                   <Button
                     size="sm"
                     onClick={async () => {
                       await inv.revoke()
                       toast.success('Invitation revoked')
                     }}
-                    className="bg-red-600 hover:bg-red-500 w-full sm:w-auto"
+                    className="bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
                   >
                     Revoke
                   </Button>

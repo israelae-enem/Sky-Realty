@@ -4,6 +4,8 @@ import { SignIn, useUser } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { motion } from 'framer-motion'
+import Image from 'next/image'
 
 export default function SignInPage() {
   const { user, isSignedIn } = useUser()
@@ -17,11 +19,9 @@ export default function SignInPage() {
       setChecking(true)
 
       try {
-        // Refresh user metadata
         await user.reload()
         const userId = user.id
 
-        // Check if user exists in Realtors table
         const { data: realtor } = await supabase
           .from('realtors')
           .select('id')
@@ -33,7 +33,6 @@ export default function SignInPage() {
           return
         }
 
-        // Check if user exists in Tenants table
         const { data: tenant } = await supabase
           .from('tenants')
           .select('id')
@@ -44,9 +43,6 @@ export default function SignInPage() {
           router.replace(`/tenant/${userId}/dashboard`)
           return
         }
-
-        // If user is not in either table, optionally create tenant by default
-        // await supabase.from('tenants').insert({ id: userId }) // optional
       } catch (err) {
         console.error('Error during redirect:', err)
       } finally {
@@ -67,16 +63,35 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-300">
-      <div className="p-6 rounded-lg shadow-lg">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <Image
+        src="/assets/images/pic1.jpg" // <-- your background image
+        alt="Sign in background"
+        fill
+        className="object-cover"
+        priority
+      />
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* SignIn Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 w-full max-w-md p-8 rounded-xl shadow-2xl bg-white"
+      >
         <SignIn
           appearance={{
             elements: {
-              formButtonPrimary: 'bg-[#302cfc] hover:bg-blue-700 text-white',
+              formButtonPrimary:
+                'bg-[#302cfc] hover:bg-blue-700 text-white rounded-lg',
             },
           }}
         />
-      </div>
+      </motion.div>
     </div>
   )
 }

@@ -1,46 +1,40 @@
-"use client"; // <-- Force client-side rendering
+"use client";
 
-import TenantForm from '@/components/TenantForm';
-import Image from 'next/image';
-import React, { Suspense, useEffect, useState } from 'react';
+import { motion } from "framer-motion";
+import RealtorSignUpForm from "@/components/RealtorSignUpForm";
+import Image from "next/image";
+import React from "react";
+import TenantForm from "@/components/TenantForm";
 
-const Tenant = () => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setImageLoaded(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
+const Realtor = () => {
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-black text-white">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <Image
+        src="/assets/images/pic1.jpg"
+        alt="agent background"
+        fill
+        className="object-cover w-full h-full"
+        priority
+      />
 
+      {/* Optional subtle overlay for readability (can remove if you want pure image) */}
+      <div className="absolute inset-0 bg-black/30" />
 
-      {/* Image Section */}
-      <div
-        className="w-full md:w-1/2 relative h-64 md:h-auto transition-opacity duration-1000 ease-in-out"
-        style={{ opacity: imageLoaded ? 1 : 0 }}
+      {/* Motion Form Modal */}
+      <motion.div
+        initial={{ opacity: 0, y: 60, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
       >
-        <Image
-          src="/assets/images/agent.jpg"
-          alt="agent"
-          fill
-          className="object-cover w-full h-full"
-        />
-      </div>
-
-
-        {/* Form Section */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <Suspense fallback={<div>Loading form...</div>}>
-            <TenantForm />
-          </Suspense>
-        </div>
-      </div>
-
+        <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
+          Realtor Sign Up
+        </h1>
+        <TenantForm />
+      </motion.div>
     </div>
   );
-}
+};
 
-export default Tenant;
+export default Realtor;

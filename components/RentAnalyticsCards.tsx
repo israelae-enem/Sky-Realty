@@ -1,30 +1,68 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import useRentAnalytics from '@/app/hooks/useAnalytics'
 import { useUser } from '@clerk/nextjs'
 
 export default function RentAnalyticsCard() {
-  const { user } = useUser() // Clerk user
+  const { user } = useUser()
   const realtorId = user?.id || null
   const analytics = useRentAnalytics(realtorId)
 
+  // Count-up states
+  const [paid, setPaid] = useState(0)
+  const [pending, setPending] = useState(0)
+  const [overdue, setOverdue] = useState(0)
+
+  useEffect(() => {
+    const duration = 800
+    const steps = 30
+    const paidStep = analytics.total_collected / steps
+    const pendingStep = analytics.total_outstanding / steps
+    const overdueStep = analytics.total_late / steps
+    let currentStep = 0
+
+    const interval = setInterval(() => {
+      currentStep++
+      setPaid(Math.round(paidStep * currentStep))
+      setPending(Math.round(pendingStep * currentStep))
+      setOverdue(Math.round(overdueStep * currentStep))
+      if (currentStep >= steps) clearInterval(interval)
+    }, duration / steps)
+
+    return () => clearInterval(interval)
+  }, [analytics.total_collected, analytics.total_outstanding, analytics.total_late])
+
+  const stats = [
+    { label: 'Paid', value: paid, color: 'text-green-600' },
+    { label: 'Pending', value: pending, color: 'text-yellow-600' },
+    { label: 'Overdue', value: overdue, color: 'text-red-600' },
+  ]
+
   return (
-    <div className="bg-[#0d0d0e] border border-gray-300 rounded-lg p-4 text-white">
-      <h2 className="text-xl font-semibold mb-3 text-[#302cfc]">Rent Summary</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="bg-gray-200 border border-gray-300 rounded-lg p-5 text-gray-800 shadow-md"
+    >
+      <h2 className="text-xl font-semibold mb-4 text-[#302cfc]">Rent Summary</h2>
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-[#222224] p-4 rounded text-center">
-          <p className="text-gray-400 text-sm">Paid</p>
-          <p className="text-green-400 text-lg font-bold">${analytics.total_collected}</p>
-        </div>
-        <div className="bg-[#222224] p-4 rounded text-center">
-          <p className="text-gray-400 text-sm">Pending</p>
-          <p className="text-yellow-400 text-lg font-bold">${analytics.total_outstanding}</p>
-        </div>
-        <div className="bg-[#222224] p-4 rounded text-center">
-          <p className="text-gray-400 text-sm">Overdue</p>
-          <p className="text-red-400 text-lg font-bold">${analytics.total_late}</p>
-        </div>
+        {stats.map((stat, idx) => (
+          <motion.div
+            key={stat.label}
+            whileHover={{ scale: 1.05 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + idx * 0.1, type: 'spring', stiffness: 120 }}
+            className="bg-gray-300 p-4 rounded text-center cursor-pointer shadow-sm"
+          >
+            <p className="text-gray-600 text-sm">{stat.label}</p>
+            <p className={`text-lg font-bold ${stat.color}`}>${stat.value}</p>
+          </motion.div>
+        ))}
       </div>
-    </div>
+    </motion.div>
   )
 }

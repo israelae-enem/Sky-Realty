@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Bell, MessageCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { motion } from 'framer-motion';
 import TenantChat from '@/components/TenantChat';
+import Profile from '@/components/Profile'; // <-- added Profile import
 
 interface Tenant {
   id: string;
@@ -38,100 +39,101 @@ interface Stats {
 
 const TenantDashboard = () => {
   const { user, isLoaded } = useUser();
-  const [open, setOpen] = useState<'notifications' | 'chat' | null>(null);
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, completed: 0, pending: 0 });
   const [filter, setFilter] = useState<'All' | 'Pending' | 'Completed'>('All');
+  const [openNotifications, setOpenNotifications] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-
-  // ---------------- CHAT ----------------
-  
 
   useEffect(() => {
     if (!isLoaded || !user) return;
 
     const fetchTenantData = async () => {
-      // Tenant profile
-      const { data: tenantData, error: tenantError } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      if (tenantError) console.error(tenantError);
-      else setTenant(tenantData);
+      try {
+        // Tenant profile
+        const { data: tenantData, error: tenantError } = await supabase
+          .from('tenants')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        if (tenantError) console.error(tenantError);
+        else setTenant(tenantData);
 
-      // Notifications
-      const { data: notifData, error: notifError } = await supabase
-        .from('notification')
-        .select('*')
-        .eq('tenant_id', user.id)
-        .order('created_at', { ascending: false });
-      if (notifError) console.error(notifError);
-      else setNotifications(notifData || []);
+        // Notifications
+        const { data: notifData, error: notifError } = await supabase
+          .from('notification')
+          .select('*')
+          .eq('tenant_id', user.id)
+          .order('created_at', { ascending: false });
+        if (notifError) console.error(notifError);
+        else setNotifications(notifData || []);
 
-      // Maintenance requests
-      const { data: reqData, error: reqError } = await supabase
-        .from('maintenance_request')
-        .select('*')
-        .eq('tenant_id', user.id)
-        .order('created_at', { ascending: false });
-      if (reqError) console.error(reqError);
-      else {
-        setMaintenanceRequests(reqData || []);
-        const total = reqData?.length || 0;
-        const completed = reqData?.filter((r) => r.status === 'Completed').length || 0;
-        const pending = reqData?.filter((r) => r.status === 'Pending').length || 0;
-        setStats({ total, completed, pending });
+        // Maintenance requests
+        const { data: reqData, error: reqError } = await supabase
+          .from('maintenance_request')
+          .select('*')
+          .eq('tenant_id', user.id)
+          .order('created_at', { ascending: false });
+        if (reqError) console.error(reqError);
+        else {
+          setMaintenanceRequests(reqData || []);
+          const total = reqData?.length || 0;
+          const completed = reqData?.filter((r) => r.status === 'Completed').length || 0;
+          const pending = reqData?.filter((r) => r.status === 'Pending').length || 0;
+          setStats({ total, completed, pending });
+        }
+      } catch (err) {
+        console.error('Error fetching tenant data:', err);
+        toast.error('Failed to load tenant data');
       }
     };
 
     fetchTenantData();
   }, [isLoaded, user]);
 
-  // Fetch + subscribe to chat messages
-  
-
-    // Subscribe to real-time updates
-
-   
-
   const filteredRequests =
     filter === 'All'
       ? maintenanceRequests
       : maintenanceRequests.filter((r) => r.status === filter);
 
-  if (!tenant) return <p className="p-8 text-center text-white">Loading...</p>;
+  if (!tenant) return <p className="p-8 text-center text-gray-800">Loading...</p>;
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 space-y-10">
+    <div className="min-h-screen bg-gray-50 text-gray-800 p-6 space-y-10">
       {/* Topbar */}
-      <div className="flex flex-col md:flex-row justify-end gap-6 relative font-bold">
+      <div className="flex flex-col md:flex-row justify-end items-center gap-6 relative font-bold">
         {/* Notifications */}
         <div className="relative">
           <button
             aria-haspopup="true"
-            aria-expanded={open === 'notifications'}
-            onClick={() => setOpen(open === 'notifications' ? null : 'notifications')}
-            className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-700 bg-gray-900 hover:bg-gray-800 text-white"
+            aria-expanded={openNotifications}
+            onClick={() => setOpenNotifications(!openNotifications)}
+            className="flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-100 text-gray-800"
           >
             <Bell size={18} />
-            <span>Notifications</span>
+            <span className="hidden sm:inline">Notifications</span>
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-2 bg-[#302cfc] text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+              <span className="absolute -top-1 -right-2 bg-[#302cfc] text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full text-white">
                 {unreadCount}
               </span>
             )}
           </button>
-          {open === 'notifications' && (
-            <div className="absolute top-12 right-0 bg-gray-900 rounded p-4 shadow w-80 z-40 max-h-96 overflow-auto space-y-2">
+
+          {openNotifications && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="absolute top-12 right-0 bg-white rounded p-4 shadow w-80 z-40 max-h-96 overflow-auto space-y-2"
+            >
               {notifications.length > 0 ? (
                 notifications.map((n) => (
                   <p
                     key={n.id}
-                    className={`text-sm ${n.read ? 'text-gray-500' : 'font-semibold text-white'}`}
+                    className={`text-sm ${n.read ? 'text-gray-500' : 'font-semibold text-gray-800'}`}
                   >
                     🔔 {n.message || 'Notification'}
                   </p>
@@ -139,26 +141,36 @@ const TenantDashboard = () => {
               ) : (
                 <p className="text-sm text-gray-500">No notifications</p>
               )}
-            </div>
+            </motion.div>
           )}
         </div>
 
+        {/* Profile placed top-right */}
+        <motion.div
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className="flex items-center"
+        >
+          {/* This uses your existing Profile component */}
+          <Profile />
+        </motion.div>
+      </div>
 
       {/* Welcome */}
       <h1 className="text-3xl font-bold">Welcome, {user?.firstName || user?.fullName || 'Tenant'}!</h1>
 
       {/* Stats Panel */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-        <div className="bg-gray-900 p-6 rounded-md shadow flex flex-col items-center">
-          <span className="text-sm text-gray-400">Total Requests</span>
+        <div className="bg-white p-6 rounded-md shadow flex flex-col items-center">
+          <span className="text-sm text-gray-500">Total Requests</span>
           <span className="text-3xl font-bold text-[#302cfc]">{stats.total}</span>
         </div>
-        <div className="bg-gray-900 p-6 rounded-md shadow flex flex-col items-center">
-          <span className="text-sm text-gray-400">Completed Requests</span>
+        <div className="bg-white p-6 rounded-md shadow flex flex-col items-center">
+          <span className="text-sm text-gray-500">Completed Requests</span>
           <span className="text-3xl font-bold text-[#302cfc]">{stats.completed}</span>
         </div>
-        <div className="bg-gray-900 p-6 rounded-md shadow flex flex-col items-center">
-          <span className="text-sm text-gray-400">Pending Requests</span>
+        <div className="bg-white p-6 rounded-md shadow flex flex-col items-center">
+          <span className="text-sm text-gray-500">Pending Requests</span>
           <span className="text-3xl font-bold text-[#302cfc]">{stats.pending}</span>
         </div>
       </div>
@@ -180,7 +192,7 @@ const TenantDashboard = () => {
             className={`px-4 py-2 rounded-md font-semibold ${
               filter === f
                 ? 'bg-[#302cfc] text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-white text-gray-800 hover:bg-gray-100'
             }`}
           >
             {f}
@@ -188,20 +200,22 @@ const TenantDashboard = () => {
         ))}
       </div>
 
-      {/* Maintenance Requests Accordion */}
+      {/* Maintenance Requests */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Your Maintenance Requests</h2>
         <div className="space-y-3">
           {filteredRequests.length > 0 ? (
             filteredRequests.map((req) => (
-              <details
+              <motion.div
                 key={req.id}
-                className="bg-gray-900 rounded-md p-4 border border-gray-700"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -3, boxShadow: '0px 10px 20px rgba(0,0,0,0.12)' }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-md p-4 border border-gray-200 shadow"
               >
-                <summary className="cursor-pointer font-semibold text-[#302cfc]">
-                  {req.description}
-                </summary>
-                <div className="mt-3 space-y-2 text-sm text-gray-300">
+                <p className="font-semibold text-[#302cfc]">{req.description}</p>
+                <div className="mt-2 space-y-1 text-sm text-gray-600">
                   <p><strong>Priority:</strong> {req.priority}</p>
                   <p><strong>Status:</strong> {req.status}</p>
                   <p>
@@ -209,26 +223,20 @@ const TenantDashboard = () => {
                     {req.created_at ? new Date(req.created_at).toLocaleDateString() : '-'}
                   </p>
                 </div>
-              </details>
+              </motion.div>
             ))
           ) : (
-            <p className="text-gray-400">No maintenance requests for this filter.</p>
+            <p className="text-gray-500">No maintenance requests for this filter.</p>
           )}
         </div>
       </section>
-       
-       <Accordion type="single">
-      <AccordionItem value="chat">
-          <AccordionTrigger>Chat with Realtor</AccordionTrigger>
-          <AccordionContent>
-            {user?.id && (
-              <TenantChat tenantId={user.id} userId={user.id} />
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+
+      {/* Chat with Realtor */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Chat with Realtor</h2>
+        {user?.id && <TenantChat tenantId={user.id} userId={user.id} />}
+      </section>
     </div>
-  </div>
   );
 };
 

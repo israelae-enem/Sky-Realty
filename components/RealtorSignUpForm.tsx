@@ -6,10 +6,11 @@ import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@clerk/nextjs';
 import { User, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 export default function RealtorSignUpForm() {
   const router = useRouter();
-  const { user } = useUser(); // Clerk user
+  const { user } = useUser();
   const [form, setForm] = useState({
     full_name: '',
     phone_number: '',
@@ -17,10 +18,9 @@ export default function RealtorSignUpForm() {
     address: '',
     country: '',
   });
-  const [loading, setLoading] = useState(true); // start in loading state until we check
+  const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 🚀 Auto-skip onboarding if realtor already exists
   useEffect(() => {
     const checkRealtor = async () => {
       if (!user?.id) {
@@ -38,7 +38,7 @@ export default function RealtorSignUpForm() {
         toast.success('Welcome back! Redirecting to your dashboard...');
         router.push(`/realtor/${user.id}/dashboard`);
       } else {
-        setLoading(false); // show form
+        setLoading(false);
       }
     };
 
@@ -78,7 +78,8 @@ export default function RealtorSignUpForm() {
       if (error) throw error;
 
       toast.success('✅ Realtor profile created!');
-      router.push('/subscription');
+      router.push(`/realtor/${user.id}/dashboard`);
+;
     } catch (err: any) {
       console.error('Onboarding error:', err);
       setErrorMsg(err?.message || 'Failed to complete onboarding');
@@ -88,91 +89,106 @@ export default function RealtorSignUpForm() {
     }
   };
 
-  if (loading) return <p className="p-8 text-center text-white">Loading...</p>;
+  if (loading) return <p className="p-8 text-center text-gray-700">Loading...</p>;
+
+  const fadeUpVariant = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.5 },
+    }),
+  };
+
+  const formElements = [
+    {
+      name: 'full_name',
+      type: 'text',
+      placeholder: 'Full Name',
+      icon: <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
+    },
+    {
+      name: 'phone_number',
+      type: 'tel',
+      placeholder: 'Phone Number',
+      icon: <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
+    },
+    {
+      name: 'company_name',
+      type: 'text',
+      placeholder: 'Company Name',
+    },
+    {
+      name: 'address',
+      type: 'text',
+      placeholder: 'Address',
+    },
+    {
+      name: 'country',
+      type: 'text',
+      placeholder: 'Country',
+    },
+  ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto mt-10 mb-10">
-      {/* Full Name */}
-      <div className="relative">
-        <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-        <input
-          type="text"
-          name="full_name"
-          placeholder="Full Name"
-          value={form.full_name}
-          onChange={handleChange}
-          className="pl-10 w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-          required
-        />
-      </div>
+    <motion.form
+      onSubmit={handleSubmit}
+      className="space-y-4 max-w-md mx-auto mt-10 mb-10 bg-white p-8 rounded-xl shadow-lg"
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Full Name + inputs */}
+      {formElements.map((field, idx) => (
+        <motion.div
+          key={field.name}
+          className="relative"
+          custom={idx}
+          variants={fadeUpVariant}
+        >
+          {field.icon && field.icon}
+          <input
+            type={field.type}
+            name={field.name}
+            placeholder={field.placeholder}
+            value={(form as any)[field.name]}
+            onChange={handleChange}
+            className="pl-10 w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </motion.div>
+      ))}
 
-      {/* Email (readonly) */}
-      <div className="relative">
+      {/* Email readonly */}
+      <motion.div
+        className="relative"
+        custom={formElements.length}
+        variants={fadeUpVariant}
+      >
         <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
         <input
           type="email"
           value={user?.primaryEmailAddress?.emailAddress || ''}
           disabled
-          className="pl-10 w-full px-4 py-2 border rounded-md bg-gray-700 text-gray-300 cursor-not-allowed"
+          className="pl-10 w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
         />
-      </div>
-
-      {/* Phone */}
-      <div className="relative">
-        <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-        <input
-          type="tel"
-          name="phone_number"
-          placeholder="Phone Number"
-          value={form.phone_number}
-          onChange={handleChange}
-          className="pl-10 w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-          required
-        />
-      </div>
-
-      {/* Company, Address, Country */}
-      <input
-        type="text"
-        name="company_name"
-        placeholder="Company Name"
-        value={form.company_name}
-        onChange={handleChange}
-        className="w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-        required
-      />
-      <input
-        type="text"
-        name="address"
-        placeholder="Address"
-        value={form.address}
-        onChange={handleChange}
-        className="w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-        required
-      />
-      <input
-        type="text"
-        name="country"
-        placeholder="Country"
-        value={form.country}
-        onChange={handleChange}
-        className="w-full px-4 py-2 border rounded-md bg-black text-white focus:outline-none"
-        required
-      />
+      </motion.div>
 
       {errorMsg && <p className="text-red-600 text-sm">{errorMsg}</p>}
 
-      <button
+      {/* Submit button */}
+      <motion.button
         type="submit"
         disabled={loading}
         className="w-full bg-[#302cfc] text-white py-2 rounded-md hover:bg-blue-700 transition flex justify-center"
+        custom={formElements.length + 1}
+        variants={fadeUpVariant}
       >
         {loading ? (
           <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
         ) : (
           'Complete Realtor Onboarding'
         )}
-      </button>
-    </form>
+      </motion.button>
+    </motion.form>
   );
 }

@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
-import { AccordionItem, AccordionTrigger, AccordionContent } from './ui/accordion'
 import { MessageCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Tenant {
   id: string
@@ -38,53 +38,53 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
   const [newMessage, setNewMessage] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [tenantPic, setTenantPic] = useState<string | null>(null)
+  const [realtorPic, setRealtorPic] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
 
-  // ---------------- Fetch messages ----------------
+  // Fetch messages
   useEffect(() => {
     if (!selectedTenant || !user?.id) return
 
-        const fetchMessages = async () => {
-        const { data, error } = await supabase
-       .from('message')
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('message')
         .select('*')
-       .eq('tenant_id', selectedTenant.id)
-      .eq('realtor_id', user.id)
-      .order('created_at', { ascending: true })
+        .eq('tenant_id', selectedTenant.id)
+        .eq('realtor_id', user.id)
+        .order('created_at', { ascending: true })
 
       if (!error && data) {
-       const enriched = data.map((m) => ({
-      ...m,
-      message: m.content || (m.file_url ? `[File] ${m.file_url.split('/').pop()}` : ''),
-      }))
-    setMessages(enriched)
-   }
-  }
+        const enriched = data.map((m) => ({
+          ...m,
+          message: m.content || (m.file_url ? `[File] ${m.file_url.split('/').pop()}` : ''),
+        }))
+        setMessages(enriched)
+      }
+    }
 
     fetchMessages()
 
-    // ---------------- Realtime subscription ----------------
     const subscription = supabase
       .channel(`conversation-${selectedTenant.id}-${user.id}`)
       .on(
-  'postgres_changes',
-  { event: 'INSERT', schema: 'public', table: 'message' },
-  (payload) => {
-    const m = payload.new as Message
-    if (m.tenant_id === selectedTenant.id && m.realtor_id === user.id) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...m,
-          message: m.content || (m.file_url ? `[File] ${m.file_url.split('/').pop()}` : ''),
-        },
-      ])
-    }
-  }
-)
-      
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'message' },
+        (payload) => {
+          const m = payload.new as Message
+          if (m.tenant_id === selectedTenant.id && m.realtor_id === user.id) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                ...m,
+                message: m.content || (m.file_url ? `[File] ${m.file_url.split('/').pop()}` : ''),
+              },
+            ])
+          }
+        }
+      )
       .subscribe()
 
     return () => {
@@ -92,17 +92,39 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
     }
   }, [selectedTenant, user?.id])
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+  useEffect(() => scrollToBottom(), [messages])
 
-  // ---------------- Send message + file ----------------
+  // Fetch profile pictures
+  useEffect(() => {
+    const fetchPics = async () => {
+      if (selectedTenant) {
+        const { data: tenant } = await supabase
+          .from('tenants')
+          .select('profile_pic')
+          .eq('id', selectedTenant.id)
+          .single()
+        if (tenant?.profile_pic) setTenantPic(tenant.profile_pic)
+      }
+
+      if (user?.id) {
+        const { data: realtor } = await supabase
+          .from('realtors')
+          .select('profile_pic')
+          .eq('id', user.id)
+          .single()
+        if (realtor?.profile_pic) setRealtorPic(realtor.profile_pic)
+      }
+    }
+
+    fetchPics()
+  }, [selectedTenant, user])
+
+  // Send message
   const handleSend = async () => {
     if (!newMessage.trim() && !file) return toast.error('Enter a message or select a file')
     if (!selectedTenant) return
 
     setLoading(true)
-
     let fileUrl: string | undefined
 
     try {
@@ -113,11 +135,10 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
           .upload(fileName, file)
 
         if (uploadError) throw uploadError
-
         fileUrl = supabase.storage.from('chat_files').getPublicUrl(fileName).data.publicUrl
       }
 
-      const messagePayload = {
+      const payload = {
         sender_id: user.id,
         tenant_id: selectedTenant.id,
         realtor_id: user.id,
@@ -127,119 +148,134 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
         read: false,
       }
 
-      const { data, error } = await supabase.from('message').insert([messagePayload]).select().single()
+      const { data, error } = await supabase.from('message').insert([payload]).select().single()
       if (error) throw error
-
       setMessages((prev) => [...prev, data])
       setNewMessage('')
       setFile(null)
       scrollToBottom()
     } catch (err) {
-      console.error('Send message error:', err)
+      console.error(err)
       toast.error('Failed to send message')
     } finally {
       setLoading(false)
     }
   }
 
-  // ---------------- Render file preview ----------------
   const renderFile = (url?: string) => {
     if (!url) return null
     const ext = url.split('.').pop()?.toLowerCase()
     if (!ext) return null
-
     if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
-      return <img src={url} alt="file" className="max-w-xs max-h-40 rounded-md" />
+      return <img src={url} alt="file" className="max-w-xs max-h-40 rounded-md mt-1" />
     }
-
-    // Fallback for PDFs and other files
     return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline text-blue-300 flex items-center gap-1"
-      >
+      <a href={url} target="_blank" rel="noopener noreferrer" className="underline text-blue-500 text-sm mt-1 block">
         📎 View File
       </a>
     )
   }
 
   return (
-    <AccordionItem value="chat">
-      <AccordionTrigger className="text-lg font-semibold text-blue-600 flex items-center gap-2">
-        <MessageCircle size={18} /> Chat
-      </AccordionTrigger>
-      <AccordionContent className="space-y-4">
-        {/* Tenant selector */}
-        <select
-          value={selectedTenant?.id || ''}
-          onChange={(e) => {
-            const tenant = tenants.find((t) => t.id === e.target.value) ?? null
-            setSelectedTenant(tenant)
-            setMessages([])
-          }}
-          className="w-full sm:w-1/2 bg-gray-700 text-white p-2 rounded-md border border-gray-700 focus:outline-none"
-        >
-          <option value="">Select Tenant</option>
-          {tenants.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.full_name || t.id}
-            </option>
-          ))}
-        </select>
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+      <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2 mb-4">
+        <MessageCircle className="text-[#302cfc]" /> Chat
+      </h2>
 
-        {/* Messages */}
-        <div className="flex flex-col h-64 sm:h-80 overflow-y-auto p-2 space-y-2 border border-gray-300 rounded-md">
-          {selectedTenant ? (
-            messages.length > 0 ? (
-              messages.map((m) => (
-                <div
-                  key={m.id}
-                  className={`p-2 rounded-md text-sm max-w-[80%] ${
-                    m.sender_id === user.id
-                      ? 'bg-[#302cfc] text-white self-end'
-                      : 'bg-gray-700 text-gray-200 self-start'
-                  }`}
-                >
-                  {m.message}
-                  {renderFile(m.file_url)}
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-100 text-sm">No messages yet</p>
-            )
+      {/* Tenant Selector */}
+      <select
+        value={selectedTenant?.id || ''}
+        onChange={(e) => {
+          const tenant = tenants.find((t) => t.id === e.target.value) ?? null
+          setSelectedTenant(tenant)
+          setMessages([])
+        }}
+        className="w-full p-2 border border-gray-300 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#302cfc] mb-4"
+      >
+        <option value="">Select Tenant</option>
+        {tenants.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.full_name || t.id}
+          </option>
+        ))}
+      </select>
+
+      {/* Chat Messages */}
+      <div className="flex flex-col h-80 overflow-y-auto p-3 bg-gray-50 rounded-md space-y-3">
+        {selectedTenant ? (
+          messages.length > 0 ? (
+            <AnimatePresence initial={false}>
+              {messages.map((m) => {
+                const isRealtor = m.sender_id === user.id
+                const avatar = isRealtor ? realtorPic : tenantPic
+                return (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex items-end gap-2 ${isRealtor ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {!isRealtor && (
+                      <img
+                        src={avatar || '/assets/default-avatar.png'}
+                        alt="Tenant"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    )}
+                    <div
+                      className={`p-2 rounded-lg max-w-[70%] text-sm shadow-sm ${
+                        isRealtor ? 'bg-[#302cfc] text-white' : 'bg-gray-200 text-gray-900'
+                      }`}
+                    >
+                      <p>{m.message}</p>
+                      {renderFile(m.file_url)}
+                    </div>
+                    {isRealtor && (
+                      <img
+                        src={avatar || '/assets/default-avatar.png'}
+                        alt="Realtor"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    )}
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
           ) : (
-            <p className="text-gray-100 text-sm">Select a tenant to start chatting</p>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Send input */}
-        {selectedTenant && (
-          <div className="flex flex-col sm:flex-row gap-2 mt-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-300 focus:outline-none"
-            />
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="px-2 py-2 rounded-md bg-gray-700 text-white"
-            />
-            <button
-              onClick={handleSend}
-              disabled={loading}
-              className="px-4 py-2 bg-[#302cfc] hover:bg-[#241fd9] rounded-md text-white font-semibold"
-            >
-              {loading ? 'Sending...' : 'Send'}
-            </button>
-          </div>
+            <p className="text-gray-500 text-center mt-4">No messages yet</p>
+          )
+        ) : (
+          <p className="text-gray-500 text-center mt-4">Select a tenant to start chatting</p>
         )}
-      </AccordionContent>
-    </AccordionItem>
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      {selectedTenant && (
+        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#302cfc]"
+          />
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="flex-1 sm:flex-none text-sm"
+          />
+          <button
+            onClick={handleSend}
+            disabled={loading}
+            className="px-4 py-2 bg-[#302cfc] hover:bg-[#241fd9] text-white rounded-md font-medium transition-all"
+          >
+            {loading ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
