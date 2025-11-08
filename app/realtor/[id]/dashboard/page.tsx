@@ -278,8 +278,12 @@ return (
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col ml-0 md:ml-64 transition-all duration-300">
-        {/* Top Bar */}
+      <main className={clsx(
+          'flex-1 flex flex-col ml-0 md:ml-64 transition-all duration-300 relative',
+          !subscriptionActive && 'blur-sm pointer-events-none select-none'
+        )}
+      > 
+      
         <div className="flex items-center justify-between h-16 px-6 bg-white shadow-sm">
           <h2 className="text-lg font-semibold">{activeSection}</h2>
           
@@ -389,6 +393,37 @@ return (
           </AnimatePresence>
         </div>
       </main>
+
+
+      {/* ⚠ Subscription Modal */}
+      {!subscriptionActive && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                        className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md w-[90%]"
+          >
+            <h2 className="text-2xl font-bold text-[#302cfc] mb-4">
+              Please Subscribe to Continue
+            </h2>
+            <p className="text-gray-700 mb-6">
+              Your trial or subscription has expired. To regain access to your dashboard features,
+              please choose a plan and subscribe now! see you soon.
+            </p>
+            <button
+              onClick={() => router.push('/subscription')}
+              className="bg-[#302cfc] hover:bg-[#241fd9] text-white font-semibold px-6 py-3 rounded-lg transition"
+            >
+              Go to Pricing Page
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }

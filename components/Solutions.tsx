@@ -103,7 +103,7 @@ export default function SolutionsPage() {
         {solutions.map((solution, i) => (
           <motion.div
             key={i}
-            className="flex flex-col items-center bg-gray-200 rounded-2xl shadow-lg p-6 md:p-10 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+            className="flex flex-col items-center bg-gray-100 rounded-2xl shadow-lg p-6 md:p-10 cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}

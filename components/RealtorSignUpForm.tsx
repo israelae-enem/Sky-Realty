@@ -133,7 +133,7 @@ export default function RealtorSignUpForm() {
   return (
     <motion.form
       onSubmit={handleSubmit}
-      className="space-y-4 max-w-md mx-auto mt-10 mb-10 bg-white p-8 rounded-xl shadow-lg"
+      className="space-y-4 max-w-md mx-auto text-gray-800 mt-10 mb-10 bg-white p-8 rounded-xl shadow-lg"
       initial="hidden"
       animate="visible"
     >

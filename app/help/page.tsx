@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function HelpCenter() {
   return (
-    <div className="bg-gray-900 text-gray-200 min-h-screen py-16 px-6">
+    <div className="bg-gray-100 text-gray-800 min-h-screen py-16 px-6">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl font-bold text-white mb-6">Help Center</h1>
         <p className="mb-10 text-gray-400">
@@ -15,14 +15,14 @@ export default function HelpCenter() {
         {/* Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Getting Started */}
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-[#302cfc] transition">
-            <h2 className="text-2xl font-semibold text-white mb-3">Getting Started</h2>
+          <div className="bg-gray-100 rounded-lg p-6 border border-gray-700 hover:border-[#302cfc] transition">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-3">Getting Started</h2>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/faq" className="hover:text-[#302cfc]">FAQ</Link>
+                <Link href="/" className="hover:text-[#302cfc]">FAQ</Link>
               </li>
               <li>
-                <Link href="/propertyCTA" className="hover:text-[#302cfc]">How to Add Your First Property</Link>
+                <Link href="/sign-in" className="hover:text-[#302cfc]">How to Add Your First Property</Link>
               </li>
               <li>
                 <Link href="/subscription" className="hover:text-[#302cfc]">Understanding Subscription Plans</Link>
@@ -31,8 +31,8 @@ export default function HelpCenter() {
           </div>
 
           {/* Account & Security */}
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-[#302cfc] transition">
-            <h2 className="text-2xl font-semibold text-white mb-3">Account & Security</h2>
+          <div className="bg-gray-100 rounded-lg p-6 border border-gray-500 hover:border-[#302cfc] transition">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-3">Account & Security</h2>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/privacy" className="hover:text-[#302cfc]">Privacy Policy</Link>
@@ -47,8 +47,8 @@ export default function HelpCenter() {
           </div>
 
           {/* Tenants & Leases */}
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-[#302cfc] transition">
-            <h2 className="text-2xl font-semibold text-white mb-3">Tenants & Leases</h2>
+          <div className="bg-gray-100 rounded-lg p-6 border border-gray-700 hover:border-[#302cfc] transition">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-3">Tenants & Leases</h2>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/tenants" className="hover:text-[#302cfc]">Inviting Tenants</Link>

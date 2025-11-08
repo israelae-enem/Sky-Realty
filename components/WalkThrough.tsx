@@ -26,7 +26,7 @@ export default function WalkthroughSection() {
     <section className="bg-gray-100 py-20 px-6 md:px-12 text-gray-900">
       <div className="max-w-6xl mx-auto text-center mb-16">
         <motion.h2
-          className="text-4xl md:text-5xl font-bold text-[#302cfc] font-accent"
+          className="text-4xl md:text-5xl font-bold text-[#302cfc] font-tech"
           initial={{ opacity: 0, y: -40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -70,7 +70,7 @@ export default function WalkthroughSection() {
             </div>
 
             <div className="p-6">
-              <h3 className="text-2xl font-semibold text-[#302cfc] mb-2 font-accent">{step.title}</h3>
+              <h3 className="text-2xl font-semibold text-[#302cfc] mb-2 font-tech">{step.title}</h3>
               <p className="text-gray-700 leading-relaxed">{step.description}</p>
             </div>
           </motion.div>

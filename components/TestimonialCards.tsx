@@ -71,7 +71,7 @@ export default function TestimonialCards() {
   return (
     <section className="overflow-hidden py-16 bg-gray-100">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-[#302cfc] mb-12">
+        <h2 className="text-3xl font-tech md:text-4xl font-bold text-center text-[#302cfc] mb-12">
           What Realtors Say About Us
         </h2>
 

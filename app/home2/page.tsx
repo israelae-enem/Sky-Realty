@@ -42,7 +42,7 @@ export default function TenantsPage() {
       {/* Hero Section */}
       <section className="flex flex-col md:flex-row min-h-screen">
         <div className="flex-1 flex flex-col justify-center items-start p-10 md:p-20 bg-gray-50">
-          <h1 className="text-5xl font-bold text-blue-700 mb-6">
+          <h1 className="text-5xl font-tech font-bold text-blue-700 mb-6">
             Manage Your Rentals Effortlessly
           </h1>
           <p className="text-xl text-gray-700 mb-8">
@@ -76,7 +76,7 @@ export default function TenantsPage() {
       {/* Manage Section */}
       <section className="flex flex-col md:flex-row items-center my-20 px-10 md:px-20">
         <div className="flex-1 mb-10 md:mb-0 md:pr-10">
-          <h2 className="text-4xl font-bold text-blue-700 mb-6">
+          <h2 className="text-4xl font-tech font-bold text-blue-700 mb-6">
             Stay in Control of Your Rentals
           </h2>
           <p className="text-lg text-gray-700">
@@ -104,7 +104,7 @@ export default function TenantsPage() {
       {/* 3 Points Section */}
       <section className="py-20 px-10 md:px-20 bg-gray-50">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-accent font-bold text-blue-700">
+          <h2 className="text-4xl font-tech font-bold text-blue-700">
             Why Tenants Love Sky Realty
           </h2>
         </div>
@@ -116,7 +116,7 @@ export default function TenantsPage() {
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-4">Easy Rent Payments</h3>
+            <h3 className="text-blue-700 font-tech text-2xl font-semibold mb-4">Easy Rent Payments</h3>
             <p className="text-gray-400 text-lg">
               Pay your rent securely online anytime without worrying about missing a due date.
             </p>
@@ -128,7 +128,7 @@ export default function TenantsPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-4">Track Maintenance Requests</h3>
+            <h3 className="text-blue-700 font-tech text-2xl font-semibold mb-4">Track Maintenance Requests</h3>
             <p className="text-gray-400 text-lg">
               Submit and track requests easily. Get updates when your issues are addressed.
             </p>
@@ -140,7 +140,7 @@ export default function TenantsPage() {
             transition={{ duration: 0.5, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-4">Centralized Communication</h3>
+            <h3 className="text-blue-700 text-2xl font-tech font-semibold mb-4">Centralized Communication</h3>
             <p className="text-gray-400 text-lg">
               All communication with your landlord is in one place—organized, simple, and accessible.
             </p>
@@ -151,7 +151,7 @@ export default function TenantsPage() {
       {/* Rent Section */}
       <section className="py-20 px-10 md:px-20 bg-white">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold font-accent text-blue-700 mb-6">Stay on Top of Rent</h2>
+          <h2 className="text-5xl font-bold font-tech text-blue-700 mb-6">Stay on Top of Rent</h2>
           <p className="text-lg text-gray-700 max-w-2xl mx-auto">
             Sky Realty keeps your rent records organized and up to date.
           </p>
@@ -174,11 +174,11 @@ export default function TenantsPage() {
             />
           </motion.div>
           <div className="flex-1 flex flex-col gap-6">
-            <h3 className="text-2xl font-accent font-semibold text-blue-700 mb-4">Rent Tracking</h3>
+            <h3 className="text-2xl font-tech font-semibold text-blue-700 mb-4">Rent Tracking</h3>
             <p className="text-gray-400 text-lg">
               See all your payments, due dates, and history in one simple dashboard.
             </p>
-            <h3 className="text-2xl font-accent font-semibold text-blue-700 mb-4">Rent Reminders</h3>
+            <h3 className="text-2xl font-tech font-semibold text-blue-700 mb-4">Rent Reminders</h3>
             <p className="text-gray-400 text-lg">
               Automatic reminders help you never miss a payment and stay stress-free.
             </p>
@@ -190,7 +190,7 @@ export default function TenantsPage() {
       <section className="py-20 px-10 md:px-20 bg-gray-50">
         <div className="text-center mb-16">
           <motion.h2
-            className="text-4xl md:text-5xl font-accent font-bold text-blue-700 mb-6"
+            className="text-4xl md:text-5xl font-tech font-bold text-blue-700 mb-6"
             initial={{ opacity: 0, y: -50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -229,21 +229,21 @@ export default function TenantsPage() {
 
           <div className="flex-1 flex flex-col gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-3">Manage Maintenance Requests Easily</h3>
+              <h3 className="text-blue-700 font-tech text-2xl font-semibold mb-3">Manage Maintenance Requests Easily</h3>
               <p className="text-gray-400 mb-4">
-                Submit and track requests without confusion. <Link href="/maintenance" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
+                Submit and track requests without confusion. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-blue-700 text-2xl font-semibold mb-3">Send and Receive Updates</h3>
               <p className="text-gray-400 mb-4">
-                Get notified about your requests and updates automatically. <Link href="/reminders" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
+                Get notified about your requests and updates automatically. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-3">Store Every Record Securely</h3>
+              <h3 className="text-blue-700 text-2xl font-tech font-semibold mb-3">Store Every Record Securely</h3>
               <p className="text-gray-400 mb-4">
-                All communication and records are safely stored. <Link href="/records" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
+                All communication and records are safely stored. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
               </p>
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function TenantsPage() {
       {/* FAQ Section */}
       <section className="py-20 px-10 md:px-20 bg-white">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-accent font-bold text-blue-700">
+          <h2 className="text-4xl md:text-5xl font-tech font-bold text-blue-700">
             Frequently Asked Questions
           </h2>
           <p className="text-gray-700 text-lg mt-4">
@@ -297,7 +297,7 @@ export default function TenantsPage() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl md:text-5xl font-accent font-bold mb-6">
+          <h2 className="text-4xl md:text-5xl font-tech font-bold mb-6">
             Still have questions?
           </h2>
           <p className="text-lg md:text-xl mb-8">

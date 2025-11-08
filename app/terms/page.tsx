@@ -30,7 +30,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-accent font-semibold text-white mb-2">3. Use of Services</h2>
+            <h2 className="text-2xl  font-semibold text-white mb-2">3. Use of Services</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>You agree to use Sky-Realty for lawful purposes only.</li>
               <li>You may not misuse or attempt to disrupt the platform.</li>
@@ -40,7 +40,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-accent font-semibold text-white mb-2">4. Subscriptions & Payments</h2>
+            <h2 className="text-2xl  font-semibold text-white mb-2">4. Subscriptions & Payments</h2>
             <p>
               Sky-Realty offers subscription plans (Basic, Pro, Premium) with property limits. 
               Payments are securely processed through Stripe. 
@@ -49,7 +49,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-accent font-semibold text-white mb-2">5. Termination</h2>
+            <h2 className="text-2xl  font-semibold text-white mb-2">5. Termination</h2>
             <p>
               We reserve the right to suspend or terminate accounts that violate these Terms or 
               misuse the platform. You may also cancel your account at any time.
@@ -57,7 +57,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-accent font-semibold text-white mb-2">6. Limitation of Liability</h2>
+            <h2 className="text-2xl  font-semibold text-white mb-2">6. Limitation of Liability</h2>
             <p>
               Sky-Realty is provided “as is” without warranties of any kind. 
               We are not liable for any indirect, incidental, or consequential damages 
@@ -66,7 +66,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-accent font-semibold text-white mb-2">7. Changes to Terms</h2>
+            <h2 className="text-2xl  font-semibold text-white mb-2">7. Changes to Terms</h2>
             <p>
               We may update these Terms & Conditions from time to time. 
               Continued use of the platform after changes means you accept the new terms.
@@ -74,7 +74,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-accent font-semibold text-white mb-2">8. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-white mb-2">8. Contact Us</h2>
             <p>
               If you have any questions about these Terms & Conditions, please contact us at:{" "}
               <a

@@ -178,7 +178,7 @@ export default function RealtorChat({ tenants, user }: RealtorChatProps) {
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2 mb-4">
+      <h2 className="text-xl font-semibold text-gray-800 flex font-tech items-center gap-2 mb-4">
         <MessageCircle className="text-[#302cfc]" /> Chat
       </h2>
 

@@ -12,7 +12,7 @@ const Footer = () => {
     <div className="relative">
       {/* ================= Footer ================= */}
       <motion.footer
-        className="bg-gray-300 text-gray-800 py-12 px-5 md:px-20"
+        className="bg-gray-200 text-gray-800 py-12 px-5 md:px-20"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -21,7 +21,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-start gap-10">
           {/* Brand */}
           <div className="space-y-3 md:w-1/3">
-            <h3 className="font-bold font-accent text-2xl text-[#302cfc]">Sky Realty</h3>
+            <h3 className="font-bold font-tech text-2xl text-[#302cfc]">Sky Realty</h3>
             <p className="text-gray-700 leading-relaxed">
               Smarter property management at your fingertips. Manage tenants, rentals, maintenance, all in one dashboard.
             </p>
@@ -29,7 +29,7 @@ const Footer = () => {
 
           {/* Navigation Links */}
           <div className="space-y-3 md:w-1/5">
-            <h3 className="font-bold font-accent text-xl text-[#302cfc]">Navigation</h3>
+            <h3 className="font-bold font-tech text-xl text-[#302cfc]">Navigation</h3>
             <ul className="space-y-1 text-gray-700">
               <li><a href="/" className="hover:text-blue-600 transition">Home</a></li>
               <li><a href="/about" className="hover:text-blue-600 transition">About Us</a></li>
@@ -44,7 +44,7 @@ const Footer = () => {
 
           {/* Social & Contact */}
           <div className="space-y-3 md:w-1/4">
-            <h3 className="font-bold font-accent text-xl text-[#302cfc]">Connect</h3>
+            <h3 className="font-bold font-tech text-xl text-[#302cfc]">Connect</h3>
             <div className="flex gap-4 mt-1 text-2xl">
               <a href="https://www.linkedin.com/company/sky-realty" target="_blank" className="hover:text-blue-600"><FaLinkedin /></a>
               <a href="https://www.instagram.com/sky_realtyae?igsh=dWFoZDAybDgwNTNl&utm_source=qr" target="_blank" className="hover:text-blue-600"><FaInstagram /></a>

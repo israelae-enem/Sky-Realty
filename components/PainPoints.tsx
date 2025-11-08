@@ -69,7 +69,7 @@ const fadeUp = {
 export default function PainPointsPage() {
   return (
    <motion.main
-      className="min-h-screen relative text-gray-900 py-20 px-6 overflow-hidden"
+      className="min-h-screen relative text-gray-800 py-20 px-6 overflow-hidden"
       style={{
         backgroundImage: "url('/assets/images/pic1.jpg')",
         backgroundSize: "cover",
@@ -115,7 +115,7 @@ export default function PainPointsPage() {
               viewport={{ once: true }}
               custom={i}
             >
-              <h3 className="text-xl font-accent font-semibold text-[#302cfc] mb-3">
+              <h3 className="text-xl font-tech font-semibold text-[#302cfc] mb-3">
                 {point.title}
               </h3>
               <p className="text-gray-700 leading-relaxed">{point.description}</p>
@@ -130,7 +130,7 @@ export default function PainPointsPage() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-4">
+          <h2 className="text-3xl font-tech font-semibold text-gray-800 mb-4">
             Ready to solve these challenges for good?
           </h2>
           <a

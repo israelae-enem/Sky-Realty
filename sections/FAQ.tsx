@@ -56,7 +56,7 @@ export default function FAQ() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="border border-gray-400 rounded-lg p-4 bg-gray-300"
+            className="border border-gray-400 rounded-lg p-4 bg-gray-100"
           >
             <button
               className="flex justify-between items-center w-full text-left text-lg font-medium text-gray-900"

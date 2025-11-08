@@ -1,32 +1,39 @@
-import MaintenanceForm from '@/components/MaintenanceForm'
-import Image from 'next/image'
-import React from 'react'
+"use client";
 
-const Realtor = () => {
+import { motion } from "framer-motion";
+import Image from "next/image";
+import React from "react";
+import MaintenanceForm from "@/components/MaintenanceForm";
+
+const Maintenance = () => {
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-black text-white">
+    <div className="relative min-h-screen w-full mt-20 flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <Image
+        src="/assets/images/pic1.jpg"
+        alt="agent background"
+        fill
+        className="object-cover w-full h-full"
+        priority
+      />
 
-      
+      {/* Optional subtle overlay for readability (can remove if you want pure image) */}
+      <div className="absolute inset-0 bg-black/30" />
 
-      {/* Image Section */}
-      <div className="w-full md:w-1/2 relative h-64 md:h-auto flex">
-        <Image
-          src="/assets/images/maintenance-request.jpg"
-          alt="agent"
-          fill
-          className="object-cover w-full h-full"
-        />
-      </div>
-
-        {/* Form Section */}
-      <div className="w-full md:w-1/2 items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <MaintenanceForm />
-        </div>
-      </div>
-
+      {/* Motion Form Modal */}
+      <motion.div
+        initial={{ opacity: 0, y: 60, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
+      >
+        <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
+          Realtor Sign Up
+        </h1>
+        <MaintenanceForm />
+      </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default Realtor
+export default Maintenance;

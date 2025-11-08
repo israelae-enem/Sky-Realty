@@ -61,7 +61,7 @@ export default function LegalDocumentsTable() {
   if (loading) {
     return (
       <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
-        <h2 className="text-xl font-accent font-semibold mb-4">Legal Documents</h2>
+        <h2 className="text-xl font-tech font-semibold mb-4">Legal Documents</h2>
         <p className="text-gray-400">Loading documents...</p>
       </div>
     )

@@ -3,21 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
-import {
-  UserCircle,
-  Trash2,
-  LogOut,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { UserCircle, Trash2, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ZiinaPlan {
@@ -47,7 +35,7 @@ export default function ProfileSidebar() {
     status: 'none',
   });
 
-  // Load profile picture & role
+  // Load profile pic & role
   useEffect(() => {
     if (!isLoaded || !user) return;
 
@@ -79,7 +67,7 @@ export default function ProfileSidebar() {
     loadProfile();
   }, [isLoaded, user]);
 
-  // Fetch plan if Realtor
+  // Fetch plan if realtor
   useEffect(() => {
     if (!user || !isRealtor) return;
 
@@ -109,26 +97,20 @@ export default function ProfileSidebar() {
 
       setLoading(true);
       const filePath = `profile-pics/${user.id}-${file.name}`;
+
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('documents').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
+      const publicUrl = data.publicUrl;
 
       if (isRealtor) {
-        await supabase
-          .from('realtors')
-          .update({ profile_pic: publicUrl })
-          .eq('id', user.id);
+        await supabase.from('realtors').update({ profile_pic: publicUrl }).eq('id', user.id);
       } else {
-        await supabase
-          .from('tenants')
-          .update({ profile_pic: publicUrl })
-          .eq('id', user.id);
+        await supabase.from('tenants').update({ profile_pic: publicUrl }).eq('id', user.id);
       }
 
       setProfilePic(publicUrl);
@@ -144,23 +126,13 @@ export default function ProfileSidebar() {
   const deleteProfilePic = async () => {
     try {
       if (!user || !profilePic) return;
-
       const fileName = profilePic.split('/').pop();
-      if (fileName)
-        await supabase.storage
-          .from('documents')
-          .remove([`profile-pics/${fileName}`]);
+      if (fileName) await supabase.storage.from('documents').remove([`profile-pics/${fileName}`]);
 
       if (isRealtor) {
-        await supabase
-          .from('realtors')
-          .update({ profile_pic: null })
-          .eq('id', user.id);
+        await supabase.from('realtors').update({ profile_pic: null }).eq('id', user.id);
       } else {
-        await supabase
-          .from('tenants')
-          .update({ profile_pic: null })
-          .eq('id', user.id);
+        await supabase.from('tenants').update({ profile_pic: null }).eq('id', user.id);
       }
 
       setProfilePic(null);
@@ -170,7 +142,7 @@ export default function ProfileSidebar() {
     }
   };
 
-  // Change plan (Realtors only)
+  // Change plan (realtors only)
   const handleChangePlan = async (planId: string) => {
     if (!user || !isRealtor) return;
 
@@ -182,22 +154,25 @@ export default function ProfileSidebar() {
       });
 
       const data = await res.json();
-      if (data.redirectUrl) window.open(data.redirectUrl, '_blank');
+      if (data.redirectUrl) {
+        // redirect to subscription page
+        window.location.href = data.redirectUrl;
+      }
     } catch (err) {
       console.error('Failed to change plan:', err);
+      alert('Failed to redirect to subscription page.');
     }
   };
 
-  // Delete account (both roles)
+  // Delete account
   const handleDeleteAccount = async () => {
     if (!user) return;
-    if (!confirm('Are you sure you want to permanently delete your account?'))
-      return;
+    if (!confirm('Are you sure you want to permanently delete your account?')) return;
 
     try {
       await supabase.from('realtors').delete().eq('id', user.id);
       await supabase.from('tenants').delete().eq('id', user.id);
-      await signOut();
+      signOut();
     } catch (err) {
       console.error('Delete account failed', err);
       alert('Failed to delete account.');
@@ -207,7 +182,7 @@ export default function ProfileSidebar() {
   if (!isLoaded || !user) return null;
 
   return (
-    <div className="bg-white border border-gray-200 text-gray-800 w-full p-4 rounded-md shadow-sm">
+    <div className="bg-white border border-gray-200 text-gray-800 w-full p-4 rounded-md shadow-lg">
       {/* Collapsed Header */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -215,17 +190,11 @@ export default function ProfileSidebar() {
       >
         <div className="flex items-center gap-3">
           {profilePic ? (
-            <img
-              src={profilePic}
-              alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border border-gray-300"
-            />
+            <img src={profilePic} alt="Profile" className="w-12 h-12 rounded-full object-cover border border-gray-300" />
           ) : (
-            <UserCircle className="w-10 h-10 text-gray-400" />
+            <UserCircle className="w-12 h-12 text-gray-400" />
           )}
-          <span className="font-semibold text-lg truncate">
-            {user.firstName || user.fullName || 'User'}
-          </span>
+          <span className="font-semibold text-lg truncate">{user.firstName || user.fullName || 'User'}</span>
         </div>
         {expanded ? <ChevronUp /> : <ChevronDown />}
       </button>
@@ -255,19 +224,10 @@ export default function ProfileSidebar() {
             <div className="text-sm">
               <label className="text-[#302cfc] font-semibold cursor-pointer hover:underline">
                 {loading ? 'Uploading...' : 'Upload Photo'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={uploadProfilePic}
-                  className="hidden"
-                  disabled={loading}
-                />
+                <input type="file" accept="image/*" onChange={uploadProfilePic} className="hidden" disabled={loading} />
               </label>
               {profilePic && (
-                <button
-                  onClick={deleteProfilePic}
-                  className="flex items-center gap-1 text-red-500 hover:underline mt-1"
-                >
+                <button onClick={deleteProfilePic} className="flex items-center gap-1 text-red-500 hover:underline mt-1">
                   <Trash2 className="w-4 h-4" /> Delete Photo
                 </button>
               )}
@@ -276,25 +236,14 @@ export default function ProfileSidebar() {
             {isRealtor && (
               <div>
                 <p className="text-[#302cfc] font-semibold">Change Plan:</p>
-                <Select
-                  onValueChange={handleChangePlan}
-                  defaultValue={currentPlan.plan}
-                >
+                <Select onValueChange={handleChangePlan} defaultValue={currentPlan.plan}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Plan" />
                   </SelectTrigger>
                   <SelectContent>
                     {PLAN_OPTIONS.map((plan) => (
-                      <SelectItem
-                        key={plan.id}
-                        value={plan.id}
-                        disabled={plan.id === currentPlan.plan}
-                      >
-                        {plan.name} –{' '}
-                        {plan.propertyLimit === null
-                          ? 'Unlimited'
-                          : plan.propertyLimit}{' '}
-                        Properties
+                      <SelectItem key={plan.id} value={plan.id} disabled={plan.id === currentPlan.plan}>
+                        {plan.name} – {plan.propertyLimit === null ? 'Unlimited' : plan.propertyLimit} Properties
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -302,19 +251,11 @@ export default function ProfileSidebar() {
               </div>
             )}
 
-            <Button
-              variant="destructive"
-              onClick={handleDeleteAccount}
-              className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white"
-            >
+            <Button variant="destructive" onClick={handleDeleteAccount} className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white">
               Delete Account
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => signOut()}
-              className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-100"
-            >
+            <Button variant="outline" onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-100">
               <LogOut className="w-4 h-4" /> Sign Out
             </Button>
           </motion.div>

@@ -150,7 +150,7 @@ const Page = () => {
             <section className="py-20 px-10 md:px-20 bg-gray-50">
               <div className="text-center mb-16">
                 <motion.h2
-                  className="text-4xl md:text-5xl font-accent font-bold text-blue-700 mb-6"
+                  className="text-4xl md:text-5xl font-tech font-bold text-blue-700 mb-6"
                   initial={{ opacity: 0, y: -50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
@@ -189,19 +189,19 @@ const Page = () => {
       
                 <div className="flex-1 flex flex-col gap-6">
                   <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-3">Manage Maintenance Requests Easily</h3>
+                    <h3 className="text-blue-700 text-2xl font-tech font-semibold mb-3">Manage Maintenance Requests Easily</h3>
                     <p className="text-gray-400 mb-4">
                       Submit and track requests without confusion. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-3">Send and Receive Updates</h3>
+                    <h3 className="text-blue-700 text-2xl font-tech font-semibold mb-3">Send and Receive Updates</h3>
                     <p className="text-gray-400 mb-4">
                       Get notified about your requests and updates automatically. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-3">Store Every Record Securely</h3>
+                    <h3 className="text-blue-700 font-tech text-2xl font-semibold mb-3">Store Every Record Securely</h3>
                     <p className="text-gray-400 mb-4">
                       All communication and records are safely stored. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                     </p>
@@ -222,15 +222,11 @@ const Page = () => {
   <section>
     <TestimonialCards />
   </section>
-
-  
-  
-  
   
               {/* Rent Section */}
               <section className="py-20 px-10 md:px-20 bg-white">
                 <div className="text-center mb-16">
-                  <h2 className="text-5xl font-bold font-accent text-blue-700 mb-6">Stay on Top of Rent</h2>
+                  <h2 className="text-5xl font-bold font-tech text-blue-700 mb-6">Stay on Top of Rent</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Sky Realty keeps your rent records organized and up to date.
                   </p>
@@ -253,11 +249,11 @@ const Page = () => {
                     />
                   </motion.div>
                   <div className="flex-1 flex flex-col gap-6">
-                    <h3 className="text-2xl font-accent font-semibold text-blue-700 mb-4">Rent Tracking</h3>
+                    <h3 className="text-2xl font-tech font-semibold text-blue-700 mb-4">Rent Tracking</h3>
                     <p className="text-gray-400 text-lg">
                       See all your payments, due dates, and history in one simple dashboard.
                     </p>
-                    <h3 className="text-2xl font-semibold text-blue-700 mb-4">Rent Reminders</h3>
+                    <h3 className="text-2xl font-tech font-semibold text-blue-700 mb-4">Rent Reminders</h3>
                     <p className="text-gray-400 text-lg">
                       Automatic reminders help you never miss a payment and stay stress-free.
                     </p>
@@ -269,13 +265,13 @@ const Page = () => {
         {/* ================= Maintenance Section ================= */}
         <motion.section
           id="maintenance"
-          className="bg-gray-200 py-20 px-5 md:px-20 flex flex-col md:flex-row items-center gap-10"
+          className="bg-gray-100 py-20 px-5 md:px-20 flex flex-col md:flex-row items-center gap-10"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
         >
           <motion.div className="md:w-1/2 space-y-4" variants={fadeUp}>
-            <h2 className="text-3xl font-accent font-bold text-[#302cfc]">Maintenance Made Simple</h2>
+            <h2 className="text-3xl font-tech font-bold text-[#302cfc]">Maintenance Made Simple</h2>
             <p className="text-gray-700">
               Manage repairs and requests in real-time with automated notifications and easy task tracking.
             </p>
@@ -315,7 +311,7 @@ const Page = () => {
       </motion.section>
 
       {/* ================= FAQ ================= */}
-      <section className="bg-gray-300 py-20 px-5 md:px-20">
+      <section className="bg-gray-100 py-20 px-5 md:px-20">
         <FAQ />
       </section>
 

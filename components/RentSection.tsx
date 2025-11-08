@@ -10,7 +10,7 @@ export default function RentSection() {
       {/* Text content */}
       <div className="text-center mb-16">
         <motion.h2
-          className="text-5xl font-accent font-bold text-blue-700 mb-6"
+          className="text-5xl font-tech font-bold text-blue-700 mb-6"
           initial={{ opacity: 0, y: -50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -38,7 +38,7 @@ export default function RentSection() {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-2xl font-semibold font-accent text-blue-700 mb-4">Rent Tracking</h3>
+          <h3 className="text-2xl font-semibold font-tech text-blue-700 mb-4">Rent Tracking</h3>
           <p className="text-gray-400 text-lg">
             Keep track of all your tenants’ rent payments in one organized dashboard. Know what’s paid, pending, and overdue at a glance.
           </p>
@@ -51,7 +51,7 @@ export default function RentSection() {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-2xl font-accent font-semibold text-blue-700 mb-4">Rent Reminder</h3>
+          <h3 className="text-2xl font-tech font-semibold text-blue-700 mb-4">Rent Reminder</h3>
           <p className="text-gray-400 text-lg">
             Automated reminders for tenants help ensure timely payments. You'll stay informed without lifting a finger.
           </p>

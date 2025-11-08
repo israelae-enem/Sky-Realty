@@ -149,13 +149,13 @@ export const MaintenanceForm = () => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4 max-w-md w-full text-white rounded-md border-gray-300 mt-5 ml-5"
+      className="space-y-4 max-w-md w-full bg-gray-100 text-gray-800 rounded-md border-gray-300 mt-5 ml-5"
     >
       <input
         type="text"
         placeholder="Issue title"
         {...register('title')}
-        className="w-full border px-4 py-2 rounded-md border-gray-300 text-white"
+        className="w-full border px-4 py-2 rounded-md border-gray-300 text-gray-800"
       />
       {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
 
@@ -170,7 +170,7 @@ export const MaintenanceForm = () => {
         <label className="block mb-1 text-gray-300">Priority</label>
         <select
           {...register('priority')}
-          className="w-full p-2 rounded bg-black border border-gray-300 text-white"
+          className="w-full p-2 rounded bg-gtay-500 border border-gray-300 text-white"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>

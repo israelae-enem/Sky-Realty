@@ -134,7 +134,7 @@ export default function ComparisonPage() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7 }}
     >
-      <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-4">
+      <h2 className="text-3xl font-tech font-semibold text-gray-800 mb-4">
         Ready to make the switch?
       </h2>
       <p className="text-gray-700 mb-6">

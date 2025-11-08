@@ -53,16 +53,18 @@ const testimonials = [
 
 // Smooth continuous scroll animation
 const scrollAnimation = {
+  initial: { x: "0%" },
   animate: {
-    x: ["0%", "-100%"],
+    x: ["0%", "-50%"],
     transition: {
       repeat: Infinity,
       repeatType: "loop",
-      duration: 50,
+      duration: 20,
       ease: "linear",
     },
   },
 };
+
 
 export default function TenantTestimonials() {
   return (
@@ -70,7 +72,7 @@ export default function TenantTestimonials() {
       {/* Header */}
       <div className="max-w-4xl mx-auto text-center mb-16">
         <motion.h1
-          className="text-5xl font-bold text-[#302cfc] mb-4"
+          className="text-5xl font-tech font-bold text-[#302cfc] mb-4"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -90,10 +92,11 @@ export default function TenantTestimonials() {
       {/* Scrolling Testimonials */}
       <div className="relative w-full overflow-hidden">
         <motion.div
-          className="flex gap-10 items-stretch"
-          variants={scrollAnimation}
+         className="flex gap-10 items-stretch"
+         variants={scrollAnimation}
+         initial="initial"
           animate="animate"
-        >
+          >
           {[...testimonials, ...testimonials].map((t, i) => (
             <div
               key={i}

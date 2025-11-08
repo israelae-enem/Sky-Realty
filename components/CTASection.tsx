@@ -11,7 +11,7 @@ export default function CTASection() {
         transition={{ duration: 0.6 }}
         viewport={{ once: true }}
       >
-        <h2 className="text-4xl font-accent md:text-5xl font-bold mb-6">
+        <h2 className="text-4xl font-tech md:text-5xl font-bold mb-6">
           Still have questions?
         </h2>
         <p className="text-lg md:text-xl mb-8 ">
@@ -19,7 +19,7 @@ export default function CTASection() {
         </p>
 
          <a
-          href="/terms"
+          href="/sign-in"
           className="bg-white text-blue-700 font-semibold px-8 py-4 rounded-lg text-lg hover:bg-gray-100 transition">
           
           Get in touch

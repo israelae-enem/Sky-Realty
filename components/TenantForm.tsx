@@ -138,7 +138,7 @@ const TenantForm = () => {
       animate="visible"
     >
       <motion.h1
-        className="text-2xl font-bold mb-4 text-gray-900"
+        className="text-2xl font-bold mb-4 text-gray-800"
         custom={0}
         variants={fadeUpVariant}
       >

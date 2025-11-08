@@ -222,7 +222,7 @@ export default function PricingSubscription() {
               )}
 
               <div>
-                <h2 className="text-2xl font-semibold mb-2">{plan.name}</h2>
+                <h2 className="text-2xl font-tech font-semibold mb-2">{plan.name}</h2>
                 <p className="text-3xl font-bold mb-4">
                   {billingCycle === "monthly"
                     ? plan.monthlyPrice

@@ -121,7 +121,7 @@ export default function SuccessStories() {
 
       {/* Tenant Testimonials */}
       <section className="max-w-7xl mx-auto mb-20">
-        <h2 className="text-3xl font-accent text-center text-gray-800 mb-12">What Tenants Are Saying</h2>
+        <h2 className="text-3xl font-tech text-center text-gray-800 mb-12">What Tenants Are Saying</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {tenantTestimonials.map((t, i) => (
             <motion.div
@@ -145,7 +145,7 @@ export default function SuccessStories() {
 
       {/* Realtor Testimonials */}
       <section className="max-w-7xl mx-auto">
-        <h2 className="text-3xl font-accent text-center text-gray-800 mb-12">What Realtors Say About Us</h2>
+        <h2 className="text-3xl font-tech text-center text-gray-800 mb-12">What Realtors Say About Us</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
           {realtorTestimonials.map((r, i) => (
             <motion.div
@@ -174,7 +174,7 @@ export default function SuccessStories() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-8">
+        <h2 className="text-3xl font-tech font-semibold text-gray-800 mb-8">
           Join thousands experiencing a smarter way to rent and manage with Sky Realty
         </h2>
         <a

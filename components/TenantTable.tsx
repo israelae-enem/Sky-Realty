@@ -191,7 +191,7 @@ export default function TenantTable({ realtorId }: TenantTableProps) {
   // -------------------------------
   return (
     <section className="mt-8 bg-white p-6 rounded-lg border border-gray-300 text-gray-900 shadow-sm">
-      <h2 className="text-2xl font-accent font-semibold mb-4 text-blue-700">Your Tenants</h2>
+      <h2 className="text-2xl font-tech font-semibold mb-4 text-blue-700">Your Tenants</h2>
 
       <Input
         placeholder="Search tenants by name or email..."

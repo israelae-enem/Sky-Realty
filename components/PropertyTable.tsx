@@ -234,7 +234,7 @@ export default function PropertyTable({ plan, propertyLimit }: PropertyTableProp
   // ----------------- Render -----------------
   return (
     <section className="mt-6 bg-white p-4 rounded-md border border-gray-200 text-gray-900">
-      <h2 className="text-2xl mb-4 text-blue-700 font-accent font-semibold">Your Properties</h2>
+      <h2 className="text-2xl mb-4 text-blue-700 font-texh font-semibold">Your Properties</h2>
 
       {/* Search + Plan */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">

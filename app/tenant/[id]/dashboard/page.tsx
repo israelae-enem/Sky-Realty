@@ -223,7 +223,7 @@ const TenantDashboard = () => {
 
       {/* Maintenance Requests */}
       <section className="space-y-4">
-        <h2 className="text-xl font-accent font-semibold">Your Maintenance Requests</h2>
+        <h2 className="text-xl font-tech font-semibold">Your Maintenance Requests</h2>
         <div className="space-y-3">
           {filteredRequests.length > 0 ? (
             filteredRequests.map((req) => (

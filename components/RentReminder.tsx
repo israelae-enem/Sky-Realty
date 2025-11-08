@@ -156,7 +156,7 @@ export default function RentReminders() {
     <div className="bg-gray-100 rounded-lg p-6 grid grid-cols-1 lg:grid-cols-[3fr-1fr] gap-8">
       {/* Table view */}
       <div className="overflow-x-auto">
-        <h2 className="text-lg font-semibold mb-3 text-gray-800">Upcoming Rent Reminders</h2>
+        <h2 className="text-lg font-semibold font-tech mb-3 text-gray-800">Upcoming Rent Reminders</h2>
         <table className="min-w-full table-auto border border-gray-300 rounded">
           <thead className="bg-gray-200">
             <tr>

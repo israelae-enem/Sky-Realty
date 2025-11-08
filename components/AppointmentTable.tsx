@@ -270,7 +270,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
 
   return (
     <section className=" p-6 rounded-md text-gray-800 bg-gray-100 border border-gray-500">
-      <h2 className="text-2xl font-semibold font-accent mb-4 text-[#302cfc]">Maintenance Appointments</h2>
+      <h2 className="text-2xl font-semibold font-tech mb-4 text-[#302cfc]">Maintenance Appointments</h2>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
