@@ -1,17 +1,31 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Orbitron, Audiowide } from "next/font/google";
 import { cn } from "../lib/utils";
 // @ts-ignore
 import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs';
 
-// Use .className property when applying to body
+// Primary body font
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "700"],
-  variable: "--font-inter", // optional, can help with Tailwind/var usage
+  variable: "--font-inter",
+});
+
+// Techy / futuristic font for headings
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  weight: ["400", "600", "800"],
+  variable: "--font-orbitron",
+});
+
+// Accent font (dramatic, stylish)
+const audiowide = Audiowide({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-audiowide",
 });
 
 export const metadata: Metadata = {
@@ -25,12 +39,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={cn("min-h-screen antialiased")}>
-        <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc'}}}>
-        <Navbar />
-        {children}
-        <Toaster position="top-center" richColors theme="dark" />
+    <html
+      lang="en"
+      className={cn(inter.variable, orbitron.variable, audiowide.variable)}
+    >
+      <body className={cn("min-h-screen antialiased font-[var(--font-inter)]")}>
+        <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc' } }}>
+          <Navbar />
+          {children}
+          <Toaster position="top-center" richColors theme="dark" />
         </ClerkProvider>
       </body>
     </html>

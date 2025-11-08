@@ -8,7 +8,7 @@ import TenantForm from "@/components/TenantForm";
 
 const Realtor = () => {
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen w-full flex items-center mt-20 justify-center overflow-hidden">
       {/* Background Image */}
       <Image
         src="/assets/images/pic1.jpg"

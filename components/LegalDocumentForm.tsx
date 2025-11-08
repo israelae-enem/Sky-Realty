@@ -115,12 +115,12 @@ export default function LegalDocumentManager() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* 📝 Form */}
-      <form onSubmit={handleSubmit} className="bg-[#0d0d0e] p-6 rounded-lg text-white space-y-4 mb-6 ">
+      <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded-lg text-gray-800 space-y-4 mt-20 mb-6 ">
         <h2 className="text-xl font-semibold">New Legal Document</h2>
 
         <div>
           <label className="block text-sm mb-1">Document Type</label>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="w-full bg-gray-700 text-white px-3 py-2 rounded">
+          <select value={type} onChange={(e) => setType(e.target.value)} className="w-full bg-gray-500 text-white px-3 py-2 rounded">
             <option value="lease">Lease</option>
             <option value="notice">Notice</option>
             <option value="contract">Contract</option>
@@ -129,7 +129,7 @@ export default function LegalDocumentManager() {
 
         <div>
           <label className="block text-sm mb-1">Tenant</label>
-          <select value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="w-full bg-gray-700 text-white px-3 py-2 rounded">
+          <select value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="w-full bg-gray-100 text-gray-800 px-3 py-2 rounded">
             <option value="">Select tenant</option>
             {tenants.map((t) => (
               <option key={t.id} value={t.id}>{t.full_name}</option>
@@ -139,7 +139,7 @@ export default function LegalDocumentManager() {
 
         <div>
           <label className="block text-sm mb-1">Property</label>
-          <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} className="w-full bg-gray-700 text-white px-3 py-2 rounded">
+          <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} className="w-full bg-gray-100 text-gray-800 px-3 py-2 rounded">
             <option value="">Select property</option>
             {properties.map((p) => (
               <option key={p.id} value={p.id}>{p.address}</option>
@@ -153,7 +153,7 @@ export default function LegalDocumentManager() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write content here..."
-            className="w-full bg-gray-700 text-white px-3 py-2 rounded h-28"
+            className="w-full bg-gray-100 text-gray-800 px-3 py-2 rounded h-28"
           />
         </div>
 
@@ -162,7 +162,7 @@ export default function LegalDocumentManager() {
           <input
             type="file"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="w-full text-sm text-gray-300"
+            className="w-full text-sm text-gray-700"
           />
         </div>
 
@@ -176,14 +176,14 @@ export default function LegalDocumentManager() {
       </form>
 
       {/* 📜 Table */}
-      <div className="bg-gray-800 p-6 rounded-lg text-white">
+      <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
         <h2 className="text-xl font-semibold mb-4">Legal Documents</h2>
         {documents.length === 0 ? (
-          <p className="text-gray-400">No documents yet.</p>
+          <p className="text-gray-700">No documents yet.</p>
         ) : (
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-gray-700 text-left">
+              <tr className="border-b border-gray-500 text-left">
                 <th className="py-2 px-3">Type</th>
                 <th className="py-2 px-3">Tenant</th>
                 <th className="py-2 px-3">Property</th>
@@ -193,7 +193,7 @@ export default function LegalDocumentManager() {
             </thead>
             <tbody>
               {documents.map((doc) => (
-                <tr key={doc.id} className="border-b border-gray-700 hover:bg-gray-700/50">
+                <tr key={doc.id} className="border-b border-gray-500 hover:bg-gray-500/50">
                   <td className="py-2 px-3 capitalize">{doc.type}</td>
                   <td className="py-2 px-3">{doc.tenants?.full_name || '—'}</td>
                   <td className="py-2 px-3">{doc.properties?.address || '—'}</td>
@@ -203,10 +203,10 @@ export default function LegalDocumentManager() {
                         View / Download
                       </a>
                     ) : (
-                      <span className="text-gray-400">No file</span>
+                      <span className="text-gray-800">No file</span>
                     )}
                   </td>
-                  <td className="py-2 px-3 text-gray-400 text-sm">
+                  <td className="py-2 px-3 text-gray-800 text-sm">
                     {new Date(doc.created_at).toLocaleDateString()}
                   </td>
                 </tr>

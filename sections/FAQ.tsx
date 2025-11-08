@@ -42,7 +42,7 @@ export default function FAQ() {
   return (
     <section className="bg-gray-100 text-gray-900 py-16 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold text-gray-900">Frequently Asked Questions</h2>
+        <h2 className="text-3xl font-tech font-bold text-gray-900">Frequently Asked Questions</h2>
         <p className="mt-3 text-gray-700">
           Everything you need to know about Sky-Realty.
         </p>

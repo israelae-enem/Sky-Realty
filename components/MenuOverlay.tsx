@@ -32,7 +32,6 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
     { title: "Complete Onboarding", url: "/onboarding" },
   ];
 
-  // Animation variants
   const container = {
     hidden: { opacity: 0 },
     visible: {
@@ -47,7 +46,6 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  // 🔍 Check if user exists in Supabase (realtor or tenant)
   useEffect(() => {
     if (!isLoaded || !user) return;
 
@@ -65,13 +63,9 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
           .eq("id", user.id)
           .single();
 
-        if (realtor) {
-          setDashboardUrl(`/realtor/${user.id}/dashboard`);
-        } else if (tenant) {
-          setDashboardUrl(`/tenant/${user.id}/dashboard`);
-        } else {
-          setDashboardUrl(null);
-        }
+        if (realtor) setDashboardUrl(`/realtor/${user.id}/dashboard`);
+        else if (tenant) setDashboardUrl(`/tenant/${user.id}/dashboard`);
+        else setDashboardUrl(null);
       } catch (err) {
         console.error("Error checking user in Supabase:", err);
       }
@@ -84,7 +78,7 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
     <AnimatePresence>
       <motion.div
         key="menu"
-        className="fixed inset-0 z-[999] flex flex-col items-center justify-center text-white overflow-hidden"
+        className="fixed inset-0 z-[999] flex flex-col items-center justify-between py-16 text-white overflow-y-auto"
         variants={container}
         initial="hidden"
         animate="visible"
@@ -92,8 +86,6 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
       >
         {/* Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0A192F] via-[#112240] to-[#1E2A78] opacity-95" />
-
-        {/* Glow Accent */}
         <div className="absolute w-[600px] h-[600px] bg-[#2EF2FF]/20 blur-[180px] rounded-full -top-40 left-1/3 pointer-events-none" />
 
         {/* Close Button */}
@@ -106,7 +98,7 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
         </motion.button>
 
         {/* Menu Items */}
-        <motion.ul className="space-y-10 text-center z-10">
+        <motion.ul className="flex flex-col items-center space-y-6 text-center z-10 mt-5">
           {menuItems.map((itemData, index) => (
             <motion.li key={index} variants={item}>
               <a
@@ -118,7 +110,6 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
             </motion.li>
           ))}
 
-          {/* ✅ Conditional Dashboard Link */}
           {dashboardUrl && (
             <motion.li variants={item}>
               <a
@@ -132,7 +123,7 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
         </motion.ul>
 
         {/* Auth Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 z-10">
+        <div className="z-10 flex flex-col sm:flex-row items-center gap-4 mb-8">
           <SignedOut>
             <SignInButton>
               <button className="px-8 py-3 rounded-full bg-white text-blue-700 font-semibold hover:bg-gray-100 transition-all duration-300">
@@ -142,7 +133,7 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
           </SignedOut>
 
           <SignedIn>
-            <UserButton  />
+            <UserButton />
           </SignedIn>
 
           <SignUpButton>

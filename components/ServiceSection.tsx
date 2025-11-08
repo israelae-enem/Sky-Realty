@@ -52,7 +52,7 @@ export default function ServicesSection() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
       >
-        <h2 className="text-4xl md:text-5xl font-bold text-[#302cfc] mb-4">
+        <h2 className="text-4xl font-tech md:text-5xl font-bold text-[#302cfc] mb-4">
           Our Core Services
         </h2>
         <p className="text-lg text-gray-700 max-w-2xl mx-auto">

@@ -160,7 +160,7 @@ export default function PricingSubscription() {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 p-8">
-      <h1 className="text-4xl font-bold text-center mb-6 text-blue-700">Sky Realty Plans</h1>
+      <h1 className="text-4xl font-bold font-tech text-center mb-6 text-blue-700">Sky Realty Plans</h1>
 
       {renderTrialBanner()}
 

@@ -24,7 +24,7 @@ export default function WhySkyRealty() {
   return (
     <section className="py-20 px-10 md:px-20 bg-gray-50">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold text-blue-700">Why Sky Realty Makes Your Life Better</h2>
+        <h2 className="text-4xl font-accent font-bold text-blue-700">Why Sky Realty Makes Your Life Better</h2>
       </div>
       <div className="flex flex-col md:flex-row gap-10">
         {points.map((point, index) => (

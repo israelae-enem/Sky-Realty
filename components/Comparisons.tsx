@@ -82,7 +82,7 @@ export default function ComparisonPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
     >
-      <h1 className="text-5xl font-bold text-[#302cfc] mb-4">
+      <h1 className="text-5xl font-tech font-bold text-[#302cfc] mb-4">
         Sky Realty vs Traditional Property Management
       </h1>
       <p className="text-gray-700 text-lg">
@@ -134,7 +134,7 @@ export default function ComparisonPage() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7 }}
     >
-      <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+      <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-4">
         Ready to make the switch?
       </h2>
       <p className="text-gray-700 mb-6">

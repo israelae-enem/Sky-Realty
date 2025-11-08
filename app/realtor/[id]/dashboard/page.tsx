@@ -138,7 +138,7 @@ export default function RealtorDashboard() {
         setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : (trial ? 0 : 0))
         setTrialEndsAt(trial)
         setSubscriptionExpiresAt(subExpires)
-        setSubscriptionActive(true)
+        setSubscriptionActive(!isExpired)
         setExpired(isExpired)
 
         if (trial && trial > now) startCountdown(trial)
@@ -229,7 +229,7 @@ export default function RealtorDashboard() {
 ]
 
 return (
-  <div className="flex min-h-screen bg-gray-100 text-gray-800">
+  <div className="flex min-h-screen bg-gray-100 mt-20 text-gray-800">
     {/* Sidebar */}
     <aside className={clsx(
       'fixed top-0 left-0 h-full w-64 backdrop-blur-md bg-[#e8ecf1]/80 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
@@ -303,7 +303,7 @@ return (
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <h1 className="text-2xl font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
+                <h1 className="text-2xl font-tech font-bold text-[#302cfc]">Welcome, {user?.firstName || 'Realtor'}</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
                   <StatCard icon={<Building />} title={`Total Properties ${plan ? `(Plan: ${plan})` : ''}`} value={stats.properties} />
                   <StatCard icon={<CheckCircle />} title="Occupied Units" value={stats.occupied} />

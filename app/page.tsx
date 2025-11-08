@@ -17,24 +17,7 @@ import TestimonialsPage from '@/components/Testimony'
 import ClientLogosCarousel from '@/components/Logos'
 import TestimonialCards from '@/components/TestimonialCards'
 import Footer from '@/components/Footer'
-
-const testimonials = [
-  {
-    name: "Alice Johnson",
-    image: "/assets/images/testimonial1.jpg",
-    text: "Sky Realty has completely simplified managing my rental properties. I save hours every week!",
-  },
-  {
-    name: "Mohammed Al Fahad",
-    image: "/assets/images/testimonial2.jpg",
-    text: "The dashboard is intuitive, and communication with tenants has never been easier.",
-  },
-  {
-    name: "Fatima Noor",
-    image: "/assets/images/testimonial3.jpg",
-    text: "Automated rent collection and maintenance tracking have transformed my workflow.",
-  },
-]
+import WalkthroughSection from '@/components/WalkThrough'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -68,7 +51,7 @@ const Page = () => {
   }, [isVideoOpen])
 
   return (
-    <main className="flex flex-col w-full text-gray-900 bg-gray-100">
+    <main className="flex flex-col w-full text-gray-900 bg-gray-100 mt-20">
 
     <section
       ref={ref}
@@ -77,7 +60,7 @@ const Page = () => {
       {/* ===== Background Video (No Blur) ===== */}
       <motion.video
         ref={ref}
-        src="/assets/videos/vid.mp4"
+        src="/assets/videos/hero2.mp4"
         autoPlay
         loop
         muted
@@ -92,7 +75,7 @@ const Page = () => {
       {/* ===== Foreground Content ===== */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 space-y-8">
         <motion.h1
-          className="text-5xl md:text-7xl font-extrabold text-white tracking-tight drop-shadow-lg leading-tight"
+          className="text-5xl md:text-7xl font-tech font-extrabold text-white tracking-tight drop-shadow-lg leading-tight"
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
@@ -144,8 +127,6 @@ const Page = () => {
         <p className="text-xs mt-1 opacity-80">Scroll to explore</p>
       </motion.div>
     </section>
-  
-
 
   <section>
     <ServicesSection />
@@ -169,7 +150,7 @@ const Page = () => {
             <section className="py-20 px-10 md:px-20 bg-gray-50">
               <div className="text-center mb-16">
                 <motion.h2
-                  className="text-4xl md:text-5xl font-bold text-blue-700 mb-6"
+                  className="text-4xl md:text-5xl font-accent font-bold text-blue-700 mb-6"
                   initial={{ opacity: 0, y: -50 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
@@ -178,7 +159,7 @@ const Page = () => {
                   Keep All Your Conversations in One Place
                 </motion.h2>
                 <motion.p
-                  className="text-lg text-gray-700 max-w-2xl mx-auto"
+                  className="text-lg text-gray-700 font-body max-w-2xl mx-auto"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
@@ -208,19 +189,19 @@ const Page = () => {
       
                 <div className="flex-1 flex flex-col gap-6">
                   <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-blue-700 text-2xl font-semibold mb-3">Manage Maintenance Requests Easily</h3>
+                    <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-3">Manage Maintenance Requests Easily</h3>
                     <p className="text-gray-400 mb-4">
                       Submit and track requests without confusion. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-blue-700 text-2xl font-semibold mb-3">Send and Receive Updates</h3>
+                    <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-3">Send and Receive Updates</h3>
                     <p className="text-gray-400 mb-4">
                       Get notified about your requests and updates automatically. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                     </p>
                   </div>
                   <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-blue-700 text-2xl font-semibold mb-3">Store Every Record Securely</h3>
+                    <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-3">Store Every Record Securely</h3>
                     <p className="text-gray-400 mb-4">
                       All communication and records are safely stored. <Link href="/sign-in" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                     </p>
@@ -249,7 +230,7 @@ const Page = () => {
               {/* Rent Section */}
               <section className="py-20 px-10 md:px-20 bg-white">
                 <div className="text-center mb-16">
-                  <h2 className="text-5xl font-bold text-blue-700 mb-6">Stay on Top of Rent</h2>
+                  <h2 className="text-5xl font-bold font-accent text-blue-700 mb-6">Stay on Top of Rent</h2>
                   <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                     Sky Realty keeps your rent records organized and up to date.
                   </p>
@@ -272,7 +253,7 @@ const Page = () => {
                     />
                   </motion.div>
                   <div className="flex-1 flex flex-col gap-6">
-                    <h3 className="text-2xl font-semibold text-blue-700 mb-4">Rent Tracking</h3>
+                    <h3 className="text-2xl font-accent font-semibold text-blue-700 mb-4">Rent Tracking</h3>
                     <p className="text-gray-400 text-lg">
                       See all your payments, due dates, and history in one simple dashboard.
                     </p>
@@ -294,7 +275,7 @@ const Page = () => {
           viewport={{ once: true }}
         >
           <motion.div className="md:w-1/2 space-y-4" variants={fadeUp}>
-            <h2 className="text-3xl font-bold text-[#302cfc]">Maintenance Made Simple</h2>
+            <h2 className="text-3xl font-accent font-bold text-[#302cfc]">Maintenance Made Simple</h2>
             <p className="text-gray-700">
               Manage repairs and requests in real-time with automated notifications and easy task tracking.
             </p>
@@ -318,6 +299,8 @@ const Page = () => {
   <section>
     <TestimonialsPage />
   </section>
+
+  <WalkthroughSection />
        
       {/* ================= Pricing ================= */}
       <motion.section

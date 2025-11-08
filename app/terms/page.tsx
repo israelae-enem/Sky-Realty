@@ -1,9 +1,11 @@
 // app/terms/page.tsx (Next.js App Router)
 // or pages/terms.tsx (Next.js Pages Router)
 
+import Footer from "@/components/Footer";
+
 export default function TermsAndConditions() {
   return (
-    <div className="bg-gray-900 text-gray-200 min-h-screen py-16 px-6">
+    <div className="bg-gray-100 text-gray-800 min-h-screen py-16 px-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-white mb-6">Terms & Conditions</h1>
         <p className="mb-4 text-gray-400">
@@ -28,7 +30,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">3. Use of Services</h2>
+            <h2 className="text-2xl font-accent font-semibold text-white mb-2">3. Use of Services</h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>You agree to use Sky-Realty for lawful purposes only.</li>
               <li>You may not misuse or attempt to disrupt the platform.</li>
@@ -38,7 +40,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">4. Subscriptions & Payments</h2>
+            <h2 className="text-2xl font-accent font-semibold text-white mb-2">4. Subscriptions & Payments</h2>
             <p>
               Sky-Realty offers subscription plans (Basic, Pro, Premium) with property limits. 
               Payments are securely processed through Stripe. 
@@ -47,7 +49,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">5. Termination</h2>
+            <h2 className="text-2xl font-accent font-semibold text-white mb-2">5. Termination</h2>
             <p>
               We reserve the right to suspend or terminate accounts that violate these Terms or 
               misuse the platform. You may also cancel your account at any time.
@@ -55,7 +57,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">6. Limitation of Liability</h2>
+            <h2 className="text-2xl font-accent font-semibold text-white mb-2">6. Limitation of Liability</h2>
             <p>
               Sky-Realty is provided “as is” without warranties of any kind. 
               We are not liable for any indirect, incidental, or consequential damages 
@@ -64,7 +66,7 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">7. Changes to Terms</h2>
+            <h2 className="text-2xl font-accent font-semibold text-white mb-2">7. Changes to Terms</h2>
             <p>
               We may update these Terms & Conditions from time to time. 
               Continued use of the platform after changes means you accept the new terms.
@@ -72,17 +74,22 @@ export default function TermsAndConditions() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-2">8. Contact Us</h2>
+            <h2 className="text-2xl font-accent font-semibold text-white mb-2">8. Contact Us</h2>
             <p>
               If you have any questions about these Terms & Conditions, please contact us at:{" "}
               <a
-                href="mailto:support@sky-realty.com"
+                href="mailto:support@sky-realtyae.com"
                 className="text-[#302cfc] hover:underline"
               >
                 support@sky-realty.com
               </a>
+        
             </p>
           </div>
+        </section>
+
+        <section>
+          <Footer />
         </section>
       </div>
     </div>

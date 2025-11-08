@@ -234,7 +234,7 @@ export default function PropertyTable({ plan, propertyLimit }: PropertyTableProp
   // ----------------- Render -----------------
   return (
     <section className="mt-6 bg-white p-4 rounded-md border border-gray-200 text-gray-900">
-      <h2 className="text-2xl mb-4 text-blue-700 font-semibold">Your Properties</h2>
+      <h2 className="text-2xl mb-4 text-blue-700 font-accent font-semibold">Your Properties</h2>
 
       {/* Search + Plan */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -303,6 +303,7 @@ export default function PropertyTable({ plan, propertyLimit }: PropertyTableProp
               <TableCell className="p-2">
                 <Input
                   type="date"
+                  placeholder='lease start'
                   value={newProperty.lease_start ?? ''}
                   onChange={(e) =>
                     setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))
@@ -313,6 +314,7 @@ export default function PropertyTable({ plan, propertyLimit }: PropertyTableProp
               <TableCell className="p-2">
                 <Input
                   type="date"
+                  placeholder='lease end'
                   value={newProperty.lease_end ?? ''}
                   onChange={(e) =>
                     setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))
@@ -486,12 +488,14 @@ export default function PropertyTable({ plan, propertyLimit }: PropertyTableProp
           <div className="flex gap-2 mb-2">
             <Input
               type="date"
+              placeholder='lease start'
               value={newProperty.lease_start ?? ''}
               onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_start: e.target.value }))}
               className="bg-white text-gray-900 border-gray-300"
             />
             <Input
               type="date"
+              placeholder='lease end'
               value={newProperty.lease_end ?? ''}
               onChange={(e) => setNewProperty((s) => ({ ...(s || {}), lease_end: e.target.value }))}
               className="bg-white text-gray-900 border-gray-300"

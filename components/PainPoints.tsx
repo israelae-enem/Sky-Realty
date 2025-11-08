@@ -85,7 +85,7 @@ export default function PainPointsPage() {
         {/* Header */}
         <div className="max-w-4xl mx-auto text-center mb-16">
           <motion.h1
-            className="text-5xl font-bold text-[#302cfc] mb-4"
+            className="text-5xl font-tech font-bold text-[#302cfc] mb-4"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -93,7 +93,7 @@ export default function PainPointsPage() {
             The Pain Points Sky Realty Solves
           </motion.h1>
           <motion.p
-            className="text-gray-700 text-lg max-w-2xl mx-auto"
+            className="text-gray-700 font-body text-lg max-w-2xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
@@ -115,7 +115,7 @@ export default function PainPointsPage() {
               viewport={{ once: true }}
               custom={i}
             >
-              <h3 className="text-xl font-semibold text-[#302cfc] mb-3">
+              <h3 className="text-xl font-accent font-semibold text-[#302cfc] mb-3">
                 {point.title}
               </h3>
               <p className="text-gray-700 leading-relaxed">{point.description}</p>
@@ -130,7 +130,7 @@ export default function PainPointsPage() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+          <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-4">
             Ready to solve these challenges for good?
           </h2>
           <a

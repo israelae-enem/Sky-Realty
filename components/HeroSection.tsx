@@ -48,7 +48,7 @@ export default function HeroSection() {
         transition={{ duration: 1, delay: 0.4 }}
       >
         <motion.h1
-          className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 drop-shadow-lg"
+          className="text-5xl md:text-6xl font-tech font-extrabold leading-tight mb-6 drop-shadow-lg"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.8 }}

@@ -119,7 +119,7 @@ export default function TenantTestimonials() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-3xl font-semibold text-gray-800 mb-4">
+        <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-8">
           Join thousands of tenants enjoying simpler renting with Sky Realty
         </h2>
         <a

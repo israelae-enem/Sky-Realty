@@ -32,7 +32,7 @@ export default function CommunicationSection() {
           <section className="py-20 px-10 md:px-20 bg-gray-50">
             <div className="text-center mb-16">
               <motion.h2
-                className="text-4xl md:text-5xl font-bold text-blue-700 mb-6"
+                className="text-4xl md:text-5xl font-accent font-bold text-blue-700 mb-6"
                 initial={{ opacity: 0, y: -50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
@@ -71,19 +71,19 @@ export default function CommunicationSection() {
     
               <div className="flex-1 flex flex-col gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-blue-700 text-2xl font-semibold mb-3">Manage Maintenance Requests Easily</h3>
+                  <h3 className="text-blue-700 text-2xl font-accent font-semibold mb-3">Manage Maintenance Requests Easily</h3>
                   <p className="text-gray-400 mb-4">
                     Submit and track requests without confusion. <Link href="/maintenance" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-blue-700 text-2xl font-semibold mb-3">Send and Receive Updates</h3>
+                  <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-3">Send and Receive Updates</h3>
                   <p className="text-gray-400 mb-4">
                     Get notified about your requests and updates automatically. <Link href="/reminders" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-blue-700 text-2xl font-semibold mb-3">Store Every Record Securely</h3>
+                  <h3 className="text-blue-700 font-accent text-2xl font-semibold mb-3">Store Every Record Securely</h3>
                   <p className="text-gray-400 mb-4">
                     All communication and records are safely stored. <Link href="/records" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
                   </p>

@@ -29,7 +29,7 @@ const AboutPage = () => {
         >
           <div className="md:w-1/2">
             <Image
-              src="/assets/images/about1.jpg"
+              src="/assets/images/ptoperty.jpg"
               alt="Property management"
               width={1000}
               height={1000}
@@ -55,7 +55,7 @@ const AboutPage = () => {
         >
           <div className="md:w-1/2">
             <Image
-              src="/assets/images/about2.jpg"
+              src="/assets/images/communication.jpg"
               alt="Messaging tool"
               width={1000}
               height={1000}
@@ -81,7 +81,7 @@ const AboutPage = () => {
         >
           <div className="md:w-1/2">
             <Image
-              src="/assets/images/about3.jpg"
+              src="/assets/images/dash.jpg"
               alt="Security and analytics"
               width={1000}
               height={1000}
@@ -107,7 +107,7 @@ const AboutPage = () => {
         >
           <div className="md:w-1/2">
             <Image
-              src="/assets/images/about4.jpg"
+              src="/assets/icons/sky-logo.jpg"
               alt="Global platform"
               width={1000}
               height={1000}

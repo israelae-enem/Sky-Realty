@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabaseClient'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 
+
+
 import {
   Table,
   TableBody,
@@ -68,6 +70,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
   const [editDate, setEditDate] = useState<Date | undefined>()
   const [editTime, setEditTime] = useState('')
   const [editStatus, setEditStatus] = useState<Appointment['status']>('Scheduled')
+  const [showCalendar, setShowCalendar] = useState(false)
 
   // -----------------------------
   // Fetch tenants and appointments
@@ -266,20 +269,20 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
   }, [appointments, searchTerm])
 
   return (
-    <section className=" p-6 rounded-md text-gray-800 bg-gray-300 border border-gray-500">
-      <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Appointments</h2>
+    <section className=" p-6 rounded-md text-gray-800 bg-gray-100 border border-gray-500">
+      <h2 className="text-2xl font-semibold font-accent mb-4 text-[#302cfc]">Maintenance Appointments</h2>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-400 p-4 rounded-md text-center border border-gray-500">
+        <div className="bg-gray-300 p-4 rounded-md text-center border border-gray-500">
           <p className="text-gray-800 text-sm">Scheduled</p>
           <p className="text-yellow-600 text-xl font-semibold">{stats.scheduled}</p>
         </div>
-        <div className="bg-gray-400 p-4 rounded-md text-center border border-gray-500">
+        <div className="bg-gray-300 p-4 rounded-md text-center border border-gray-500">
           <p className="text-gray-800 text-sm">Completed</p>
           <p className="text-green-600 text-xl font-semibold">{stats.completed}</p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-md text-center border border-gray-500">
+        <div className="bg-gray-300 p-4 rounded-md text-center border border-gray-500">
           <p className="text-gray-800 text-sm">Canceled</p>
           <p className="text-red-600 text-xl font-semibold">{stats.canceled}</p>
         </div>
@@ -322,21 +325,55 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
                </select>
             </TableCell>
              
-              <TableCell>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full text-left text-gray-800 bg-gray-300">
-                      {newDate ? format(newDate, 'yyyy-MM-dd') : 'Select Date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0">
-                    <Calendar mode="single" selected={newDate} onSelect={setNewDate} />
-                  </PopoverContent>
-                </Popover>
-              </TableCell>
-              <TableCell>
-                <Input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="text-gray-800 bg-gray-300"/>
-              </TableCell>
+           <TableCell>
+  {/** Full Calendar Popup Integration */}
+  <div className="relative">
+    <Button
+      variant="outline"
+      onClick={() => setShowCalendar(true)}
+      className="w-full text-left text-gray-800 bg-gray-300 border border-gray-500"
+    >
+      {newDate ? format(newDate, 'yyyy-MM-dd') : 'Select Date'}
+    </Button>
+
+    {showCalendar && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-gray-200 p-4 rounded-lg shadow-lg border border-gray-400 w-[90%] sm:w-[450px]">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold text-[#302cfc]">
+              Select Appointment Date
+            </h3>
+            <button
+              onClick={() => setShowCalendar(false)}
+              className="text-gray-600 hover:text-red-600"
+            >
+              ✕
+            </button>
+          </div>
+
+          <Calendar
+            mode="single"
+            selected={newDate}
+            onSelect={(date) => {
+              setNewDate(date)
+              setShowCalendar(false)
+            }}
+            className="rounded-md border border-gray-400 bg-gray-100"
+          />
+        </div>
+      </div>
+    )}
+  </div>
+</TableCell>
+
+<TableCell>
+  <Input
+    type="time"
+    value={newTime}
+    onChange={(e) => setNewTime(e.target.value)}
+    className="text-gray-800 bg-gray-300"
+  />
+</TableCell>
               <TableCell>
                 <Select value={newStatus} onValueChange={val => setNewStatus(val as Appointment['status'])}>
                   <SelectTrigger className="text-gray-800 bg-gray-300 w-32 border border-gray-500">

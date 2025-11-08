@@ -59,7 +59,7 @@ export default function FoundersSection() {
   return (
     <section className="bg-gray-300 py-20 overflow-hidden">
       <div className="text-center mb-12 px-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-[#302cfc] mb-4">
+        <h2 className="text-4xl font-tech md:text-5xl font-bold text-[#302cfc] mb-4">
           Meet the Visionaries Behind Sky Realty
         </h2>
         <p className="text-gray-700 max-w-2xl mx-auto">

@@ -31,6 +31,13 @@ interface MaintenanceRequest {
   created_at: string;
 }
 
+interface Document {
+  id: string;
+  file_name: string;
+  file_url: string;
+  created_at: string;
+}
+
 interface Stats {
   total: number;
   completed: number;
@@ -45,6 +52,7 @@ const TenantDashboard = () => {
   const [stats, setStats] = useState<Stats>({ total: 0, completed: 0, pending: 0 });
   const [filter, setFilter] = useState<'All' | 'Pending' | 'Completed'>('All');
   const [openNotifications, setOpenNotifications] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -94,6 +102,19 @@ const TenantDashboard = () => {
     fetchTenantData();
   }, [isLoaded, user]);
 
+  useEffect(() => {
+  if (!user) return;
+  const fetchDocs = async () => {
+    const { data, error } = await supabase
+      .from("documents")
+      .select("*")
+      .eq("tenant_id", user.id)
+      .order("created_at", { ascending: false });
+    if (!error) setDocuments(data || []);
+  };
+  fetchDocs();
+}, [user]);
+
   const filteredRequests =
     filter === 'All'
       ? maintenanceRequests
@@ -102,7 +123,7 @@ const TenantDashboard = () => {
   if (!tenant) return <p className="p-8 text-center text-gray-800">Loading...</p>;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 p-6 space-y-10">
+    <div className="min-h-screen bg-gray-50 text-gray-800 mt-20 p-6 space-y-10">
       {/* Topbar */}
       <div className="flex flex-col md:flex-row justify-end items-center gap-6 relative font-bold">
         {/* Notifications */}
@@ -157,7 +178,7 @@ const TenantDashboard = () => {
       </div>
 
       {/* Welcome */}
-      <h1 className="text-3xl font-bold">Welcome, {user?.firstName || user?.fullName || 'Tenant'}!</h1>
+      <h1 className="text-xl font-tech font-bold">Welcome, {user?.firstName || user?.fullName || 'Tenant'}!</h1>
 
       {/* Stats Panel */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -202,7 +223,7 @@ const TenantDashboard = () => {
 
       {/* Maintenance Requests */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Your Maintenance Requests</h2>
+        <h2 className="text-xl font-accent font-semibold">Your Maintenance Requests</h2>
         <div className="space-y-3">
           {filteredRequests.length > 0 ? (
             filteredRequests.map((req) => (
@@ -230,6 +251,44 @@ const TenantDashboard = () => {
           )}
         </div>
       </section>
+
+      {/* Tenant Documents */}
+<section className="space-y-4">
+  <h2 className="font-tech text-2xl text-[#302cfc]">Your Documents</h2>
+  <div className="bg-white p-4 rounded-md shadow border border-gray-200">
+    {documents.length > 0 ? (
+      <table className="min-w-full text-sm text-left">
+        <thead>
+          <tr className="border-b text-gray-600">
+            <th className="py-2">File Name</th>
+            <th className="py-2">Uploaded On</th>
+            <th className="py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {documents.map((doc) => (
+            <tr key={doc.id} className="border-b hover:bg-gray-50">
+              <td className="py-2">{doc.file_name}</td>
+              <td className="py-2">{new Date(doc.created_at).toLocaleDateString()}</td>
+              <td className="py-2">
+                <a
+                  href={doc.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#302cfc] hover:underline font-semibold"
+                >
+                  View
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p className="text-gray-500">No documents yet.</p>
+    )}
+  </div>
+</section>
 
       {/* Chat with Realtor */}
       <section className="space-y-4">

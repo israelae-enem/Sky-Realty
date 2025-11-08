@@ -14,7 +14,7 @@ const solutions = [
     title: '2. Automated Rent Collection',
     description:
       'Our platform automates rent reminders, invoices, and receipts. Tenants receive instant notifications, while realtors can track payments in real time — no more chasing payments manually.',
-    image: '/assets/images/receipt.jpg',
+    image: '/assets/images/rent.jpg',
   },
   {
     title: '3. Unified Communication Hub',
@@ -38,13 +38,13 @@ const solutions = [
     title: '6. Real-Time Financial Insights',
     description:
       'See how your properties are performing at a glance. Sky Realty tracks income, expenses, ROI, and generates clear visual reports for better decision-making.',
-    image: '/assets/images/agent.jpg',
+    image: '/assets/images/ana.jpg',
   },
   {
     title: '7. Vacancy & Tenant Tracking',
     description:
       'Know exactly which units are occupied, when leases end, and which tenants are moving in next. Our automated system keeps your occupancy rate high and downtime low.',
-    image: '/assets/images/dash2.jpg',
+    image: '/assets/images/ten.jpg',
   },
   {
     title: '8. Branded Realtor Experience',
@@ -56,7 +56,7 @@ const solutions = [
     title: '9. Scalable Infrastructure',
     description:
       'Whether you manage 5 or 500 properties, Sky Realty scales effortlessly with your portfolio. Add new properties and users without slowing down performance.',
-    image: '/assets/images/pro1.jpg',
+    image: '/assets/images/property.jpg',
   },
   {
     title: '10. Secure Cloud Storage',
@@ -80,7 +80,7 @@ export default function SolutionsPage() {
       {/* Header */}
       <div className="max-w-4xl mx-auto text-center mb-16">
         <motion.h1
-          className="text-5xl font-bold text-[#302cfc] mb-4"
+          className="text-5xl font-bold font-tech text-[#302cfc] mb-4"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -88,7 +88,7 @@ export default function SolutionsPage() {
           How Sky Realty Solves Your Pain Points
         </motion.h1>
         <motion.p
-          className="text-gray-700 text-lg max-w-2xl mx-auto"
+          className="text-gray-700 text-lg font-body max-w-2xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}

@@ -174,7 +174,7 @@ export default function RentPaymentTable({ realtorId }: RentPaymentTableProps) {
 
   return (
     <section className="mt-8 bg-white p-4 rounded-md border border-gray-200">
-      <h2 className="text-2xl font-semibold mb-4 text-blue-600">Rent Payments</h2>
+      <h2 className="text-2xl font-accent font-semibold mb-4 text-blue-600">Rent Payments</h2>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

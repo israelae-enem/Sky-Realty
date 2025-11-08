@@ -61,7 +61,7 @@ export default function LegalDocumentsTable() {
   if (loading) {
     return (
       <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
-        <h2 className="text-xl font-semibold mb-4">Legal Documents</h2>
+        <h2 className="text-xl font-accent font-semibold mb-4">Legal Documents</h2>
         <p className="text-gray-400">Loading documents...</p>
       </div>
     )
@@ -71,7 +71,7 @@ export default function LegalDocumentsTable() {
     <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
       {/* Header with button */}
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Legal Documents</h2>
+        <h2 className="text-xl font-accent font-semibold">Legal Documents</h2>
         <Link
           href="/legal-doc"
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-all duration-200"

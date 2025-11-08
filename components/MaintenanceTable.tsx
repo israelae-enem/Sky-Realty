@@ -100,7 +100,7 @@ export default function MaintenanceTable({ realtorId }: MaintenanceTableProps) {
 
   return (
     <div className="bg-gray-100 rounded-lg p-4 text-gray-800 ">
-      <h2 className="text-2xl font-semibold mb-4 text-[#302cfc]">Maintenance Requests</h2>
+      <h2 className="text-2xl font-accent font-semibold mb-4 text-[#302cfc]">Maintenance Requests</h2>
 
       <div className='hidden md:block overflow-x-auto'></div>
       <table className="min-w-full border-collapse border border-gray-300">

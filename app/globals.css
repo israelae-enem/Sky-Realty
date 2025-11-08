@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@12..96,200..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@12..96,200..800&display=swapfamily=Orbitron:wght@400;600;800&family=Audiowide&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -83,11 +83,46 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-tech: 'Orbitron', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-accent: 'Audiowide', cursive;
 }
 
-body {
-  font-family: var(--font-Inter);
+
+  html, body {
+  font-family: 'Inter', sans-serif; /* Default body font */
+  color: #1a1a1a;
+  background-color: #f9fafb;
 }
+
+/* 🧠 Font utility classes */
+
+/* Techy headings */
+.font-tech {
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Accent titles (good for brand names, headers, or hero sections) */
+.font-accent {
+  font-family: 'Audiowide', cursive;
+  letter-spacing: 0.04em;
+}
+
+/* Clean, modern body text */
+.font-body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Optional: add weights for consistency */
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}
+
 
 .dark {
   --background: oklch(0.145 0 0);
