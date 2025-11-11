@@ -18,11 +18,11 @@ const Navbar = () => {
   return (
     <>
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 sm:px-10 py-4 bg-transparent backdrop-blur-md">
+      <nav className=" w-full z-50 flex items-center justify-between px-6 sm:px-10 py-4 bg-white backdrop-blur-md">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
           <Image
-            src="/assets/icons/sky-logo.jpg"
+            src="/assets/icons/logo4.jpg"
             alt="logo"
             width={140}
             height={30}
@@ -33,7 +33,7 @@ const Navbar = () => {
         {/* Hamburger (shown on all screens) */}
         <button
           onClick={() => setMenuOpen(true)}
-          className="text-white text-3xl hover:scale-110 transition-transform"
+          className="text-blue-700 text-3xl hover:scale-110 transition-transform"
         >
           <FiMenu />
         </button>

@@ -1,10 +1,39 @@
-import LegalDocumentForm from '@/components/LegalDocumentForm'
+"use client";
 
-export default function LegalDocsPage() {
+import { motion } from "framer-motion";
+import Image from "next/image";
+import React from "react";
+import LegalDocumentForm from "@/components/LegalDocumentForm";
+
+const LegalDocument = () => {
   return (
-    <div className="space-y-6 bg-black">
-      <LegalDocumentForm />
-      
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
+      <Image
+        src="/assets/images/pic1.jpg"
+        alt="agent background"
+        fill
+        className="object-cover w-full h-full"
+        priority
+      />
+
+      {/* Optional subtle overlay for readability (can remove if you want pure image) */}
+      <div className="absolute inset-0 bg-black/30" />
+
+      {/* Motion Form Modal */}
+      <motion.div
+        initial={{ opacity: 0, y: 60, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
+      >
+        <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
+          Draft Your Document
+        </h1>
+        <LegalDocumentForm />
+      </motion.div>
     </div>
-  )
-}
+  );
+};
+
+export default LegalDocument;

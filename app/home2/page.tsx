@@ -37,7 +37,7 @@ export default function TenantsPage() {
   };
 
   return (
-    <main className="overflow-x-hidden mt-20 bg-gray-300">
+    <main className="overflow-x-hidden bg-gray-300">
 
       {/* Hero Section */}
       <section className="flex flex-col md:flex-row min-h-screen">

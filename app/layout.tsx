@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Orbitron, Audiowide } from "next/font/google";
+import { Inter, Roboto, Audiowide } from "next/font/google";
 import { cn } from "../lib/utils";
 // @ts-ignore
 import "./globals.css";
@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 // Techy / futuristic font for headings
-const orbitron = Orbitron({
+const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "600", "800"],
   variable: "--font-orbitron",
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(inter.variable, orbitron.variable, audiowide.variable)}
+      className={cn(inter.variable, roboto.variable, audiowide.variable)}
     >
       <body className={cn("min-h-screen antialiased font-[var(--font-inter)]")}>
         <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc' } }}>

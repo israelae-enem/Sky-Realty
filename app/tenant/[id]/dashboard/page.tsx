@@ -123,7 +123,7 @@ const TenantDashboard = () => {
   if (!tenant) return <p className="p-8 text-center text-gray-800">Loading...</p>;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 mt-20 p-6 space-y-10">
+    <div className="min-h-screen bg-gray-50 text-gray-800 p-6 space-y-10">
       {/* Topbar */}
       <div className="flex flex-col md:flex-row justify-end items-center gap-6 relative font-bold">
         {/* Notifications */}

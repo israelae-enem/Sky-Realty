@@ -6,9 +6,9 @@ import Image from "next/image";
 import React from "react";
 import TenantForm from "@/components/TenantForm";
 
-const Realtor = () => {
+const Tenant = () => {
   return (
-    <div className="relative min-h-screen w-full flex items-center mt-20 justify-center overflow-hidden">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
         src="/assets/images/pic1.jpg"
@@ -29,7 +29,7 @@ const Realtor = () => {
         className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
       >
         <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
-          Realtor Sign Up
+          Tenant Sign Up
         </h1>
         <TenantForm />
       </motion.div>
@@ -37,4 +37,4 @@ const Realtor = () => {
   );
 };
 
-export default Realtor;
+export default Tenant;

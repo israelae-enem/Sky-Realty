@@ -7,7 +7,7 @@ import MaintenanceForm from "@/components/MaintenanceForm";
 
 const Maintenance = () => {
   return (
-    <div className="relative min-h-screen w-full mt-20 flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
         src="/assets/images/pic1.jpg"
@@ -28,7 +28,7 @@ const Maintenance = () => {
         className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
       >
         <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
-          Realtor Sign Up
+          Send Your Request
         </h1>
         <MaintenanceForm />
       </motion.div>

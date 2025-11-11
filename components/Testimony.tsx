@@ -68,7 +68,7 @@ const scrollAnimation = {
 
 export default function TenantTestimonials() {
   return (
-    <main className="min-h-screen bg-gray-100 text-gray-900 py-20 px-6 overflow-hidden">
+    <main className="min-h-screen bg-gray-100 text-gray-900 py-5 px-6 overflow-hidden">
       {/* Header */}
       <div className="max-w-4xl mx-auto text-center mb-16">
         <motion.h1
@@ -122,7 +122,7 @@ export default function TenantTestimonials() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-3xl font-accent font-semibold text-gray-800 mb-8">
+        <h2 className="text-3xl font-tech font-semibold text-gray-800 mb-8">
           Join thousands of tenants enjoying simpler renting with Sky Realty
         </h2>
         <a

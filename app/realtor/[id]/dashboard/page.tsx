@@ -229,41 +229,44 @@ export default function RealtorDashboard() {
 ]
 
 return (
-  <div className="flex min-h-screen bg-gray-100 mt-20 text-gray-800">
+  <div className="flex min-h-screen bg-gray-100 text-gray-800">
     {/* Sidebar */}
-    <aside className={clsx(
-      'fixed top-0 left-0 h-full w-64 backdrop-blur-md bg-[#e8ecf1]/80 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
-      sidebarOpen ? 'translate-x-0' : '-translate-x-64',
-      'md:translate-x-0'
-    )}>
-      
-      {/* Top section: Profile and heading */}
-      <div className="flex flex-col space-y-4 sticky top-0 z-10">
-        {/* Profile */}
-        <Profile />
+     {/* Sidebar */}
+<aside
+  className={clsx(
+    'fixed top-0 left-0 h-full w-64 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
+    sidebarOpen ? 'translate-x-0' : '-translate-x-64',
+    'md:translate-x-0 bg-[#1836b2] text-white'
+  )}
+>
+  {/* Top section: Profile and heading */}
+  <div className="flex flex-col space-y-4 sticky top-0 z-10">
+    {/* Profile */}
+    <Profile />
 
-        {/* Dashboard heading */}
-        <h1 className="text-2xl font-bold text-[#302cfc]">Dashboard</h1>
-      </div>
+    {/* Dashboard heading */}
+    <h1 className="text-2xl font-bold">Dashboard</h1>
+  </div>
 
-      {/* Navigation items */}
-      <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
-        {navItems.map((item) => (
-          <button
-            key={item.name}
-            onClick={() => setActiveSection(item.name)}
-            className={clsx(
-              'flex items-center p-2 rounded-lg transition-colors duration-200',
-              activeSection === item.name ? 'bg-[#dbe2ff] text-[#302cfc]' : 'hover:bg-[#dbe2ff]'
-            )}
-          >
-            <span className="mr-3">{item.icon}</span>
-            {item.name}
-          </button>
-        ))}
-      </nav>
-    </aside>
-  
+  {/* Navigation items */}
+  <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
+    {navItems.map((item) => (
+      <button
+        key={item.name}
+        onClick={() => setActiveSection(item.name)}
+        className={clsx(
+          'flex items-center p-2 rounded-lg transition-colors duration-200',
+          activeSection === item.name
+            ? 'bg-[#302cfc] text-white'
+            : 'hover:bg-[#241fd9] text-white'
+        )}
+      >
+        <span className="mr-3">{item.icon}</span>
+        {item.name}
+      </button>
+    ))}
+  </nav>
+</aside>
 
       {/* Mobile Hamburger */}
       <div className="md:hidden fixed top-4 left-4 z-50">

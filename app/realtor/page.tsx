@@ -7,7 +7,7 @@ import React from "react";
 
 const Realtor = () => {
   return (
-    <div className="relative min-h-screen w-full mt-20 flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
         src="/assets/images/pic1.jpg"

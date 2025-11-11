@@ -162,7 +162,7 @@ export default function PricingSubscription() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 mt-20 p-8">
+    <div className="min-h-screen bg-gray-100 text-gray-800 p-8">
       <h1 className="text-4xl font-bold font-tech text-center mb-6">Sky Realty Plans</h1>
 
       {renderTrialBanner()}

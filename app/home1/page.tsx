@@ -15,7 +15,7 @@ import TestimonialCards from "@/components/TestimonialCards";
 
 export default function HomePage() {
   return (
-    <main className="overflow-x-hidden mt-20 bg-gray-100">
+    <main className="overflow-x-hidden bg-gray-100">
       {/* Hero Section */}
       <HeroSection />
 

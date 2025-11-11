@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { motion } from "framer-motion";
 
 type Plan = {
   id: string;
@@ -88,7 +87,7 @@ export default function PricingSubscription() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
 
-  // Fetch subscription data
+  // GET current subscription on mount
   useEffect(() => {
     if (!userId) return;
 
@@ -130,7 +129,11 @@ export default function PricingSubscription() {
 
       if (!res.ok) throw new Error(data.error || "Failed to create subscription");
 
-      window.location.href = data.redirectUrl || `/realtor/${userId}/dashboard`;
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl; // Ziina checkout
+      } else {
+        window.location.href = `/realtor/${userId}/dashboard`;
+      }
     } catch (err: any) {
       console.error("❌ Subscribe error:", err.message);
       alert("Something went wrong: " + err.message);
@@ -146,9 +149,9 @@ export default function PricingSubscription() {
       );
 
       return (
-        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-md bg-blue-300 text-gray-900 text-center font-semibold shadow-md">
+        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-md bg-blue-700 text-white text-center font-semibold shadow-md">
           🎉 You're currently enjoying a{" "}
-          <span className="text-yellow-500">7-day free trial</span>!
+          <span className="text-yellow-400">7-day free trial</span>!
           <br />
           Trial ends in{" "}
           <span className="underline">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span>.
@@ -159,13 +162,13 @@ export default function PricingSubscription() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 p-8">
-      <h1 className="text-4xl font-bold font-tech text-center mb-6 text-blue-700">Sky Realty Plans</h1>
+    <div className="min-h-screen bg-gray-100 text-gray-800 mt-20 p-8">
+      <h1 className="text-4xl font-bold font-tech text-center mb-6">Sky Realty Plans</h1>
 
       {renderTrialBanner()}
 
       {currentPlan && subscriptionStatus !== "trialing" && (
-        <div className="max-w-3xl mx-auto mb-8 p-4 rounded-md bg-green-200 text-gray-900 text-center font-semibold shadow-md">
+        <div className="max-w-3xl mx-auto mb-8 p-4 rounded-md bg-green-700 text-white text-center font-semibold shadow-md">
           You are currently on{" "}
           <span className="underline">{currentPlan.toUpperCase()}</span> plan.{" "}
           {propertyLimit
@@ -174,11 +177,10 @@ export default function PricingSubscription() {
         </div>
       )}
 
-      {/* Billing toggle */}
       <div className="flex justify-center mb-12 space-x-4">
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
-            billingCycle === "monthly" ? "bg-yellow-400 text-gray-900" : "bg-gray-200 text-gray-700"
+            billingCycle === "monthly" ? "bg-yellow-500 text-gray-900" : "bg-gray-700 text-gray-300"
           }`}
           onClick={() => setBillingCycle("monthly")}
         >
@@ -186,7 +188,7 @@ export default function PricingSubscription() {
         </button>
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
-            billingCycle === "yearly" ? "bg-yellow-400 text-gray-900" : "bg-gray-200 text-gray-700"
+            billingCycle === "yearly" ? "bg-yellow-500 text-gray-900" : "bg-gray-700 text-gray-300"
           }`}
           onClick={() => setBillingCycle("yearly")}
         >
@@ -194,27 +196,22 @@ export default function PricingSubscription() {
         </button>
       </div>
 
-      {/* Pricing cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-        {plans.map((plan, idx) => {
+        {plans.map((plan) => {
           const isFeatured = plan.badge === "Most Popular" || plan.badge === "Best Value";
           const isCurrent = currentPlan === plan.id;
 
           return (
-            <motion.div
+            <div
               key={plan.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: idx * 0.2 }}
-              className={`relative rounded-xl p-6 flex flex-col justify-between shadow-lg transform transition-transform duration-300 hover:scale-105 bg-gray-200 ${
-                isFeatured ? "ring-4 ring-yellow-400" : ""
+              className={`relative rounded-xl p-6 flex flex-col justify-between shadow-lg transform transition-transform duration-300 hover:scale-105 bg-gray-800 ${
+                isFeatured ? "ring-4 ring-yellow-500" : ""
               }`}
             >
               {plan.badge && (
                 <div
-                  className={`absolute -mt-4 ml-4 px-4 py-1 rounded-full text-sm font-bold text-gray-900 ${
-                    isFeatured ? "bg-yellow-400" : "bg-gray-300"
+                  className={`absolute -mt-4 ml-4 px-4 py-1 rounded-full text-sm font-bold text-white ${
+                    isFeatured ? "bg-yellow-500" : "bg-gray-600"
                   }`}
                 >
                   {plan.badge}
@@ -222,7 +219,7 @@ export default function PricingSubscription() {
               )}
 
               <div>
-                <h2 className="text-2xl font-tech font-semibold mb-2">{plan.name}</h2>
+                <h2 className="text-2xl font-semibold mb-2">{plan.name}</h2>
                 <p className="text-3xl font-bold mb-4">
                   {billingCycle === "monthly"
                     ? plan.monthlyPrice
@@ -230,10 +227,10 @@ export default function PricingSubscription() {
                   USD <span className="text-sm font-normal">/ {billingCycle}</span>
                 </p>
 
-                <ul className="mb-6 space-y-2 text-gray-700">
+                <ul className="mb-6 space-y-2 text-gray-300">
                   {plan.features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-green-500 font-bold">✔</span>
+                      <span className="text-green-400 font-bold">✔</span>
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -241,34 +238,33 @@ export default function PricingSubscription() {
               </div>
 
               <div className="space-y-2">
-                <motion.button
+                <button
                   onClick={() => handleSubscribe(plan.id)}
                   disabled={!userId || loadingPlan === plan.id || isCurrent}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   className={`w-full px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
                     isFeatured
-                      ? "bg-yellow-400 text-gray-900 hover:bg-yellow-300"
-                      : "bg-blue-400 text-white hover:bg-blue-300"
+                      ? "bg-yellow-500 text-gray-900 hover:bg-yellow-400"
+                      : "bg-blue-500 text-white hover:bg-blue-400"
                   } disabled:opacity-50`}
                 >
                   {isCurrent
                     ? "Current Plan"
                     : loadingPlan === plan.id
                     ? "Processing..."
-                    : "Start 7-Day Trial"}
-                </motion.button>
+                    : "Start 7-Day Trial (Card Required)"}
+                </button>
 
-                <p className="text-sm text-gray-500 text-center">
-                  Card details collected securely by Ziina. No charge until trial ends.
+                <p className="text-sm text-gray-400 text-center">
+                  Card details collected securely by Ziina. You won't be charged
+                  until the 7-day trial ends.
                 </p>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
-      <p className="text-center mt-12 text-gray-600 font-bold">
+      <p className="text-center mt-12 text-gray-400 font-bold">
         All plans include a 7-day free trial. Cancel anytime before your trial ends.
       </p>
     </div>

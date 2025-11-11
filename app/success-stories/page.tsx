@@ -98,7 +98,7 @@ const realtorTestimonials = [
 
 export default function SuccessStories() {
   return (
-    <main className="min-h-screen bg-gray-100 text-gray-900 py-20 mt-20 px-6">
+    <main className="min-h-screen bg-gray-100 text-gray-900 py-20 px-6">
       {/* Hero Header */}
       <div className="text-center mb-20">
         <motion.h1

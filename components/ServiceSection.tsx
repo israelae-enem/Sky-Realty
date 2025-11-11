@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { FaBuilding, FaUsers, FaFileContract, FaMoneyBillWave, FaChartLine, FaTools } from "react-icons/fa";
 
 const services = [
@@ -8,37 +9,43 @@ const services = [
     icon: <FaBuilding className="text-[#302cfc] text-5xl mb-4" />,
     title: "Property Management",
     description:
-      "Easily manage multiple properties in one centralized dashboard — from lease tracking to maintenance scheduling.",
+      "Easily manage multiple properties in one centralized dashboard from lease tracking to maintenance scheduling.",
+    href: "/services/property-management",
   },
   {
     icon: <FaUsers className="text-[#302cfc] text-5xl mb-4" />,
     title: "Tenant Management",
     description:
       "Handle tenant applications, communication, and support requests seamlessly, keeping every interaction organized.",
+    href: "/services/tenant-management",
   },
   {
     icon: <FaFileContract className="text-[#302cfc] text-5xl mb-4" />,
     title: "Lease & Document Control",
     description:
       "Store and manage digital leases, automate renewals, and keep every important document safe in the cloud.",
+    href: "/services/lease-document-control",
   },
   {
     icon: <FaMoneyBillWave className="text-[#302cfc] text-5xl mb-4" />,
     title: "Rent Reminder",
     description:
       "Automate rent reminders, collect payments online, and maintain transparent financial records effortlessly.",
+    href: "/services/rent-reminder",
   },
   {
     icon: <FaChartLine className="text-[#302cfc] text-5xl mb-4" />,
     title: "Financial Analytics",
     description:
       "Gain insights into revenue, expenses, and occupancy rates through powerful visual analytics and smart reports.",
+    href: "/services/financial-analytics",
   },
   {
     icon: <FaTools className="text-[#302cfc] text-5xl mb-4" />,
     title: "Maintenance & Repairs",
     description:
-      "Receive and track maintenance requests, assign vendors, and ensure timely resolutions — all in one place.",
+      "Receive and track maintenance requests, assign vendors, and ensure timely resolutions all in one place.",
+    href: "/services/maintenance-repairs",
   },
 ];
 
@@ -65,17 +72,21 @@ export default function ServicesSection() {
         {services.map((service, idx) => (
           <motion.div
             key={idx}
-            className="bg-gray-100 rounded-xl shadow-md hover:shadow-lg p-8 text-center transition-all duration-300"
+            className="bg-gray-100 rounded-xl shadow-md p-8 text-center transition-all duration-300 hover:shadow-lg"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1, duration: 0.6 }}
             whileHover={{ scale: 1.05 }}
           >
             {service.icon}
-            <h3 className="text-2xl font-semibold text-gray-800 mb-3">
-              {service.title}
-            </h3>
-            <p className="text-gray-600 leading-relaxed">{service.description}</p>
+            <h3 className="text-2xl font-semibold text-gray-800 mb-3">{service.title}</h3>
+            <p className="text-gray-600 leading-relaxed mb-4">{service.description}</p>
+            <Link
+              href={'/service'}
+              className="text-blue-600 underline font-semibold hover:text-blue-700 transition-colors"
+            >
+              Learn More
+            </Link>
           </motion.div>
         ))}
       </div>

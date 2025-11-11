@@ -1,7 +1,14 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { FaLinkedin, FaInstagram, FaEnvelope, FaPhone, FaArrowUp } from "react-icons/fa";
+import {
+  FaLinkedin,
+  FaInstagram,
+  FaEnvelope,
+  FaPhone,
+  FaArrowUp,
+} from "react-icons/fa";
 
 const Footer = () => {
   const scrollToTop = () => {
@@ -12,54 +19,96 @@ const Footer = () => {
     <div className="relative">
       {/* ================= Footer ================= */}
       <motion.footer
-        className="bg-gray-200 text-gray-800 py-12 px-5 md:px-20"
+        className="bg-[#1836b2] text-gray-100 py-12 px-5 md:px-20"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
         <div className="flex flex-col md:flex-row justify-between items-start gap-10">
-          {/* Brand */}
+          {/* Brand + Logo */}
           <div className="space-y-3 md:w-1/3">
-            <h3 className="font-bold font-tech text-2xl text-[#302cfc]">Sky Realty</h3>
-            <p className="text-gray-700 leading-relaxed">
-              Smarter property management at your fingertips. Manage tenants, rentals, maintenance, all in one dashboard.
+            <div className="flex items-center gap-4">
+              <Image
+                src="/assets/icons/logo3.jpg"
+                alt="Sky Realty Logo"
+                width={90}
+                height={90}
+                className="rounded-lg object-contain hover:scale-105 transition-transform duration-300 shadow-lg"
+              />
+              <h3 className="font-bold font-tech text-3xl text-gray-100 tracking-wide">
+                Sky Realty
+              </h3>
+            </div>
+            <p className="text-gray-200 leading-relaxed mt-3 text-base">
+              Smarter property management at your fingertips. Manage tenants,
+              rentals, and maintenance all in one dashboard.
             </p>
           </div>
 
           {/* Navigation Links */}
           <div className="space-y-3 md:w-1/5">
-            <h3 className="font-bold font-tech text-xl text-[#302cfc]">Navigation</h3>
-            <ul className="space-y-1 text-gray-700">
-              <li><a href="/" className="hover:text-blue-600 transition">Home</a></li>
-              <li><a href="/about" className="hover:text-blue-600 transition">About Us</a></li>
-              <li><a href="/home1" className="hover:text-blue-600 transition">Realtor</a></li>
-              <li><a href="/home2" className="hover:text-blue-600 transition">Tenants</a></li>
-              <li><a href="/subscription" className="hover:text-blue-600 transition">Pricing</a></li>
-              <li><a href="/help" className="hover:text-blue-600 transition">Help</a></li>
-              <li><a href="/privacy" className="hover:text-blue-600 transition">Privacy</a></li>
-              <li><a href="/terms" className="hover:text-blue-600 transition">Terms</a></li>
+            <h3 className="font-bold font-tech text-xl text-gray-100">
+              Navigation
+            </h3>
+            <ul className="space-y-1 text-gray-300">
+              <li><a href="/" className="hover:text-white transition">Home</a></li>
+              <li><a href="/about" className="hover:text-white transition">About Us</a></li>
+              <li><a href="/home1" className="hover:text-white transition">Realtor</a></li>
+              <li><a href="/home2" className="hover:text-white transition">Tenants</a></li>
+              <li><a href="/subscription" className="hover:text-white transition">Pricing</a></li>
+              <li><a href="/help" className="hover:text-white transition">Help</a></li>
+              <li><a href="/privacy" className="hover:text-white transition">Privacy</a></li>
+              <li><a href="/terms" className="hover:text-white transition">Terms</a></li>
             </ul>
           </div>
 
           {/* Social & Contact */}
           <div className="space-y-3 md:w-1/4">
-            <h3 className="font-bold font-tech text-xl text-[#302cfc]">Connect</h3>
+            <h3 className="font-bold font-tech text-xl text-gray-100">
+              Connect
+            </h3>
             <div className="flex gap-4 mt-1 text-2xl">
-              <a href="https://www.linkedin.com/company/sky-realty" target="_blank" className="hover:text-blue-600"><FaLinkedin /></a>
-              <a href="https://www.instagram.com/sky_realtyae?igsh=dWFoZDAybDgwNTNl&utm_source=qr" target="_blank" className="hover:text-blue-600"><FaInstagram /></a>
+              <a
+                href="https://www.linkedin.com/company/sky-realty"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <FaLinkedin />
+              </a>
+              <a
+                href="https://www.instagram.com/sky_realtyae?igsh=dWFoZDAybDgwNTNl&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <FaInstagram />
+              </a>
             </div>
-            <div className="mt-4 space-y-1 text-sm text-gray-700">
-              <p className="flex items-center gap-2"><FaEnvelope /> <a href="mailto:support@skyrealtyae.com">support@skyrealtyae.com</a></p>
-              <p className="flex items-center gap-2"><FaEnvelope /> <a href="mailto:info@skyrealtyae.com">info@skyrealtyae.com</a></p>
-              <p className="flex items-center gap-2"><FaEnvelope /> <a href="mailto:contact@skyrealtyae.com">contact@skyrealtyae.com</a></p>
-              <p className="flex items-center gap-2"><FaPhone /> +(971)558265374</p>
+
+            <div className="mt-4 space-y-1 text-sm text-gray-200">
+              <p className="flex items-center gap-2">
+                <FaEnvelope />{" "}
+                <a href="mailto:support@skyrealtyae.com">support@skyrealtyae.com</a>
+              </p>
+              <p className="flex items-center gap-2">
+                <FaEnvelope />{" "}
+                <a href="mailto:info@skyrealtyae.com">info@skyrealtyae.com</a>
+              </p>
+              <p className="flex items-center gap-2">
+                <FaEnvelope />{" "}
+                <a href="mailto:contact@skyrealtyae.com">contact@skyrealtyae.com</a>
+              </p>
+              <p className="flex items-center gap-2">
+                <FaPhone /> +(971) 558 265 374
+              </p>
             </div>
           </div>
         </div>
 
         {/* Copyright */}
-        <p className="text-center text-sm text-gray-600 mt-10">
+        <p className="text-center text-sm text-gray-200 mt-10">
           &copy; {new Date().getFullYear()} Sky Realty. All rights reserved.
         </p>
       </motion.footer>

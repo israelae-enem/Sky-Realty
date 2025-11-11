@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 const ZIINA_API_KEY = process.env.ZIINA_API_KEY!;
 
-// ✅ Plan prices (in fils)
+// Plan prices in cents/fils
 const PLAN_PRICES: Record<string, number> = {
   free: 100,
   basic: 9900,
@@ -11,7 +11,7 @@ const PLAN_PRICES: Record<string, number> = {
   premium: 29900,
 };
 
-// ✅ Property limits
+// Property limits
 const PLAN_LIMITS: Record<string, number | null> = {
   free: 1,
   basic: 10,
@@ -20,39 +20,39 @@ const PLAN_LIMITS: Record<string, number | null> = {
 };
 
 // ----------------------------
-// 📌 Create Payment Intent (7-Day Trial + Card Upfront)
+// 📌 Create Payment Intent (POST)
 // ----------------------------
 export async function POST(req: NextRequest) {
   try {
     const { userId, plan } = await req.json();
+
     if (!userId || !plan || !PLAN_PRICES[plan]) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    // Check if user already on trial or subscribed
+    // 1️⃣ Check current subscription/trial
     const { data: realtor } = await supabase
       .from("realtors")
       .select("trial_ends_at, subscription_status, subscription_ends_at")
       .eq("id", userId)
       .single();
 
-    // If currently active and not expired → prevent re-subscribing
     if (
       realtor?.subscription_status === "active" &&
-      realtor?.subscription_ends_at &&
+      realtor.subscription_ends_at &&
       new Date(realtor.subscription_ends_at) > new Date()
     ) {
       return NextResponse.json({
-        message: "You already have an active subscription.",
+        error: "You already have an active subscription.",
       });
     }
 
-    // Set trial period (7 days from now)
+    // 2️⃣ Set trial period
     const trialEnds = new Date();
     trialEnds.setDate(trialEnds.getDate() + 7);
 
-    // Create Ziina payment intent
-    const res = await fetch("https://api-v2.ziina.com/api/payment_intent", {
+    // 3️⃣ Call Ziina API to create payment intent
+    const ziinaRes = await fetch("https://api-v2.ziina.com/api/payment_intent", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${ZIINA_API_KEY}`,
@@ -70,10 +70,20 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    if (!res.ok) throw new Error("Ziina API failed");
-    const data = await res.json();
+    if (!ziinaRes.ok) {
+      const text = await ziinaRes.text();
+      console.error("Ziina API error:", text);
+      throw new Error("Ziina API request failed");
+    }
 
-    // Save trial info
+    const ziinaData = await ziinaRes.json();
+
+    if (!ziinaData.redirect_url) {
+      console.error("Ziina did not return a redirect URL:", ziinaData);
+      throw new Error("Ziina redirect URL not returned");
+    }
+
+    // 4️⃣ Save trial info to Supabase
     await supabase
       .from("realtors")
       .update({
@@ -84,21 +94,19 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", userId);
 
+    // 5️⃣ Respond with redirect URL
     return NextResponse.json({
       message: "✅ Card collected and 7-day trial started.",
-      redirectUrl: data.redirect_url,
+      redirectUrl: ziinaData.redirect_url, // <--- frontend will use this
     });
   } catch (err) {
     console.error("❌ Ziina POST error:", err);
-    return NextResponse.json(
-      { error: "Failed to create payment intent" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create payment intent" }, { status: 500 });
   }
 }
 
 // ----------------------------
-// 📌 Handle Callback OR Fetch Subscription
+// 📌 Handle Callback or Fetch Subscription (GET)
 // ----------------------------
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -107,12 +115,11 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("user");
 
   try {
-    // 1️⃣ Handle Ziina Callback (Success, Cancel, Failure)
-    if (status) {
-      if (status === "success" && userId && plan) {
-        // Add 30 days to current date (start of active period)
+    // 1️⃣ Handle Ziina callback
+    if (status && userId && plan) {
+      if (status === "success") {
         const subscriptionEnds = new Date();
-        subscriptionEnds.setDate(subscriptionEnds.getDate() + 30);
+        subscriptionEnds.setDate(subscriptionEnds.getDate() + 30); // 30 days active
 
         await supabase
           .from("realtors")
@@ -131,24 +138,22 @@ export async function GET(req: NextRequest) {
 
       if (status === "cancel") {
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=cancelled?plan=${plan}&user=${userId}`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=cancelled&plan=${plan}&user=${userId}`
         );
       }
 
       if (status === "failure") {
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=failed?plan=${plan}&user=${userId}`
+          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=failed&plan=${plan}&user=${userId}`
         );
       }
     }
 
-    // 2️⃣ Fetch Subscription Info for Dashboard
+    // 2️⃣ Fetch subscription info
     if (userId) {
       const { data } = await supabase
         .from("realtors")
-        .select(
-          "subscription_plan, subscription_status, trial_ends_at, subscription_ends_at"
-        )
+        .select("subscription_plan, subscription_status, trial_ends_at, subscription_ends_at")
         .eq("id", userId)
         .single();
 
@@ -160,18 +165,12 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Handle expiration
-      const now = new Date();
+      // Expiration check
       let status = data.subscription_status;
-      if (
-        data.subscription_ends_at &&
-        new Date(data.subscription_ends_at) < now
-      ) {
+      const now = new Date();
+      if (data.subscription_ends_at && new Date(data.subscription_ends_at) < now) {
         status = "expired";
-        await supabase
-          .from("realtors")
-          .update({ subscription_status: "expired" })
-          .eq("id", userId);
+        await supabase.from("realtors").update({ subscription_status: "expired" }).eq("id", userId);
       }
 
       const userPlan = data.subscription_plan ?? "free";
@@ -184,6 +183,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Default
     return NextResponse.json({
       plan: "free",
       propertyLimit: PLAN_LIMITS["free"],
@@ -191,9 +191,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error("❌ Ziina GET error:", err);
-    return NextResponse.json(
-      { plan: "free", propertyLimit: 1, status: "none" },
-      { status: 500 }
-    );
+    return NextResponse.json({ plan: "free", propertyLimit: 1, status: "none" }, { status: 500 });
   }
 }

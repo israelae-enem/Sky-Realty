@@ -25,6 +25,7 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
     { title: "Home", url: "/" },
     { title: "Realtors", url: "/home1" },
     { title: "Tenants", url: "/home2" },
+    { title: "Services", url: "/service"},
     { title: "Success Stories", url: "/success-stories" },
     { title: "Pricing", url: "/subscription" },
     { title: "How To", url: "/how-to" },
@@ -78,7 +79,7 @@ const MenuOverlay = ({ onClose }: MenuOverlayProps) => {
     <AnimatePresence>
       <motion.div
         key="menu"
-        className="fixed inset-0 z-[999] flex flex-col items-center justify-between py-16 text-white overflow-y-auto"
+        className="fixed inset-0 z-[999] flex flex-col items-center justify-between py-10 text-blue-700 overflow-y-auto"
         variants={container}
         initial="hidden"
         animate="visible"
