@@ -45,7 +45,7 @@ export default function RootLayout({
     >
       <body className={cn("min-h-screen antialiased font-[var(--font-inter)]")}>
         <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc' } }}>
-          <Navbar />
+          <Navbar/>
           {children}
           <Toaster position="top-center" richColors theme="dark" />
         </ClerkProvider>

@@ -11,36 +11,31 @@ import PainPointsPage from "@/components/PainPoints";
 import SolutionsPage from "@/components/Solutions";
 import ComparisonPage from "@/components/Comparisons";
 import TestimonialCards from "@/components/TestimonialCards";
+import FreeTrialSection from "@/components/FreeTrial";
 
 
 export default function HomePage() {
   return (
     <main className="overflow-x-hidden bg-gray-100">
-      {/* Hero Section */}
+    
       <HeroSection />
 
-      <PainPointsPage />
+      <WhySkyRealty />
 
-      <SolutionsPage />
+      <CTASection />
 
-       {/* Rent Management Section */}
+      
       <RentSection />
 
-      {/* Communication Section */}
-      <CommunicationSection />
-
-      <ComparisonPage />
-
-      {/* 3 Points Section */}
-      <WhySkyRealty />
+      <FreeTrialSection />
 
       <TestimonialCards />
 
-      {/* FAQ Section */}
-      <FAQ />
+    
+      <CommunicationSection />
 
-      {/* CTA Section */}
-      <CTASection />
+      <PainPointsPage />
+
 
       <Footer />
     </main>

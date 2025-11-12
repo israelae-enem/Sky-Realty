@@ -1,59 +1,44 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 
-const painPoints = [
+const cards = [
   {
-    title: "1. Manual Property Tracking",
-    description: `Many realtors and landlords still use spreadsheets or paper files to track tenants, leases, and payments. 
-    This leads to confusion, missed renewals, and time wasted on manual updates. 
-    Sky Realty automates record-keeping and syncs everything in real time across devices.`,
+    title: "Property Management",
+    pain: "Manual tracking causes confusion and delays.",
+    solution:
+      "Sky Realty centralizes your properties, tenants, and leases in one smart dashboard fully automated and synced in real-time.",
   },
   {
-    title: "2. Missed Rent Payments & Reminders",
-    description: `Late or forgotten rent payments cause stress for both landlords and tenants. 
-    With Sky Realty, rent reminders, invoices, and receipts are automatically generated and sent — keeping everyone accountable and on time.`,
+    title: "Rent Automation",
+    pain: "Late or missed payments frustrate landlords.",
+    solution:
+      "Automated reminders, invoices, and receipts keep payments consistent no follow-ups needed.",
   },
   {
-    title: "3. Disorganized Communication",
-    description: `Phone calls, WhatsApp messages, and random emails make managing tenant issues chaotic. 
-    Sky Realty centralizes all communication into one clean dashboard, so messages and maintenance requests never get lost again.`,
+    title: "Seamless Communication",
+    pain: "Messages and requests get lost across chats.",
+    solution:
+      "A unified dashboard organizes every tenant and contractor conversation neatly.",
   },
   {
-    title: "4. Maintenance Requests Gone Wrong",
-    description: `Tracking repair issues is one of the biggest headaches in property management. 
-    Sky Realty’s maintenance system lets tenants submit requests with photos, while realtors assign and monitor contractors — all inside the app.`,
+    title: "Maintenance Management",
+    pain: "Tracking repair requests is messy and slow.",
+    solution:
+      "Tenants submit requests with photos; realtors assign vendors and track progress easily.",
   },
   {
-    title: "5. Complex Lease Management",
-    description: `Leases often get buried in folders or forgotten until it’s time to renew. 
-    Sky Realty stores all lease documents securely in the cloud, notifies you before they expire, and makes renewals seamless.`,
+    title: "Digital Lease Control",
+    pain: "Paper leases and missed renewals cost time.",
+    solution:
+      "Store, sign, and renew leases digitally with alerts before expiration.",
   },
   {
-    title: "6. Limited Financial Visibility",
-    description: `It’s hard to know if your properties are actually profitable when income and expenses are scattered. 
-    Sky Realty’s finance dashboard gives you an instant breakdown of rent collected, expenses paid, and ROI performance.`,
-  },
-  {
-    title: "7. Tenant Turnover Confusion",
-    description: `Realtors lose track of available units and tenant move-out dates, leading to vacancies and lost revenue. 
-    Sky Realty automates vacancy tracking and notifies you when units become available helping you stay one step ahead.`,
-  },
-  {
-    title: "8. Lack of Professional Image",
-    description: `Managing tenants over chat apps and Excel sheets can make realtors look unprofessional. 
-    Sky Realty gives your business a branded digital presence, complete with digital invoices, receipts, and a modern client experience.`,
-  },
-  {
-    title: "9. Difficulty Scaling Operations",
-    description: `Most tools break down once a realtor manages more than a few properties. 
-    Sky Realty is built to scale whether you handle 5 or 500 units with features that grow as your business does.`,
-  },
-  {
-    title: "10. Data Insecurity & Loss",
-    description: `Losing tenant or financial data can be devastating. 
-    Sky Realty securely stores all your information with encrypted backups and role-based access control, 
-    ensuring your data stays safe and recoverable at all times.`,
+    title: "Financial Insights",
+    pain: "Scattered finances hide real performance.",
+    solution:
+      "Instant rent, expense, and ROI analytics all visualized in one dashboard.",
   },
 ];
 
@@ -66,81 +51,79 @@ const fadeUp = {
   }),
 };
 
-export default function PainPointsPage() {
+export default function CircularSolutionsSection() {
   return (
-   <motion.main
-      className="min-h-screen relative text-gray-800 py-20 px-6 overflow-hidden"
-      style={{
-        backgroundImage: "url('/assets/images/pic1.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-      initial={{ y: 0 }}
-      whileInView={{ y: [0, -20, 0] }} // subtle vertical motion
-      transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-    >
-      {/* Content overlay to stay above background */}
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <motion.h1
-            className="text-5xl font-tech font-bold text-[#302cfc] mb-4"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            The Pain Points Sky Realty Solves
-          </motion.h1>
-          <motion.p
-            className="text-gray-700 font-body text-lg max-w-2xl mx-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            Every realtor, landlord, and tenant faces challenges Sky Realty was built 
-            to eliminate them through automation, organization, and simplicity.
-          </motion.p>
-        </div>
+    <section className="bg-white py-20 px-6 text-gray-800 overflow-hidden">
+      {/* Heading */}
+      <motion.div
+        className="text-center mb-16"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <h2 className="text-4xl md:text-5xl text-[#1836b2] font-bold mb-4">
+          Turning Real Estate Challenges Into Smart Solutions
+        </h2>
+        <p className="text-lg md:text-xl max-w-3xl mx-auto text-gray-700">
+          Each circle represents a core area where Sky Realty simplifies real
+          estate management from automation to insights.
+        </p>
+      </motion.div>
 
-        {/* Pain Points Grid */}
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
-          {painPoints.map((point, i) => (
-            <motion.div
-              key={i}
-              className="bg-gray-300 rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              custom={i}
-            >
-              <h3 className="text-xl font-tech font-semibold text-[#302cfc] mb-3">
-                {point.title}
-              </h3>
-              <p className="text-gray-700 leading-relaxed">{point.description}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <motion.div
-          className="text-center mt-20"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h2 className="text-3xl font-tech font-semibold text-gray-800 mb-4">
-            Ready to solve these challenges for good?
-          </h2>
-          <a
-            href="/sign-in"
-            className="inline-block bg-[#302cfc] text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-[#241fd9]/80 transition"
+      {/* Circular Cards */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14 place-items-center">
+        {cards.map((card, i) => (
+          <motion.div
+            key={i}
+            className="relative bg-[#1836b2] w-72 h-72 rounded-full shadow-lg flex flex-col items-center justify-center text-center p-8 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            custom={i}
           >
-            Start Free Trial
-          </a>
-        </motion.div>
+            {/* Logo */}
+            <div className="absolute top-6 w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-md">
+              <Image
+                src="/assets/icons/logo4.jpg"
+                alt="Sky Realty Logo"
+                width={40}
+                height={40}
+                className="object-contain rounded-full"
+              />
+            </div>
+
+            {/* Card Content */}
+            <h3 className="text-xl font-semibold text-white mb-3 mt-10">
+              {card.title}
+            </h3>
+            <div className="text-gray-100 text-sm mb-2 font-medium">
+              <span className="block">Pain:</span> {card.pain}
+            </div>
+            <div className="bg-white/90 text-gray-900 text-sm rounded-lg px-4 py-2 leading-relaxed">
+              <span className="font-semibold">Solution:</span> {card.solution}
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </motion.main>
+
+      {/* CTA */}
+      <motion.div
+        className="text-center mt-20"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className="text-3xl font-semibold text-[#1836b2] mb-4">
+          Ready to experience smarter property management?
+        </h2>
+        <a
+          href="/sign-in"
+          className="inline-block bg-[#1836b2] text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-[0_0_15px_#59fcf7] transition-all duration-300"
+        >
+          Get Started
+        </a>
+      </motion.div>
+    </section>
   );
 }

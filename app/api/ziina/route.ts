@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 const ZIINA_API_KEY = process.env.ZIINA_API_KEY!;
 
-// Plan prices in cents/fils
 const PLAN_PRICES: Record<string, number> = {
   free: 100,
   basic: 9900,
@@ -11,7 +10,6 @@ const PLAN_PRICES: Record<string, number> = {
   premium: 29900,
 };
 
-// Property limits
 const PLAN_LIMITS: Record<string, number | null> = {
   free: 1,
   basic: 10,
@@ -28,6 +26,27 @@ export async function POST(req: NextRequest) {
 
     if (!userId || !plan || !PLAN_PRICES[plan]) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    // 🧪 Local Dev Shortcut
+    if (process.env.NODE_ENV === "development") {
+      const trialEnds = new Date();
+      trialEnds.setDate(trialEnds.getDate() + 7);
+
+      await supabase
+        .from("realtors")
+        .update({
+          subscription_plan: plan,
+          subscription_status: "trialing",
+          trial_ends_at: trialEnds.toISOString(),
+          subscription_ends_at: null,
+        })
+        .eq("id", userId);
+
+      return NextResponse.json({
+        message: "✅ Local dev mode: Trial started without Ziina redirect",
+        redirectUrl: `http://localhost:3000/realtor/${userId}/dashboard?devTrial=true`,
+      });
     }
 
     // 1️⃣ Check current subscription/trial
@@ -51,7 +70,7 @@ export async function POST(req: NextRequest) {
     const trialEnds = new Date();
     trialEnds.setDate(trialEnds.getDate() + 7);
 
-    // 3️⃣ Call Ziina API to create payment intent
+    // 3️⃣ Create payment intent via Ziina
     const ziinaRes = await fetch("https://api-v2.ziina.com/api/payment_intent", {
       method: "POST",
       headers: {
@@ -97,7 +116,7 @@ export async function POST(req: NextRequest) {
     // 5️⃣ Respond with redirect URL
     return NextResponse.json({
       message: "✅ Card collected and 7-day trial started.",
-      redirectUrl: ziinaData.redirect_url, // <--- frontend will use this
+      redirectUrl: ziinaData.redirect_url,
     });
   } catch (err) {
     console.error("❌ Ziina POST error:", err);
@@ -115,11 +134,11 @@ export async function GET(req: NextRequest) {
   const userId = searchParams.get("user");
 
   try {
-    // 1️⃣ Handle Ziina callback
     if (status && userId && plan) {
+      // ✅ Success — activate subscription
       if (status === "success") {
         const subscriptionEnds = new Date();
-        subscriptionEnds.setDate(subscriptionEnds.getDate() + 30); // 30 days active
+        subscriptionEnds.setDate(subscriptionEnds.getDate() + 30);
 
         await supabase
           .from("realtors")
@@ -132,24 +151,17 @@ export async function GET(req: NextRequest) {
           .eq("id", userId);
 
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription/success?plan=${plan}&user=${userId}`
+          `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${userId}/dashboard`
         );
       }
 
-      if (status === "cancel") {
-        return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=cancelled&plan=${plan}&user=${userId}`
-        );
-      }
-
-      if (status === "failure") {
-        return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/subscription?status=failed&plan=${plan}&user=${userId}`
-        );
+      // ❌ Cancel or Failure — redirect home
+      if (status === "cancel" || status === "failure") {
+        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/`);
       }
     }
 
-    // 2️⃣ Fetch subscription info
+    // Fetch subscription info for user
     if (userId) {
       const { data } = await supabase
         .from("realtors")
@@ -165,7 +177,7 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Expiration check
+      // Check for expiry
       let status = data.subscription_status;
       const now = new Date();
       if (data.subscription_ends_at && new Date(data.subscription_ends_at) < now) {

@@ -1,95 +1,100 @@
-'use client'
+"use client";
+import { motion } from "framer-motion";
 
-import { motion } from 'framer-motion'
-import Image from 'next/image'
+export default function HowItWorksSection() {
+  const cards = [
+    { title: "REGISTER YOUR ACCOUNT", bg: "#1836b2" },
+    { title: "MANAGE YOUR PROPERTIES", bg: "#2563eb" },
+    { title: "SEAMLESS AND HASSLE-FREE", bg: "#1836b2" },
+  ];
 
-const walkthroughSteps = [
-  {
-    title: 'Get Started Create Your Account',
-    description: 'Click the Get Started button and set up your Sky-Realty account in seconds. Begin your journey effortlessly.',
-    image: '/assets/images/signup.jpg',
-  },
-  {
-    title: 'Complete Your Onboarding',
-    description: 'Add your details, connect your profile, and personalize your dashboard for seamless property management.',
-    image: '/assets/images/onboarding.jpg',
-  },
-  {
-    title: 'Already Have an Account? Log In',
-    description: 'Jump right back into your dashboard with one click everything you need is waiting for you.',
-    image: '/assets/images/signin.jpg',
-  },
-]
+  // Float animation for cards
+  const floatAnimation = {
+    initial: { y: 0 },
+    animate: {
+      y: [0, -15, 0], // float up and down
+      transition: {
+        duration: 3,
+        repeat: Infinity,
+        repeatType: "loop",
+        ease: "easeInOut",
+      },
+    },
+  };
 
-export default function WalkthroughSection() {
   return (
-    <section className="bg-gray-100 py-20 px-6 md:px-12 text-gray-900">
-      <div className="max-w-6xl mx-auto text-center mb-16">
+    <section className="w-full bg-gray-100 py-20">
+      <div className="container mx-auto px-6 text-center flex flex-col items-center space-y-6">
+        {/* Section Heading */}
         <motion.h2
-          className="text-4xl md:text-5xl font-bold text-[#302cfc] font-tech"
-          initial={{ opacity: 0, y: -40 }}
+          className="text-4xl md:text-5xl font-bold text-[#1836b2]"
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          Getting Started with Sky-Realty
+          How Sky Realty Works
         </motion.h2>
+
+        {/* Subtext */}
         <motion.p
-          className="text-gray-600 mt-4 max-w-2xl mx-auto text-lg"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
+          className="text-lg md:text-xl text-gray-700 max-w-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true }}
         >
-          Your luxury real estate experience simplified follow these simple steps to start managing or renting effortlessly.
+          A simple way to connect tenants and realtors
         </motion.p>
-      </div>
 
-      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {walkthroughSteps.map((step, index) => (
-          <motion.div
-            key={index}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.2, duration: 0.8 }}
-            viewport={{ once: true }}
-            whileHover={{
-              scale: 1.05,
-              rotateX: -5,
-              rotateY: 5,
-              transition: { duration: 0.4, ease: 'easeOut' },
-            }}
+        {/* Cards + Lines */}
+        <div className="relative mt-16 flex justify-between items-center w-full max-w-5xl">
+          {/* Top line */}
+          <svg
+            className="absolute top-0 left-0 w-full h-full"
+            viewBox="0 0 1000 200"
+            preserveAspectRatio="none"
           >
-            <div className="relative w-full h-64 overflow-hidden">
-              <Image
-                src={step.image}
-                alt={step.title}
-                fill
-                className="object-cover"
-              />
-            </div>
+            <path
+              d="M0 50 Q250 150 500 50 Q750 -50 1000 50"
+              fill="transparent"
+              stroke="#59fcf7"
+              strokeWidth="4"
+            />
+          </svg>
 
-            <div className="p-6">
-              <h3 className="text-2xl font-semibold text-[#302cfc] mb-2 font-tech">{step.title}</h3>
-              <p className="text-gray-700 leading-relaxed">{step.description}</p>
-            </div>
-          </motion.div>
-        ))}
+          {/* Bottom line */}
+          <svg
+            className="absolute bottom-0 left-0 w-full h-full"
+            viewBox="0 0 1000 200"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0 100 Q250 0 500 100 Q750 200 1000 100"
+              fill="transparent"
+              stroke={cards[0].bg}
+              strokeWidth="4"
+            />
+          </svg>
+
+          {/* Cards */}
+          {cards.map((card, idx) => (
+            <motion.div
+              key={idx}
+              className="relative flex flex-col items-center justify-center w-62 h-62 rounded-full shadow-lg"
+              style={{ backgroundColor: card.bg }}
+              variants={floatAnimation}
+              initial="initial"
+              animate="animate"
+              transition={{ delay: idx * 0.2 }}
+            >
+              <p className="text-center text-white font-bold text-sm md:text-lg uppercase px-4">
+                {card.title}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
-
-      <motion.div
-        className="text-center mt-16"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <a
-          href="/sign-in"
-          className="bg-[#302cfc] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#1f1bcc] transition-all shadow-lg"
-        >
-          Get Started Now
-        </a>
-      </motion.div>
     </section>
-  )
+  );
 }

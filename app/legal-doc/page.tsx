@@ -10,7 +10,7 @@ const LegalDocument = () => {
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
-        src="/assets/images/pic1.jpg"
+        src="/assets/images/burj4.jpg"
         alt="agent background"
         fill
         className="object-cover w-full h-full"

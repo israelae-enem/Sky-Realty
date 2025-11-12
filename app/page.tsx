@@ -22,6 +22,8 @@ import HeroSection from '@/components/Hero'
 import DashboardPreview from '@/components/Dashboard'
 import CTASection from '@/components/CTASection'
 import AboutUsSection from '@/components/AboutUsSection'
+import FreeTrial from '@/components/FreeTrial'
+import Marker from '@/components/Marker'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -59,6 +61,10 @@ const Page = () => {
 
     <HeroSection />
 
+    <AboutUsSection />
+
+    <CTASection />
+
      <section>
         <WalkthroughSection/>
      </section>
@@ -67,49 +73,22 @@ const Page = () => {
     <ServicesSection />
    </section>
 
-   <section>
-    <DashboardPreview />
-   </section>
-
   <section>
     <ClientLogosCarousel />
   </section>
+
+  <FreeTrial />
 
   
   <section>
     <TestimonialCards />
   </section>
 
+  <Marker />
+
 
   
-  <section>
-    <TestimonialsPage />
-  </section>
-
   
-       
-      {/* ================= Pricing ================= */}
-      <motion.section
-        id="plans"
-        className="bg-gray-100 py-5 px-5 md:px-20 flex flex-col items-center text-gray-900"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={fadeUp}
-      >
-        <PricingSubscription />
-      </motion.section>
-
-      <CTASection />
-
-      <AboutUsSection />
-
-
-       {/* ================= FAQ ================= */}
-      <section className="bg-gray-100 py-20 px-5 md:px-20">
-        <FAQ />
-      </section>
-
       {/* ================= Footer ================= */}
      <Footer />
 

@@ -29,10 +29,10 @@ export default function CommunicationSection() {
 
   return (
      
-          <section className="py-20 px-10 md:px-20 bg-gray-50">
+          <section className="py-20 px-10 md:px-20 bg-[#1836b2]">
             <div className="text-center mb-16">
               <motion.h2
-                className="text-4xl md:text-5xl font-tech font-bold text-blue-700 mb-6"
+                className="text-4xl md:text-5xl font-tech font-bold text-white mb-6"
                 initial={{ opacity: 0, y: -50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
@@ -41,7 +41,7 @@ export default function CommunicationSection() {
                 Keep All Your Conversations in One Place
               </motion.h2>
               <motion.p
-                className="text-lg text-gray-700 max-w-2xl mx-auto"
+                className="text-lg text-gray-100 max-w-2xl mx-auto"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}

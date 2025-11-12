@@ -12,7 +12,7 @@ export default function OnboardingPage() {
     <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100 relative overflow-hidden">
       {/* Background Image */}
       <Image
-        src="/assets/images/pic1.jpg"
+        src="/assets/images/burj.jpg"
         alt="onboarding background"
         fill
         className="object-cover"

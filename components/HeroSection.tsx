@@ -30,7 +30,7 @@ export default function HeroSection() {
         onMouseLeave={() => setHover(false)}
       >
         <Image
-          src="/assets/images/pic.jpg"
+          src="/assets/images/burj2.jpg"
           alt="Realtor managing properties"
           fill
           className="object-cover"

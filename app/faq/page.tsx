@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import RealtorSignUpForm from "@/components/RealtorSignUpForm";
 import Image from "next/image";
 import React from "react";
+import FAQ from "@/sections/FAQ";
 
-const Realtor = () => {
+const page = () => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
-        src="/assets/images/burj2.jpg"
+        src="/assets/images/burj.jpg"
         alt="agent background"
         fill
         className="object-cover w-full h-full"
@@ -28,12 +29,12 @@ const Realtor = () => {
         className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
       >
         <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
-          Realtor Sign Up
+          Tenant Sign Up
         </h1>
-        <RealtorSignUpForm />
+        <FAQ />
       </motion.div>
     </div>
   );
 };
 
-export default Realtor;
+export default page;

@@ -71,8 +71,8 @@ export default function TestimonialCards() {
   return (
     <section className="overflow-hidden py-16 bg-gray-100">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-tech md:text-4xl font-bold text-center text-[#302cfc] mb-12">
-          What Realtors Say About Us
+        <h2 className="text-3xl font-tech md:text-4xl font-bold text-center text-[#1836b2] mb-12">
+          WHAT OUR CLIENTS SAY
         </h2>
 
         <motion.div
@@ -84,7 +84,7 @@ export default function TestimonialCards() {
             <motion.div
               key={idx}
               animate={controls}
-              className="flex-shrink-0 w-72 md:w-80 bg-blue-300 rounded-2xl shadow-xl p-6 flex flex-col items-center text-center"
+              className="flex-shrink-0 w-72 md:w-80 bg-gray-200 rounded-2xl shadow-xl p-6 flex flex-col items-center text-center"
             >
               <img
                 src={t.avatarUrl}

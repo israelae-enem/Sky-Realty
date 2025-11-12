@@ -39,7 +39,7 @@ const testimonials = [
     role: "Tenant, Madrid",
     image: "/assets/images/tenant2.jpg",
     story: `As a foreign tenant, I struggled with language barriers and missed communications. 
-    Sky Realty keeps everything in clear records  rent, requests, documents all accessible anytime. 
+    Sky Realty keeps everything in clear records — rent, requests, documents all accessible anytime. 
     It gave me peace of mind in a new country.`,
   },
   {
@@ -47,7 +47,7 @@ const testimonials = [
     role: "Tenant, Cameroon",
     image: "/assets/images/tenant4.jpg",
     story: `The tenant portal makes everything simple. I can log in, pay rent, and track issues without calling anyone. 
-    Sky Realty has completely changed how I interact with my landlord  it’s smooth and professional.`,
+    Sky Realty has completely changed how I interact with my landlord — it’s smooth and professional.`,
   },
 ];
 
@@ -59,20 +59,19 @@ const scrollAnimation = {
     transition: {
       repeat: Infinity,
       repeatType: "loop",
-      duration: 20,
+      duration: 30,
       ease: "linear",
     },
   },
 };
 
-
 export default function TenantTestimonials() {
   return (
-    <main className="min-h-screen bg-gray-100 text-gray-900 py-5 px-6 overflow-hidden">
+    <main className="min-h-screen bg-gray-100 text-gray-900 py-20 px-6 overflow-hidden">
       {/* Header */}
       <div className="max-w-4xl mx-auto text-center mb-16">
         <motion.h1
-          className="text-5xl font-tech font-bold text-[#302cfc] mb-4"
+          className="text-5xl font-tech font-bold text-[#1836b2] mb-4"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -80,7 +79,7 @@ export default function TenantTestimonials() {
           What Tenants Are Saying
         </motion.h1>
         <motion.p
-          className="text-gray-700 text-lg max-w-2xl mx-auto"
+          className="text-gray-800 text-lg max-w-2xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -89,27 +88,27 @@ export default function TenantTestimonials() {
         </motion.p>
       </div>
 
-      {/* Scrolling Testimonials */}
+      {/* Overlapping Circular Carousel */}
       <div className="relative w-full overflow-hidden">
         <motion.div
-         className="flex gap-10 items-stretch"
-         variants={scrollAnimation}
-         initial="initial"
+          className="flex items-center gap-[-80px]" // negative gap for overlap
+          variants={scrollAnimation}
+          initial="initial"
           animate="animate"
-          >
+        >
           {[...testimonials, ...testimonials].map((t, i) => (
             <div
               key={i}
-              className="min-w-[400px] bg-blue-300 rounded-2xl shadow-lg p-8 flex flex-col items-center text-center hover:shadow-xl transition-shadow duration-300"
+              className="min-w-[400px] bg-gray-200 rounded-full p-10 flex flex-col items-center text-center shadow-lg hover:shadow-xl transition-shadow duration-300"
             >
               <img
                 src={t.image}
                 alt={t.name}
-                className="w-52 h-52 rounded-full object-cover mb-6 border-4 border-[#302cfc]/70 shadow-md"
+                className="w-52 h-52 rounded-full object-cover mb-6 border-4 border-white shadow-md"
               />
-              <p className="text-gray-700 italic leading-relaxed mb-4">“{t.story}”</p>
-              <h3 className="font-bold text-lg text-[#302cfc]">{t.name}</h3>
-              <p className="text-gray-600 text-sm">{t.role}</p>
+              <p className="text-gray-800 italic leading-relaxed mb-4">“{t.story}”</p>
+              <h3 className="font-bold text-lg text-[#1836b2]">{t.name}</h3>
+              <p className="text-gray-800 text-sm">{t.role}</p>
             </div>
           ))}
         </motion.div>
@@ -122,12 +121,12 @@ export default function TenantTestimonials() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <h2 className="text-3xl font-tech font-semibold text-gray-800 mb-8">
+        <h2 className="text-3xl font-tech font-semibold text-[#1836b2] mb-8 max-w-4xl mx-auto">
           Join thousands of tenants enjoying simpler renting with Sky Realty
         </h2>
         <a
           href="/sign-in"
-          className="inline-block bg-[#302cfc] text-white px-8 py-4 rounded-lg font-medium text-lg hover:bg-[#241fd9]/80 transition"
+          className="inline-block bg-[#1836b2] text-gray-100 px-8 py-4 rounded-lg font-medium text-lg hover:bg-gray-[#1836b2]/50 transition"
         >
           Get Started Today
         </a>

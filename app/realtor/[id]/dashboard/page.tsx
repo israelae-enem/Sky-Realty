@@ -229,7 +229,7 @@ export default function RealtorDashboard() {
 ]
 
 return (
-  <div className="flex min-h-screen bg-gray-100 text-gray-800">
+  <div className="flex min-h-screen bg-gray-300 text-gray-800">
     {/* Sidebar */}
      {/* Sidebar */}
 <aside
@@ -427,6 +427,8 @@ return (
           </motion.div>
         </motion.div>
       )}
+
+      
     </div>
   )
 }

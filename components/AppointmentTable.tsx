@@ -269,7 +269,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
   }, [appointments, searchTerm])
 
   return (
-    <section className=" p-6 rounded-md text-gray-800 bg-gray-100 border border-gray-500">
+    <section className=" p-6 rounded-md text-gray-800 bg-gray-200 border border-gray-500">
       <h2 className="text-2xl font-semibold font-tech mb-4 text-[#302cfc]">Maintenance Appointments</h2>
 
       {/* Stats */}
@@ -358,7 +358,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
               setNewDate(date)
               setShowCalendar(false)
             }}
-            className="rounded-md border border-gray-400 bg-gray-100"
+            className="rounded-md border border-gray-400 bg-gray-200"
           />
         </div>
       </div>
@@ -379,7 +379,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
                   <SelectTrigger className="text-gray-800 bg-gray-300 w-32 border border-gray-500">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#0d0d0e] text-white">
+                  <SelectContent className="bg-gray-300 text-gray-900">
                     <SelectItem value="Scheduled">Scheduled</SelectItem>
                     <SelectItem value="Completed">Completed</SelectItem>
                     <SelectItem value="Canceled">Canceled</SelectItem>
@@ -510,7 +510,7 @@ export default function AppointmentTable({ realtorId }: AppointmentTableProps) {
     <div className="flex flex-col space-y-3">
       {/* Tenant */}
       <div className="flex flex-col">
-        <label className="text-gray-400 text-sm mb-1">Tenant</label>
+        <label className="text-gray-500 text-sm mb-1">Tenant</label>
         <select
           value={newTenantId}
           onChange={(e) => setNewTenantId(e.target.value)}

@@ -26,47 +26,45 @@ const Footer = () => {
         transition={{ duration: 0.6 }}
       >
         <div className="flex flex-col md:flex-row justify-between items-start gap-10">
-          {/* Brand + Logo */}
-          <div className="space-y-3 md:w-1/3">
-            <div className="flex items-center gap-4">
+          {/* Logo + Description */}
+          <div className="space-y-4 md:w-1/3">
+            <div className="flex items-center justify-center md:justify-start">
               <Image
-                src="/assets/icons/logo3.jpg"
+                src="/assets/icons/logo4.jpg"
                 alt="Sky Realty Logo"
                 width={90}
                 height={90}
                 className="rounded-lg object-contain hover:scale-105 transition-transform duration-300 shadow-lg"
               />
-              <h3 className="font-bold font-tech text-3xl text-gray-100 tracking-wide">
-                Sky Realty
-              </h3>
             </div>
-            <p className="text-gray-200 leading-relaxed mt-3 text-base">
-              Smarter property management at your fingertips. Manage tenants,
+            <p className="text-gray-200 leading-relaxed text-base mt-4">
+              Sky Realty offers smarter property management at your fingertips. Manage tenants,
               rentals, and maintenance all in one dashboard.
             </p>
           </div>
 
-          {/* Navigation Links */}
+          {/* Quick Links */}
           <div className="space-y-3 md:w-1/5">
-            <h3 className="font-bold font-tech text-xl text-gray-100">
-              Navigation
+            <h3 className="font-bold font-tech text-xl text-gray-100 uppercase">
+              QUICK LINKS
             </h3>
             <ul className="space-y-1 text-gray-300">
               <li><a href="/" className="hover:text-white transition">Home</a></li>
               <li><a href="/about" className="hover:text-white transition">About Us</a></li>
-              <li><a href="/home1" className="hover:text-white transition">Realtor</a></li>
+              <li><a href="/home1" className="hover:text-white transition">Realtors</a></li>
               <li><a href="/home2" className="hover:text-white transition">Tenants</a></li>
               <li><a href="/subscription" className="hover:text-white transition">Pricing</a></li>
+              <li><a href="/faq" className="hover:text-white transition">FAQ</a></li>
               <li><a href="/help" className="hover:text-white transition">Help</a></li>
               <li><a href="/privacy" className="hover:text-white transition">Privacy</a></li>
               <li><a href="/terms" className="hover:text-white transition">Terms</a></li>
             </ul>
           </div>
 
-          {/* Social & Contact */}
+          {/* Get In Touch */}
           <div className="space-y-3 md:w-1/4">
-            <h3 className="font-bold font-tech text-xl text-gray-100">
-              Connect
+            <h3 className="font-bold font-tech text-xl text-gray-100 uppercase">
+              GET IN TOUCH
             </h3>
             <div className="flex gap-4 mt-1 text-2xl">
               <a
@@ -109,7 +107,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <p className="text-center text-sm text-gray-200 mt-10">
-          &copy; {new Date().getFullYear()} Sky Realty. All rights reserved.
+          &copy; 2025. All rights reserved by Sky Realty.
         </p>
       </motion.footer>
 

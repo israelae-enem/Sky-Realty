@@ -1,78 +1,68 @@
-// components/RentSection.jsx
-"use client"
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-
+"use client";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function RentSection() {
   return (
-    <section className="py-20 px-10 md:px-20 bg-white">
-      {/* Text content */}
-      <div className="text-center mb-16">
+    <section className="py-20 px-6 md:px-20 bg-gray-100 flex flex-col md:flex-row items-center justify-between gap-12">
+      {/* Left Side - Floating Image */}
+      <motion.div
+        className="w-full md:w-1/2"
+        animate={{ y: [0, -15, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Image
+          src="/assets/images/key-handover.jpg"
+          alt="Rent management"
+          width={700}
+          height={700}
+          className="rounded-2xl object-cover w-full h-[450px] shadow-lg"
+          priority
+        />
+      </motion.div>
+
+      {/* Right Side - Content Cards */}
+      <div className="w-full md:w-1/2 flex flex-col gap-8">
         <motion.h2
-          className="text-5xl font-tech font-bold text-blue-700 mb-6"
-          initial={{ opacity: 0, y: -50 }}
+          className="text-4xl font-bold text-[#1836b2] mb-6 text-center md:text-left"
+          initial={{ opacity: 0, y: -40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
         >
-          How to Stay on Top of Rent
+          Stay On Top of Rent Effortlessly
         </motion.h2>
-        <motion.p
-          className="text-lg text-gray-700 max-w-2xl mx-auto"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
-        >
-          Sky Realty makes realtors’ books organized and updated.
-        </motion.p>
-      </div>
 
-      {/* Features */}
-      <div className="flex flex-col md:flex-row items-center gap-10">
+        {/* Card 1 */}
         <motion.div
-          className="flex-1"
-          initial={{ opacity: 0, x: -50 }}
+          className="bg-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300"
+          initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
         >
-          <h3 className="text-2xl font-semibold font-tech text-blue-700 mb-4">Rent Tracking</h3>
-          <p className="text-gray-400 text-lg">
-            Keep track of all your tenants’ rent payments in one organized dashboard. Know what’s paid, pending, and overdue at a glance.
+          <h3 className="text-2xl font-semibold text-[#1836b2] mb-3">
+            Rent Tracking
+          </h3>
+          <p className="text-gray-900 leading-relaxed">
+            Keep track of all your tenants’ rent payments in one organized
+            dashboard. Instantly see what’s paid, pending, and overdue at a
+            glance.
           </p>
         </motion.div>
 
+        {/* Card 2 */}
         <motion.div
-          className="flex-1"
+          className="bg-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300"
           initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          viewport={{ once: true }}
         >
-          <h3 className="text-2xl font-tech font-semibold text-blue-700 mb-4">Rent Reminder</h3>
-          <p className="text-gray-400 text-lg">
-            Automated reminders for tenants help ensure timely payments. You'll stay informed without lifting a finger.
+          <h3 className="text-2xl font-semibold text-[#1836b2] mb-3">
+            Automated Rent Reminders
+          </h3>
+          <p className="text-gray-900 leading-relaxed">
+            Never miss a payment again. Automated notifications remind tenants
+            on time while keeping you updated  no manual work needed.
           </p>
-        </motion.div>
-
-        {/* Optional Image on larger screens */}
-        <motion.div
-          className="flex-1 hidden md:block"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          viewport={{ once: true }}
-        >
-          <Image
-            src="/assets/images/key-handover.jpg"
-            height={1000}
-            width={1000}
-            alt="Rent management"
-            className="w-full h-full object-cover md:h-[500px] sm:h-[350px] rounded-lg"
-            priority
-          />
         </motion.div>
       </div>
     </section>

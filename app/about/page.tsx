@@ -107,7 +107,7 @@ const AboutPage = () => {
         >
           <div className="md:w-1/2">
             <Image
-              src="/assets/icons/sky-logo.jpg"
+              src="/assets/icons/logo4.jpg"
               alt="Global platform"
               width={1000}
               height={1000}

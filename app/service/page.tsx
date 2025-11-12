@@ -17,7 +17,7 @@ export default function ServicesPage() {
         "Cloud-based document storage",
         "Analytics on occupancy and revenue",
       ],
-      image: "/images/property.jpg",
+      image: "/assets/images/property.jpg",
     },
     {
       id: "tenant-management",
@@ -31,7 +31,7 @@ export default function ServicesPage() {
         "Easy renewal and move-out management",
         "Notification and message history",
       ],
-      image: "/images/ten.jpg",
+      image: "/assets/images/ten.jpg",
     },
     {
       id: "lease-document-control",
@@ -45,7 +45,7 @@ export default function ServicesPage() {
         "Version control and document history",
         "Access permissions by user role",
       ],
-      image: "/images/rdash.jpg",
+      image: "/assets/images/rdash.jpg",
     },
     {
       id: "rent-reminder",
@@ -59,7 +59,7 @@ export default function ServicesPage() {
         "Overdue rent alerts",
         "Tenant payment history tracking",
       ],
-      image: "/images/rent.jpg",
+      image: "/assets/images/rent.jpg",
     },
     {
       id: "financial-analytics",
@@ -73,13 +73,13 @@ export default function ServicesPage() {
         "Profitability and occupancy insights",
         "Downloadable data exports",
       ],
-      image: "/images/ana.jpg",
+      image: "/assets/images/ana.jpg",
     },
     {
       id: "maintenance-repairs",
       title: "Maintenance & Repairs",
       description:
-        "Receive, assign, and track maintenance requests efficiently — ensuring your tenants stay happy and your properties stay top-notch.",
+        "Receive, assign, and track maintenance requests efficiently ensuring your tenants stay happy and your properties stay top-notch.",
       features: [
         "Maintenance request tracking",
         "Vendor assignment and updates",
@@ -87,12 +87,12 @@ export default function ServicesPage() {
         "Automatic progress updates",
         "Performance analytics for repairs",
       ],
-      image: "/images/maintenance-request.jpg",
+      image: "/assets/images/maintenance-request.jpg",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-20 px-6">
+    <div className="min-h-screen bg-[#ebecf3] text-gray-900 py-20 px-6">
       {/* Header */}
       <motion.div
         className="text-center mb-16"
@@ -105,58 +105,73 @@ export default function ServicesPage() {
         </h1>
         <p className="text-lg text-gray-700 max-w-2xl mx-auto">
           Discover how Sky Realty helps you simplify property management, automate workflows,
-          and make data-driven decisions — all in one place.
+          and make data-driven decisions—all in one place.
         </p>
       </motion.div>
 
       {/* Services Sections */}
       <div className="space-y-24 max-w-6xl mx-auto">
-        {services.map((service, idx) => (
-          <motion.section
-            key={service.id}
-            id={service.id}
-            className="flex flex-col md:flex-row items-center gap-10 scroll-mt-24"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: idx * 0.1 }}
-          >
-            {/* Image */}
-            <div className="md:w-1/2">
-              <Image
-                src={service.image}
-                alt={service.title}
-                width={600}
-                height={400}
-                className="rounded-lg shadow-lg object-cover"
-              />
-            </div>
+        {services.map((service, idx) => {
+          const isEven = idx % 2 === 0; // alternate layout
 
-            {/* Content */}
-            <div className="md:w-1/2">
-              <h2 className="text-3xl font-bold text-[#302cfc] mb-4">
-                {service.title}
-              </h2>
-              <p className="text-gray-700 mb-6 leading-relaxed">
-                {service.description}
-              </p>
+          return (
+            <motion.section
+              key={service.id}
+              id={service.id}
+              className={`flex flex-col md:flex-row items-center gap-10 scroll-mt-24 ${
+                !isEven ? "md:flex-row-reverse" : ""
+              }`}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: idx * 0.1 }}
+            >
+              {/* Image */}
+              <div className="md:w-1/2 flex justify-center">
+                <div className="w-84 h-84 rounded-full overflow-hidden shadow-2xl">
+                  <Image
+                    src={service.image}
+                    alt={service.title}
+                    width={1000}
+                    height={1000}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              </div>
 
-              <ul className="list-disc pl-6 space-y-2 text-gray-700 mb-6">
-                {service.features.map((feat, i) => (
-                  <li key={i}>{feat}</li>
-                ))}
-              </ul>
+              {/* Content */}
+              <div className="md:w-1/2">
+                <motion.div
+                  className="bg-gray-200 p-8 rounded-2xl shadow-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <h2 className="text-3xl font-bold text-[#302cfc] mb-4">
+                    {service.title}
+                  </h2>
+                  <p className="text-gray-800 mb-6 leading-relaxed">
+                    {service.description}
+                  </p>
 
-              <motion.a
-                href="#top"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-block px-6 py-3 rounded-md bg-[#302cfc] text-white font-semibold hover:bg-blue-600 transition"
-              >
-                Back to Top
-              </motion.a>
-            </div>
-          </motion.section>
-        ))}
+                  <ul className="list-disc pl-6 space-y-2 text-gray-800 mb-6">
+                    {service.features.map((feat, i) => (
+                      <li key={i}>{feat}</li>
+                    ))}
+                  </ul>
+
+                  <motion.a
+                    href="#top"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-block px-6 py-3 rounded-md bg-[#302cfc] text-white font-semibold hover:bg-blue-600 transition"
+                  >
+                    Back to Top
+                  </motion.a>
+                </motion.div>
+              </div>
+            </motion.section>
+          );
+        })}
       </div>
     </div>
   );
