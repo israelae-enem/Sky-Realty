@@ -8,7 +8,7 @@ export default function HowItWorksSection() {
     { title: "SEAMLESS AND HASSLE-FREE", bg: "#1836b2" },
   ];
 
-  // Float animation for cards
+  // Float animation for cards and button
   const floatAnimation = {
     initial: { y: 0 },
     animate: {
@@ -94,6 +94,17 @@ export default function HowItWorksSection() {
             </motion.div>
           ))}
         </div>
+
+        {/* Get Started Button */}
+        <motion.a
+          href="/sign-in"
+          className="mt-16 w-40 h-40 rounded-full bg-[#302cfc] text-white flex items-center justify-center text-lg font-semibold shadow-lg hover:bg-blue-600 transition"
+          variants={floatAnimation}
+          initial="initial"
+          animate="animate"
+        >
+          Get Started
+        </motion.a>
       </div>
     </section>
   );
