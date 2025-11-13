@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useState } from "react";
 
 type Plan = {
   id: string;
@@ -77,44 +76,10 @@ const plans: Plan[] = [
 ];
 
 export default function PricingSubscription() {
-  const { user } = useUser();
-  const userId = user?.id;
-
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
-  const [propertyLimit, setPropertyLimit] = useState<number | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
-  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
-
-  // GET current subscription on mount
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchSubscription = async () => {
-      try {
-        const res = await fetch(`/api/ziina?user=${userId}`);
-        const data = await res.json();
-        if (res.ok && data.plan) {
-          setCurrentPlan(data.plan);
-          setPropertyLimit(data.propertyLimit);
-          setSubscriptionStatus(data.status);
-          if (data.trial_ends_at) setTrialEndsAt(data.trial_ends_at);
-        }
-      } catch (err) {
-        console.error("Failed to fetch subscription:", err);
-      }
-    };
-
-    fetchSubscription();
-  }, [userId]);
 
   const handleSubscribe = async (planId: string) => {
-    if (!userId) {
-      alert("Please login first to subscribe!");
-      return;
-    }
-
     try {
       setLoadingPlan(planId);
       alert("Redirecting you to Ziina to add your card and start your 7-day trial...");
@@ -122,7 +87,7 @@ export default function PricingSubscription() {
       const res = await fetch("/api/ziina", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, plan: planId }),
+        body: JSON.stringify({ plan: planId }),
       });
 
       const data = await res.json();
@@ -130,9 +95,7 @@ export default function PricingSubscription() {
       if (!res.ok) throw new Error(data.error || "Failed to create subscription");
 
       if (data.redirectUrl) {
-        window.location.href = data.redirectUrl; // Ziina checkout
-      } else {
-        window.location.href = `/realtor/${userId}/dashboard`;
+        window.location.href = data.redirectUrl;
       }
     } catch (err: any) {
       console.error("❌ Subscribe error:", err.message);
@@ -142,40 +105,9 @@ export default function PricingSubscription() {
     }
   };
 
-  const renderTrialBanner = () => {
-    if (subscriptionStatus === "trialing" && trialEndsAt) {
-      const daysLeft = Math.ceil(
-        (new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      return (
-        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-md bg-blue-700 text-white text-center font-semibold shadow-md">
-          🎉 You're currently enjoying a{" "}
-          <span className="text-yellow-400">7-day free trial</span>!
-          <br />
-          Trial ends in{" "}
-          <span className="underline">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span>.
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 mt-20 p-8">
       <h1 className="text-4xl font-bold font-tech text-center mb-6">Sky Realty Plans</h1>
-
-      {renderTrialBanner()}
-
-      {currentPlan && subscriptionStatus !== "trialing" && (
-        <div className="max-w-3xl mx-auto mb-8 p-4 rounded-md bg-green-700 text-white text-center font-semibold shadow-md">
-          You are currently on{" "}
-          <span className="underline">{currentPlan.toUpperCase()}</span> plan.{" "}
-          {propertyLimit
-            ? `You can manage up to ${propertyLimit} properties.`
-            : "Unlimited properties."}
-        </div>
-      )}
 
       <div className="flex justify-center mb-12 space-x-4">
         <button
@@ -199,7 +131,6 @@ export default function PricingSubscription() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {plans.map((plan) => {
           const isFeatured = plan.badge === "Most Popular" || plan.badge === "Best Value";
-          const isCurrent = currentPlan === plan.id;
 
           return (
             <div
@@ -240,18 +171,13 @@ export default function PricingSubscription() {
               <div className="space-y-2">
                 <button
                   onClick={() => handleSubscribe(plan.id)}
-                  disabled={!userId || loadingPlan === plan.id || isCurrent}
                   className={`w-full px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
                     isFeatured
                       ? "bg-yellow-500 text-gray-900 hover:bg-yellow-400"
                       : "bg-blue-500 text-white hover:bg-blue-400"
-                  } disabled:opacity-50`}
+                  }`}
                 >
-                  {isCurrent
-                    ? "Current Plan"
-                    : loadingPlan === plan.id
-                    ? "Processing..."
-                    : "Start 7-Day Trial (Card Required)"}
+                  {loadingPlan === plan.id ? "Processing..." : "Start 7-Day Trial (Card Required)"}
                 </button>
 
                 <p className="text-sm text-gray-400 text-center">

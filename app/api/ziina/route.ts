@@ -22,55 +22,17 @@ const PLAN_LIMITS: Record<string, number | null> = {
 // ----------------------------
 export async function POST(req: NextRequest) {
   try {
-    const { userId, plan } = await req.json();
+    const { plan, realtorId } = await req.json();
 
-    if (!userId || !plan || !PLAN_PRICES[plan]) {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    if (!plan || !PLAN_PRICES[plan]) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    // 🧪 Local Dev Shortcut
-    if (process.env.NODE_ENV === "development") {
-      const trialEnds = new Date();
-      trialEnds.setDate(trialEnds.getDate() + 7);
-
-      await supabase
-        .from("realtors")
-        .update({
-          subscription_plan: plan,
-          subscription_status: "trialing",
-          trial_ends_at: trialEnds.toISOString(),
-          subscription_ends_at: null,
-        })
-        .eq("id", userId);
-
-      return NextResponse.json({
-        message: "✅ Local dev mode: Trial started without Ziina redirect",
-        redirectUrl: `http://localhost:3000/realtor/${userId}/dashboard?devTrial=true`,
-      });
-    }
-
-    // 1️⃣ Check current subscription/trial
-    const { data: realtor } = await supabase
-      .from("realtors")
-      .select("trial_ends_at, subscription_status, subscription_ends_at")
-      .eq("id", userId)
-      .single();
-
-    if (
-      realtor?.subscription_status === "active" &&
-      realtor.subscription_ends_at &&
-      new Date(realtor.subscription_ends_at) > new Date()
-    ) {
-      return NextResponse.json({
-        error: "You already have an active subscription.",
-      });
-    }
-
-    // 2️⃣ Set trial period
+    // 1️⃣ Set trial period
     const trialEnds = new Date();
     trialEnds.setDate(trialEnds.getDate() + 7);
 
-    // 3️⃣ Create payment intent via Ziina
+    // 2️⃣ Create payment intent via Ziina
     const ziinaRes = await fetch("https://api-v2.ziina.com/api/payment_intent", {
       method: "POST",
       headers: {
@@ -81,9 +43,9 @@ export async function POST(req: NextRequest) {
         amount: PLAN_PRICES[plan],
         currency_code: "USD",
         message: `Sky Realty - ${plan} Plan (7-Day Trial, auto-charge after trial)`,
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=success&plan=${plan}&user=${userId}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=cancel&plan=${plan}&user=${userId}`,
-        failure_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=failure&plan=${plan}&user=${userId}`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=success&plan=${plan}${realtorId ? `&realtorId=${realtorId}` : ""}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=cancel&plan=${plan}`,
+        failure_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=failure&plan=${plan}`,
         test: true,
         save_card: true,
       }),
@@ -102,18 +64,20 @@ export async function POST(req: NextRequest) {
       throw new Error("Ziina redirect URL not returned");
     }
 
-    // 4️⃣ Save trial info to Supabase
-    await supabase
-      .from("realtors")
-      .update({
-        subscription_plan: plan,
-        subscription_status: "trialing",
-        trial_ends_at: trialEnds.toISOString(),
-        subscription_ends_at: null,
-      })
-      .eq("id", userId);
+    // 3️⃣ Save trial info to Supabase if realtorId is provided
+    if (realtorId) {
+      await supabase
+        .from("realtors")
+        .update({
+          subscription_plan: plan,
+          subscription_status: "trialing",
+          trial_ends_at: trialEnds.toISOString(),
+          subscription_ends_at: null,
+        })
+        .eq("id", realtorId);
+    }
 
-    // 5️⃣ Respond with redirect URL
+    // 4️⃣ Respond with redirect URL
     return NextResponse.json({
       message: "✅ Card collected and 7-day trial started.",
       redirectUrl: ziinaData.redirect_url,
@@ -125,18 +89,18 @@ export async function POST(req: NextRequest) {
 }
 
 // ----------------------------
-// 📌 Handle Callback or Fetch Subscription (GET)
+// 📌 Handle Callback / Fetch Subscription (GET)
 // ----------------------------
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const plan = searchParams.get("plan");
-  const userId = searchParams.get("user");
+  const realtorId = searchParams.get("realtorId");
 
   try {
-    if (status && userId && plan) {
+    if (status && plan) {
       // ✅ Success — activate subscription
-      if (status === "success") {
+      if (status === "success" && realtorId) {
         const subscriptionEnds = new Date();
         subscriptionEnds.setDate(subscriptionEnds.getDate() + 30);
 
@@ -148,10 +112,10 @@ export async function GET(req: NextRequest) {
             trial_ends_at: null,
             subscription_ends_at: subscriptionEnds.toISOString(),
           })
-          .eq("id", userId);
+          .eq("id", realtorId);
 
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${userId}/dashboard`
+          `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${realtorId}/dashboard`
         );
       }
 
@@ -161,12 +125,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fetch subscription info for user
-    if (userId) {
+    // If realtorId provided, return their subscription info
+    if (realtorId) {
       const { data } = await supabase
         .from("realtors")
         .select("subscription_plan, subscription_status, trial_ends_at, subscription_ends_at")
-        .eq("id", userId)
+        .eq("id", realtorId)
         .single();
 
       if (!data) {
@@ -182,7 +146,7 @@ export async function GET(req: NextRequest) {
       const now = new Date();
       if (data.subscription_ends_at && new Date(data.subscription_ends_at) < now) {
         status = "expired";
-        await supabase.from("realtors").update({ subscription_status: "expired" }).eq("id", userId);
+        await supabase.from("realtors").update({ subscription_status: "expired" }).eq("id", realtorId);
       }
 
       const userPlan = data.subscription_plan ?? "free";

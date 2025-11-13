@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useState } from "react";
 import Image from "next/image";
 
 type Plan = {
@@ -78,43 +77,10 @@ const plans: Plan[] = [
 ];
 
 export default function PricingSubscription() {
-  const { user } = useUser();
-  const userId = user?.id;
-
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
-  const [propertyLimit, setPropertyLimit] = useState<number | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
-  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchSubscription = async () => {
-      try {
-        const res = await fetch(`/api/ziina?user=${userId}`);
-        const data = await res.json();
-        if (res.ok && data.plan) {
-          setCurrentPlan(data.plan);
-          setPropertyLimit(data.propertyLimit);
-          setSubscriptionStatus(data.status);
-          if (data.trial_ends_at) setTrialEndsAt(data.trial_ends_at);
-        }
-      } catch (err) {
-        console.error("Failed to fetch subscription:", err);
-      }
-    };
-
-    fetchSubscription();
-  }, [userId]);
 
   const handleSubscribe = async (planId: string) => {
-    if (!userId) {
-      alert("Please login first to subscribe!");
-      return;
-    }
-
     try {
       setLoadingPlan(planId);
       alert("Redirecting you to Ziina to add your card and start your 7-day trial...");
@@ -122,7 +88,7 @@ export default function PricingSubscription() {
       const res = await fetch("/api/ziina", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, plan: planId }),
+        body: JSON.stringify({ plan: planId }), // ✅ removed userId
       });
 
       const data = await res.json();
@@ -132,7 +98,7 @@ export default function PricingSubscription() {
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       } else {
-        window.location.href = `/realtor/${userId}/dashboard`;
+        window.location.href = "/";
       }
     } catch (err: any) {
       console.error("❌ Subscribe error:", err.message);
@@ -142,45 +108,18 @@ export default function PricingSubscription() {
     }
   };
 
-  const renderTrialBanner = () => {
-    if (subscriptionStatus === "trialing" && trialEndsAt) {
-      const daysLeft = Math.ceil(
-        (new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      return (
-        <div className="max-w-3xl mx-auto mb-6 p-4 rounded-md bg-[#302cfc] text-white text-center font-semibold shadow-md">
-          🎉 You're currently enjoying a{" "}
-          <span className="text-yellow-500 font-bold">7-day free trial</span>!
-          <br />
-          Trial ends in{" "}
-          <span className="underline">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span>.
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="min-h-screen bg-[#1836b2] text-gray-900 p-8">
-      <h1 className="text-4xl font-bold font-tech text-center mb-6 text-white">Sky Realty Plans</h1>
-
-      {renderTrialBanner()}
-
-      {currentPlan && subscriptionStatus !== "trialing" && (
-        <div className="max-w-3xl mx-auto mb-8 p-4 rounded-md bg-[#302cfc] text-white text-center font-semibold shadow-md">
-          You are currently on{" "}
-          <span className="underline">{currentPlan.toUpperCase()}</span> plan.{" "}
-          {propertyLimit
-            ? `You can manage up to ${propertyLimit} properties.`
-            : "Unlimited properties."}
-        </div>
-      )}
+      <h1 className="text-4xl font-bold font-tech text-center mb-6 text-white">
+        Sky Realty Plans
+      </h1>
 
       <div className="flex justify-center mb-12 space-x-4">
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
-            billingCycle === "monthly" ? "bg-yellow-500 text-gray-900" : "bg-gray-300 text-gray-700"
+            billingCycle === "monthly"
+              ? "bg-yellow-500 text-gray-900"
+              : "bg-gray-300 text-gray-700"
           }`}
           onClick={() => setBillingCycle("monthly")}
         >
@@ -188,7 +127,9 @@ export default function PricingSubscription() {
         </button>
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
-            billingCycle === "yearly" ? "bg-yellow-500 text-gray-900" : "bg-gray-300 text-gray-700"
+            billingCycle === "yearly"
+              ? "bg-yellow-500 text-gray-900"
+              : "bg-gray-300 text-gray-700"
           }`}
           onClick={() => setBillingCycle("yearly")}
         >
@@ -198,15 +139,15 @@ export default function PricingSubscription() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {plans.map((plan) => {
-          const isFeatured = plan.badge === "Most Popular" || plan.badge === "Best Value";
-          const isCurrent = currentPlan === plan.id;
+          const isFeatured =
+            plan.badge === "Most Popular" || plan.badge === "Best Value";
 
           return (
             <div
               key={plan.id}
-              className={`relative rounded-xl p-6 flex flex-col justify-between shadow-lg transform transition-transform duration-300 hover:scale-105 bg-gray-100`}
+              className="relative rounded-xl p-6 flex flex-col justify-between shadow-lg transform transition-transform duration-300 hover:scale-105 bg-gray-100"
             >
-              {/* Sky Realty Logo */}
+              {/* Logo */}
               <div className="flex justify-center mb-4">
                 <Image
                   src="/assets/icons/logo3.jpg"
@@ -228,12 +169,17 @@ export default function PricingSubscription() {
               )}
 
               <div>
-                <h2 className="text-2xl font-semibold mb-2 text-gray-900">{plan.name}</h2>
+                <h2 className="text-2xl font-semibold mb-2 text-gray-900">
+                  {plan.name}
+                </h2>
                 <p className="text-3xl font-bold mb-4 text-gray-900">
                   {billingCycle === "monthly"
                     ? plan.monthlyPrice
                     : plan.yearlyPrice.toFixed(0)}{" "}
-                  USD <span className="text-sm font-normal">/ {billingCycle}</span>
+                  USD{" "}
+                  <span className="text-sm font-normal">
+                    / {billingCycle}
+                  </span>
                 </p>
 
                 <ul className="mb-6 space-y-2 text-gray-800">
@@ -249,16 +195,14 @@ export default function PricingSubscription() {
               <div className="space-y-2">
                 <button
                   onClick={() => handleSubscribe(plan.id)}
-                  disabled={!userId || loadingPlan === plan.id || isCurrent}
+                  disabled={loadingPlan === plan.id}
                   className={`w-full px-6 py-3 rounded-md font-semibold transition-all duration-300 ${
                     isFeatured
                       ? "bg-yellow-500 text-gray-900 hover:bg-yellow-400"
                       : "bg-[#302cfc] text-white hover:bg-blue-400"
                   } disabled:opacity-50`}
                 >
-                  {isCurrent
-                    ? "Current Plan"
-                    : loadingPlan === plan.id
+                  {loadingPlan === plan.id
                     ? "Processing..."
                     : "Start 7-Day Trial (Card Required)"}
                 </button>
