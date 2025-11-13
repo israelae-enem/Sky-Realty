@@ -35,7 +35,7 @@ const Page = () => {
         className="relative z-10 w-full max-w-md p-8 rounded-xl shadow-2xl bg-white"
       >
         <SignUp
-          redirectUrl={'/onboarding'}
+          
           appearance={{
             elements: {
               formButtonPrimary:

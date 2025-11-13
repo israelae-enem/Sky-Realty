@@ -98,7 +98,7 @@ export default function HowItWorksSection() {
         {/* Get Started Button */}
         <motion.a
           href="/sign-in"
-          className="mt-16 w-40 h-40 rounded-full bg-[#302cfc] text-white flex items-center justify-center text-lg font-semibold shadow-lg hover:bg-blue-600 transition"
+          className="mt-16 px-8 py-4 rounded-full bg-[#302cfc] text-white flex items-center justify-center text-lg font-semibold shadow-lg hover:bg-blue-600 transition"
           variants={floatAnimation}
           initial="initial"
           animate="animate"

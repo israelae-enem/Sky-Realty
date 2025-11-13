@@ -10,16 +10,12 @@ import WhySkyRealty from '@/components/WhySkyRealty'
 import Link from 'next/link'
 import ServicesSection from '@/components/ServiceSection'
 import PainPointsPage from '@/components/PainPoints'
-import SolutionsPage from '@/components/Solutions'
-import ComparisonPage from '@/components/Comparisons'
-import FoundersSection from '@/components/OurTeam'
 import TestimonialsPage from '@/components/Testimony'
 import ClientLogosCarousel from '@/components/Logos'
 import TestimonialCards from '@/components/TestimonialCards'
 import Footer from '@/components/Footer'
 import WalkthroughSection from '@/components/WalkThrough'
 import HeroSection from '@/components/Hero'
-import DashboardPreview from '@/components/Dashboard'
 import CTASection from '@/components/CTASection'
 import AboutUsSection from '@/components/AboutUsSection'
 import FreeTrial from '@/components/FreeTrial'
@@ -86,18 +82,7 @@ const Page = () => {
 
   <Marker />
 
-
-  
-  
-      {/* ================= Footer ================= */}
      <Footer />
-
-
-
-
-
-
-
 
        
     </main>

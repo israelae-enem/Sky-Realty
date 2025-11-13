@@ -36,7 +36,7 @@ export default function CTASection() {
           viewport={{ once: true }}
         >
           <Link
-            href="/signup"
+            href="/sign-up"
             className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-full shadow-md hover:shadow-[#1836b2]/50 hover:scale-105 transition-all duration-300"
           >
             Get Started

@@ -7,7 +7,7 @@ export default function TermsAndConditions() {
   return (
     <div className="bg-gray-100 text-gray-800 min-h-screen py-16 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-6">Terms & Conditions</h1>
+        <h1 className="text-4xl font-bold text-black mb-6">Terms & Conditions</h1>
         <p className="mb-4 text-gray-400">
           Last updated: {new Date().toLocaleDateString()}
         </p>

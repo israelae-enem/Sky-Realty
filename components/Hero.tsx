@@ -15,8 +15,8 @@ const HeroSection = () => {
         className="absolute top-0 left-0 w-full h-full object-cover"
       />
 
-      {/* ===== Overlay ===== */}
-      <div className="absolute inset-0 bg-black/40" />
+      {/* ===== Darker Overlay ===== */}
+      <div className="absolute inset-0 bg-black/60" />
 
       {/* ===== Foreground Content ===== */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 space-y-8">
@@ -30,23 +30,20 @@ const HeroSection = () => {
           Connecting Tenants and Realtors for Smarter Property Management
         </motion.h1>
 
-        {/* Floating CTA Card */}
+        {/* Floating CTA Card (always visible) */}
         <motion.div
-          className="bg-white text-[#1836b2] rounded-2xl shadow-lg px-8 py-10 mt-6 max-w-lg w-full flex flex-col items-center space-y-6"
-          initial={{ opacity: 0, y: 60 }}
+          className="bg-white text-[#1836b2] rounded-2xl shadow-xl px-8 py-10 mt-6 max-w-lg w-full flex flex-col items-center space-y-6"
           animate={{
-            opacity: 1,
-            y: [0, -8, 0], // gentle float up and down
+            y: [0, -10, 0], // gentle up-down motion
           }}
           transition={{
-            delay: 0.5,
-            duration: 3,
+            duration: 4,
             repeat: Infinity,
-            repeatType: "reverse",
+            repeatType: "mirror",
             ease: "easeInOut",
           }}
         >
-          <h2 className="text-xl font-semibold mb-2">
+          <h2 className="text-xl font-semibold mb-2 normal-case">
             How would you like to continue?
           </h2>
 
