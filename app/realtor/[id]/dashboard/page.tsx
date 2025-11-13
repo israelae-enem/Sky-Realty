@@ -21,6 +21,8 @@ import TeamAccordion from '@/components/TeamAccordion'
 import { Building, CheckCircle, FileText, Home, Users, Calendar, Bell } from 'lucide-react'
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
+import ListingTable from '@/components/ListingTable'
+import { PLAN_LIMITS } from '@/constants'
 
 interface Stats {
   properties: number
@@ -49,6 +51,8 @@ interface Notification {
 export default function RealtorDashboard() {
   const { user } = useUser()
   const router = useRouter()
+  const userId = user?.id || "";
+  const currentPlan = "free";
 
   const [loading, setLoading] = useState(true)
   const [plan, setPlan] = useState<PlanType>(null)
@@ -61,6 +65,9 @@ export default function RealtorDashboard() {
   const [countdown, setCountdown] = useState<string | null>(null)
   const [expired, setExpired] = useState(false)
   const [subscriptionActive, setSubscriptionActive] = useState(false)
+  const maxProperties = PLAN_LIMITS[currentPlan] ?? null;
+  
+
 
   const [activeSection, setActiveSection] = useState('Home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -183,6 +190,14 @@ export default function RealtorDashboard() {
           .order('full_name', { ascending: true })
         if (tenantsData) setTenants(tenantsData)
 
+          
+        const { data: listingData } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('realtor_id', user.id)
+          .order('full_name', { ascending: true })
+        if (listingData) setTenants(listingData)
+
         const { data: notificationsData } = await supabase
           .from('notification')
           .select('*')
@@ -205,6 +220,8 @@ export default function RealtorDashboard() {
     setStats({ properties: total, occupied, leases: activeLeases })
   }
 
+  
+
   const markNotificationsRead = async () => {
     if (!user?.id) return
     const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
@@ -217,6 +234,7 @@ export default function RealtorDashboard() {
 
    const navItems = [
   { name: 'Home', icon: <Home size={18} /> },
+  { name: 'Listings', icon: <Building size={18} /> },
   { name: 'Properties', icon: <Building size={18} /> },
   { name: 'Tenants', icon: <Users size={18} /> },
   { name: 'Rent Payments', icon: <FileText size={18} /> },
@@ -231,42 +249,40 @@ export default function RealtorDashboard() {
 return (
   <div className="flex min-h-screen bg-gray-300 text-gray-800">
     {/* Sidebar */}
-     {/* Sidebar */}
-<aside
-  className={clsx(
-    'fixed top-0 left-0 h-full w-64 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
-    sidebarOpen ? 'translate-x-0' : '-translate-x-64',
-    'md:translate-x-0 bg-[#1836b2] text-white'
-  )}
->
-  {/* Top section: Profile and heading */}
-  <div className="flex flex-col space-y-4 sticky top-0 z-10">
-    {/* Profile */}
-    <Profile />
 
-    {/* Dashboard heading */}
-    <h1 className="text-2xl font-bold">Dashboard</h1>
-  </div>
+    <aside className={clsx(
+      'fixed top-0 left-0 h-full w-64 backdrop-blur-md bg-[#e8ecf1]/80 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
+      sidebarOpen ? 'translate-x-0' : '-translate-x-64',
+      'md:translate-x-0'
+    )}>
+      
+      {/* Top section: Profile and heading */}
+      <div className="flex flex-col space-y-4 sticky top-0 z-10">
+        {/* Profile */}
+        <Profile />
 
-  {/* Navigation items */}
-  <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
-    {navItems.map((item) => (
-      <button
-        key={item.name}
-        onClick={() => setActiveSection(item.name)}
-        className={clsx(
-          'flex items-center p-2 rounded-lg transition-colors duration-200',
-          activeSection === item.name
-            ? 'bg-[#302cfc] text-white'
-            : 'hover:bg-[#241fd9] text-white'
-        )}
-      >
-        <span className="mr-3">{item.icon}</span>
-        {item.name}
-      </button>
-    ))}
-  </nav>
-</aside>
+        {/* Dashboard heading */}
+        <h1 className="text-2xl font-bold text-[#302cfc]">Dashboard</h1>
+      </div>
+
+      {/* Navigation items */}
+      <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
+        {navItems.map((item) => (
+          <button
+            key={item.name}
+            onClick={() => setActiveSection(item.name)}
+            className={clsx(
+              'flex items-center p-2 rounded-lg transition-colors duration-200',
+              activeSection === item.name ? 'bg-[#dbe2ff] text-[#302cfc]' : 'hover:bg-[#dbe2ff]'
+            )}
+          >
+            <span className="mr-3">{item.icon}</span>
+            {item.name}
+          </button>
+        ))}
+      </nav>
+    </aside>
+   
 
       {/* Mobile Hamburger */}
       <div className="md:hidden fixed top-4 left-4 z-50">
@@ -322,6 +338,22 @@ return (
                 <RentReminders />
               </motion.div>
             )}
+
+
+              {activeSection === 'Listings' && (
+              <motion.div
+                key="listings"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                
+              >
+                <ListingTable currentPlan={plan ?? 'free'} userId={user?.id!} />
+              </motion.div>
+            )}
+
+
 
             {activeSection === 'Properties' && (
               <motion.div

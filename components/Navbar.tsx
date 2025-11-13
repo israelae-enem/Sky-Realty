@@ -47,6 +47,13 @@ const Navbar = () => {
         </Link>
 
         <Link
+          href="/home3"
+          className="text-white text-lg font-medium hover:text-[#59fcf7] transition-colors duration-300"
+        >
+          Properties
+        </Link>
+
+        <Link
           href="/service"
           className="text-white text-lg font-medium hover:text-[#59fcf7] transition-colors duration-300"
         >
