@@ -3,6 +3,14 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  FaBuilding,
+  FaUsers,
+  FaFileContract,
+  FaBell,
+  FaChartBar,
+  FaTools,
+} from "react-icons/fa";
 
 const services = [
   {
@@ -10,36 +18,42 @@ const services = [
     description:
       "Easily manage multiple properties in one centralized dashboard from lease tracking to maintenance scheduling.",
     href: "/service",
+    icon: <FaBuilding size={48} />,
   },
   {
     title: "Tenant Management",
     description:
       "Handle tenant applications, communication, and support requests seamlessly, keeping every interaction organized.",
     href: "/service",
+    icon: <FaUsers size={48} />,
   },
   {
     title: "Lease & Document Control",
     description:
       "Store and manage digital leases, automate renewals, and keep every important document safe in the cloud.",
     href: "/service",
+    icon: <FaFileContract size={48} />,
   },
   {
     title: "Rent Reminder",
     description:
       "Automate rent reminders, collect payments online, and maintain transparent financial records effortlessly.",
     href: "/service",
+    icon: <FaBell size={48} />,
   },
   {
     title: "Financial Analytics",
     description:
       "Gain insights into revenue, expenses, and occupancy rates through powerful visual analytics and smart reports.",
     href: "/service",
+    icon: <FaChartBar size={48} />,
   },
   {
     title: "Maintenance & Repairs",
     description:
       "Receive and track maintenance requests, assign vendors, and ensure timely resolutions all in one place.",
     href: "/service",
+    icon: <FaTools size={48} />,
   },
 ];
 
@@ -71,21 +85,16 @@ export default function ServicesSection() {
             transition={{ delay: idx * 0.1, duration: 0.6 }}
             whileHover={{ scale: 1.05 }}
           >
-            {/* Replace icon with Sky Realty logo */}
-            <div className="absolute top-6 left-6">
-              <Image
-                src="/assets/icons/logo4.jpg" // ← Sky Realty logo path
-                alt="Sky Realty Logo"
-                width={50}
-                height={50}
-                className="rounded-full object-contain"
-              />
+            {/* New Icon */}
+            <div className="absolute top-6 left-6 text-white">
+              {service.icon}
             </div>
 
             {/* Card Content */}
-            <h3 className="text-2xl font-semibold text-white mb-3 mt-12">
+            <h3 className="text-2xl font-semibold text-white mb-3 mt-16">
               {service.title}
             </h3>
+
             <p className="text-gray-900 leading-relaxed mb-4">
               {service.description}
             </p>

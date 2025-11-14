@@ -8,6 +8,9 @@ import {
   FaEnvelope,
   FaPhone,
   FaArrowUp,
+  FaFacebook,
+  FaTiktok,
+  FaWhatsapp,
 } from "react-icons/fa";
 
 const Footer = () => {
@@ -75,6 +78,7 @@ const Footer = () => {
               >
                 <FaLinkedin />
               </a>
+
               <a
                 href="https://www.instagram.com/sky_realtyae?igsh=dWFoZDAybDgwNTNl&utm_source=qr"
                 target="_blank"
@@ -82,6 +86,34 @@ const Footer = () => {
                 className="hover:text-white transition"
               >
                 <FaInstagram />
+              </a>
+
+              <a
+                href="https://www.facebook.com/share/16LL8Fmpu1/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <FaFacebook />
+              </a>
+
+              <a
+                href="https://www.tiktok.com/@skyrealty.ae?_r=1&_t=ZS-91N7d1vPtsl"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <FaTiktok />
+              </a>
+
+              {/* ⭐ Added WhatsApp */}
+              <a
+                href="https://wa.me/00971558265374"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition"
+              >
+                <FaWhatsapp />
               </a>
             </div>
 
