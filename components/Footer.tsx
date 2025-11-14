@@ -69,53 +69,54 @@ const Footer = () => {
             <h3 className="font-bold font-tech text-xl text-gray-100 uppercase">
               GET IN TOUCH
             </h3>
+
             <div className="flex gap-4 mt-1 text-2xl">
-              <a
-                href="https://www.linkedin.com/company/sky-realty"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white transition"
-              >
-                <FaLinkedin />
-              </a>
+  <a
+    href="https://www.linkedin.com/company/sky-realty"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="transition transform hover:scale-125 hover:text-white duration-300"
+  >
+    <FaLinkedin />
+  </a>
 
-              <a
-                href="https://www.instagram.com/sky_realtyae?igsh=dWFoZDAybDgwNTNl&utm_source=qr"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white transition"
-              >
-                <FaInstagram />
-              </a>
+  <a
+    href="https://www.instagram.com/sky_realtyae?igsh=dWFoZDAybDgwNTNl&utm_source=qr"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="transition transform hover:scale-125 hover:text-white duration-300"
+  >
+    <FaInstagram />
+  </a>
 
-              <a
-                href="https://www.facebook.com/share/16LL8Fmpu1/?mibextid=wwXIfr"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white transition"
-              >
-                <FaFacebook />
-              </a>
+  <a
+    href="https://www.facebook.com/share/16LL8Fmpu1/?mibextid=wwXIfr"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="transition transform hover:scale-125 hover:text-white duration-300"
+  >
+    <FaFacebook />
+  </a>
 
-              <a
-                href="https://www.tiktok.com/@skyrealty.ae?_r=1&_t=ZS-91N7d1vPtsl"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white transition"
-              >
-                <FaTiktok />
-              </a>
+  <a
+    href="https://www.tiktok.com/@skyrealty.ae?_r=1&_t=ZS-91N7d1vPtsl"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="transition transform hover:scale-125 hover:text-white duration-300"
+  >
+    <FaTiktok />
+  </a>
 
-              {/* ⭐ Added WhatsApp */}
-              <a
-                href="https://wa.me/00971558265374"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white transition"
-              >
-                <FaWhatsapp />
-              </a>
-            </div>
+  <a
+    href="https://wa.me/00971558265374"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="transition transform hover:scale-125 hover:text-white duration-300"
+  >
+    <FaWhatsapp />
+  </a>
+</div>
+          
 
             <div className="mt-4 space-y-1 text-sm text-gray-200">
               <p className="flex items-center gap-2">

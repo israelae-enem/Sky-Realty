@@ -86,7 +86,7 @@ export default function ServicesSection() {
             whileHover={{ scale: 1.05 }}
           >
             {/* New Icon */}
-            <div className="absolute top-6 left-6 text-white">
+            <div className="absolute top-6 left-6 text-[#302cfc]">
               {service.icon}
             </div>
 
