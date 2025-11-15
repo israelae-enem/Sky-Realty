@@ -187,11 +187,11 @@ export default function RealtorDashboard() {
     { name: 'Properties', icon: <Building size={18} />, children: [
         { name: 'Occupied Properties', page: 'properties' },
         { name: 'Listed Properties', page: '/properties' },
-        { name: 'Vacant Properties', page: 'properties' },
+        { name: 'Add Property', page: 'properties' },
     ]},
     { name: 'Tenants', icon: <Users size={18} />, children: [
         { name: 'Tenant List', modal: 'tenants' },
-        { name: 'New Tenants', page: '/tenants' },
+        { name: 'Add New Tenants', page: '/tenants' },
         { name: 'Active Leases', modal: 'tenants' },
     ]},
     { name: 'Rent Payment', icon: <FileText size={18} />, children: [
