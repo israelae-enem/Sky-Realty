@@ -145,7 +145,7 @@ export default function RealtorDashboard() {
         setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : (trial ? 0 : 0))
         setTrialEndsAt(trial)
         setSubscriptionExpiresAt(subExpires)
-        setSubscriptionActive(!isExpired)
+        setSubscriptionActive(true)
         setExpired(isExpired)
 
         if (trial && trial > now) startCountdown(trial)
@@ -430,7 +430,7 @@ return (
       </main>
 
 
-      {/* ⚠ Subscription Modal */}
+      {/* ⚠ Subscription Modal *
       {!subscriptionActive && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -459,7 +459,7 @@ return (
           </motion.div>
         </motion.div>
       )}
-
+        */}
       
     </div>
   )
