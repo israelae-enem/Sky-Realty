@@ -22,17 +22,25 @@ const PLAN_LIMITS: Record<string, number | null> = {
 // ----------------------------
 export async function POST(req: NextRequest) {
   try {
-    const { plan, realtorId } = await req.json();
+    const { plan, realtorId, companyId } = await req.json();
 
     if (!plan || !PLAN_PRICES[plan]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
-    // 1️⃣ Set trial period
+    if (!realtorId && !companyId) {
+      return NextResponse.json(
+        { error: "Realtor ID or Company ID is required" },
+        { status: 400 }
+      );
+    }
+
     const trialEnds = new Date();
     trialEnds.setDate(trialEnds.getDate() + 7);
 
-    // 2️⃣ Create payment intent via Ziina
+    // -----------------------------------
+    // 📌 Create Payment Intent via Ziina
+    // -----------------------------------
     const ziinaRes = await fetch("https://api-v2.ziina.com/api/payment_intent", {
       method: "POST",
       headers: {
@@ -42,8 +50,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         amount: PLAN_PRICES[plan],
         currency_code: "USD",
-        message: `Sky Realty - ${plan} Plan (7-Day Trial, auto-charge after trial)`,
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=success&plan=${plan}${realtorId ? `&realtorId=${realtorId}` : ""}`,
+        message: `Sky Realty - ${plan} Plan (7-Day Trial)`,
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=success&plan=${plan}${realtorId ? `&realtorId=${realtorId}` : `&companyId=${companyId}`}`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=cancel&plan=${plan}`,
         failure_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/ziina?status=failure&plan=${plan}`,
         test: true,
@@ -52,19 +60,15 @@ export async function POST(req: NextRequest) {
     });
 
     if (!ziinaRes.ok) {
-      const text = await ziinaRes.text();
-      console.error("Ziina API error:", text);
-      throw new Error("Ziina API request failed");
+      console.error("Ziina API Error:", await ziinaRes.text());
+      throw new Error("Ziina request failed");
     }
 
     const ziinaData = await ziinaRes.json();
 
-    if (!ziinaData.redirect_url) {
-      console.error("Ziina did not return a redirect URL:", ziinaData);
-      throw new Error("Ziina redirect URL not returned");
-    }
-
-    // 3️⃣ Save trial info to Supabase if realtorId is provided
+    // -----------------------------------
+    // 📌 Save trial for Realtor OR Company
+    // -----------------------------------
     if (realtorId) {
       await supabase
         .from("realtors")
@@ -75,57 +79,87 @@ export async function POST(req: NextRequest) {
           subscription_ends_at: null,
         })
         .eq("id", realtorId);
+    } else if (companyId) {
+      await supabase
+        .from("companies")
+        .update({
+          subscription_plan: plan,
+          subscription_status: "trialing",
+          trial_ends_at: trialEnds.toISOString(),
+          subscription_ends_at: null,
+        })
+        .eq("id", companyId);
     }
 
-    // 4️⃣ Respond with redirect URL
     return NextResponse.json({
-      message: "✅ Card collected and 7-day trial started.",
+      message: "Trial started. Redirecting to billing...",
       redirectUrl: ziinaData.redirect_url,
     });
   } catch (err) {
-    console.error("❌ Ziina POST error:", err);
-    return NextResponse.json({ error: "Failed to create payment intent" }, { status: 500 });
+    console.error("❌ Ziina POST Error:", err);
+    return NextResponse.json({ error: "Payment creation failed" }, { status: 500 });
   }
 }
 
 // ----------------------------
-// 📌 Handle Callback / Fetch Subscription (GET)
+// 📌 Callback + Get Subscription (GET)
 // ----------------------------
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const plan = searchParams.get("plan");
+
   const realtorId = searchParams.get("realtorId");
+  const companyId = searchParams.get("companyId");
 
   try {
+    // -----------------------------------
+    // 📌 Callback After Payment
+    // -----------------------------------
     if (status && plan) {
-      // ✅ Success — activate subscription
-      if (status === "success" && realtorId) {
-        const subscriptionEnds = new Date();
-        subscriptionEnds.setDate(subscriptionEnds.getDate() + 30);
+      const subscriptionEnds = new Date();
+      subscriptionEnds.setDate(subscriptionEnds.getDate() + 30);
 
-        await supabase
-          .from("realtors")
-          .update({
-            subscription_plan: plan,
-            subscription_status: "active",
-            trial_ends_at: null,
-            subscription_ends_at: subscriptionEnds.toISOString(),
-          })
-          .eq("id", realtorId);
+      if (status === "success") {
+        if (realtorId) {
+          await supabase
+            .from("realtors")
+            .update({
+              subscription_plan: plan,
+              subscription_status: "active",
+              trial_ends_at: null,
+              subscription_ends_at: subscriptionEnds.toISOString(),
+            })
+            .eq("id", realtorId);
 
-        return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${realtorId}/dashboard`
-        );
+          return NextResponse.redirect(
+            `${process.env.NEXT_PUBLIC_APP_URL}/realtor/${realtorId}/dashboard`
+          );
+        }
+
+        if (companyId) {
+          await supabase
+            .from("companies")
+            .update({
+              subscription_plan: plan,
+              subscription_status: "active",
+              trial_ends_at: null,
+              subscription_ends_at: subscriptionEnds.toISOString(),
+            })
+            .eq("id", companyId);
+
+          return NextResponse.redirect(
+            `${process.env.NEXT_PUBLIC_APP_URL}/company/${companyId}/dashboard`
+          );
+        }
       }
 
-      // ❌ Cancel or Failure — redirect home
-      if (status === "cancel" || status === "failure") {
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/`);
-      }
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/`);
     }
 
-    // If realtorId provided, return their subscription info
+    // -----------------------------------
+    // 📌 Fetch Subscription for Realtor
+    // -----------------------------------
     if (realtorId) {
       const { data } = await supabase
         .from("realtors")
@@ -133,40 +167,49 @@ export async function GET(req: NextRequest) {
         .eq("id", realtorId)
         .single();
 
-      if (!data) {
-        return NextResponse.json({
-          plan: "free",
-          propertyLimit: PLAN_LIMITS["free"],
-          status: "none",
-        });
-      }
-
-      // Check for expiry
-      let status = data.subscription_status;
-      const now = new Date();
-      if (data.subscription_ends_at && new Date(data.subscription_ends_at) < now) {
-        status = "expired";
-        await supabase.from("realtors").update({ subscription_status: "expired" }).eq("id", realtorId);
-      }
-
-      const userPlan = data.subscription_plan ?? "free";
-      return NextResponse.json({
-        plan: userPlan,
-        propertyLimit: PLAN_LIMITS[userPlan] ?? PLAN_LIMITS["free"],
-        status,
-        trial_ends_at: data.trial_ends_at,
-        subscription_ends_at: data.subscription_ends_at,
-      });
+      return NextResponse.json(
+        data
+          ? {
+              plan: data.subscription_plan,
+              propertyLimit: PLAN_LIMITS[data.subscription_plan],
+              status: data.subscription_status,
+              trial_ends_at: data.trial_ends_at,
+              subscription_ends_at: data.subscription_ends_at,
+            }
+          : { plan: "free", status: "none", propertyLimit: 1 }
+      );
     }
 
-    // Default
+    // -----------------------------------
+    // 📌 Fetch Subscription for Company
+    // -----------------------------------
+    if (companyId) {
+      const { data } = await supabase
+        .from("companies")
+        .select("subscription_plan, subscription_status, trial_ends_at, subscription_ends_at")
+        .eq("id", companyId)
+        .single();
+
+      return NextResponse.json(
+        data
+          ? {
+              plan: data.subscription_plan,
+              propertyLimit: PLAN_LIMITS[data.subscription_plan],
+              status: data.subscription_status,
+              trial_ends_at: data.trial_ends_at,
+              subscription_ends_at: data.subscription_ends_at,
+            }
+          : { plan: "free", status: "none", propertyLimit: 1 }
+      );
+    }
+
     return NextResponse.json({
       plan: "free",
-      propertyLimit: PLAN_LIMITS["free"],
       status: "none",
+      propertyLimit: 1,
     });
   } catch (err) {
-    console.error("❌ Ziina GET error:", err);
-    return NextResponse.json({ plan: "free", propertyLimit: 1, status: "none" }, { status: 500 });
+    console.error("❌ Ziina GET Error:", err);
+    return NextResponse.json({ plan: "free", status: "none" }, { status: 500 });
   }
 }

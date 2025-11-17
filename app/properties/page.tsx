@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@clerk/nextjs";
-import LeadForm from "@/components/forms/LeadForm"; // <-- make sure path is correct
+import LeadForm from "@/components/forms/LeadForm";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 interface Property {
   id: string;
@@ -26,7 +27,6 @@ export default function PropertiesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Lead Form Modal
   const [openLeadForm, setOpenLeadForm] = useState(false);
 
   const fetchProperties = async () => {
@@ -56,48 +56,74 @@ export default function PropertiesPage() {
   return (
     <div className="min-h-screen">
 
-      {/* ---------------------- HERO SECTION ---------------------- */}
-      <div
-        className="relative w-full h-[380px] bg-cover bg-center flex items-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1400&q=80')",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/40" />
+      {/* HERO SECTION */}
+      <section className="relative w-full h-[90vh] flex items-center justify-center overflow-hidden bg-[#183662]">
+        <motion.img
+          src="/assets/images/burj4.jpg"
+          alt="Hero Background"
+          initial={{ scale: 1.2, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.8, ease: "easeInOut" }}
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-white">
-          <h1 className="text-4xl font-bold mb-4">Find Your Perfect Property</h1>
-          <p className="text-lg max-w-2xl mb-6">
-            Browse verified listings and contact the real estate company directly through our lead form.
-          </p>
+        <div className="absolute inset-0 bg-black/60" />
 
-          <Button
-            onClick={() => setOpenLeadForm(true)}
-            className="bg-[#302cfc] text-white px-6 py-3 text-lg"
+        <div className="relative z-10 flex flex-col items-center text-center px-6 space-y-8 max-w-4xl mx-auto">
+          <motion.h1
+            className="text-4xl md:text-6xl font-extrabold text-white leading-tight"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
           >
-            Contact Us
-          </Button>
-        </div>
-      </div>
+            Find Your Perfect Property
+          </motion.h1>
 
-      {/* ---------------------- LEAD FORM MODAL ---------------------- */}
+          <motion.p
+            className="text-lg md:text-xl text-gray-200 max-w-2xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2 }}
+          >
+            Browse verified listings and contact our team instantly.
+          </motion.p>
+
+          <motion.div
+            className="bg-white text-[#1836b2] rounded-2xl shadow-xl px-8 py-10 mt-4 max-w-lg w-full flex flex-col items-center space-y-6"
+            animate={{ y: [0, -10, 0] }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              repeatType: "mirror",
+              ease: "easeInOut",
+            }}
+          >
+            <h2 className="text-xl font-semibold normal-case">How can we help?</h2>
+
+            <Button
+              onClick={() => setOpenLeadForm(true)}
+              className="w-full sm:w-auto px-8 py-3 bg-[#302cfc] text-white text-lg rounded-full shadow hover:scale-105 transition-all"
+            >
+              Contact Us
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* LEAD FORM MODAL */}
       <Dialog open={openLeadForm} onOpenChange={setOpenLeadForm}>
         <DialogContent className="max-w-lg">
-          
-            <DialogTitle>Contact Realtor</DialogTitle>
-          
+          <DialogTitle>Contact Realtor</DialogTitle>
 
           <LeadForm
-            realtorId=""        // optional → if you want to link to general company
-            companyId="public"  // or your default company ID
+            realtorId=""
+            companyId="public"
             onSuccess={() => setOpenLeadForm(false)}
           />
         </DialogContent>
       </Dialog>
 
-
-      {/* ---------------------- PROPERTY LISTING ---------------------- */}
+      {/* PROPERTY LISTS */}
       <div className="max-w-7xl mx-auto p-6">
         <h2 className="text-3xl font-bold text-[#302cfc] mb-6">All Properties</h2>
 
@@ -124,16 +150,13 @@ export default function PropertiesPage() {
                     />
                   )}
                   <div className="p-4">
-                    <h2 className="font-bold text-xl text-gray-800">
-                      {property.title}
-                    </h2>
+                    <h2 className="font-bold text-xl text-gray-800">{property.title}</h2>
                     <p className="text-gray-600">{property.address}</p>
                   </div>
                 </Link>
               ))}
             </div>
 
-            {/* Pagination */}
             <div className="flex justify-center mt-6 space-x-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}

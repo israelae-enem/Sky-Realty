@@ -33,6 +33,17 @@ export default function SignInPage() {
           return
         }
 
+        const { data: company } = await supabase
+          .from('companies')
+          .select('id')
+          .or(`owner_id.eq.${userId},members.cs.{${userId}}`)
+          .single()
+
+        if (company) {
+          router.replace(`/company/${company.id}/dashboard`)
+          return
+        }
+
         const { data: tenant } = await supabase
           .from('tenants')
           .select('id')
