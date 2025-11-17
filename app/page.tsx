@@ -53,7 +53,7 @@ const Page = () => {
   }, [isVideoOpen])
 
   return (
-    <main className="min-h-screen mx-auto  w-full text-gray-900 bg-gray-100">
+    <main className="min-h-screen overflow-x-hidden w-full text-gray-900 bg-gray-100">
 
     <HeroSection />
 

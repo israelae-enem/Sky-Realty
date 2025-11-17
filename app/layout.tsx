@@ -43,7 +43,7 @@ export default function RootLayout({
       lang="en"
       className={cn(inter.variable, roboto.variable, audiowide.variable)}
     >
-      <body className={cn("min-h-screen antialiased font-[var(--font-inter)]")}>
+      <body className={cn("min-h-screen antialiased font-[var(--font-inter)] overflow-x-hidden w-full")}>
         <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc' } }}>
           <Navbar/>
           {children}

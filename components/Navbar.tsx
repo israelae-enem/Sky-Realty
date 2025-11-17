@@ -116,53 +116,66 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      
+
       {mobileOpen && (
-        <div className="md:hidden mt-4 bg-[#1836b2] rounded-lg p-4 space-y-4 text-white">
-          <Link href="/" className="mobile-link">Home</Link>
-          <Link href="/home3" className="mobile-link">Properties</Link>
-          <Link href="/service" className="mobile-link">Services</Link>
-          <Link href="/subscription" className="mobile-link">Pricing</Link>
+  <div className="md:hidden mt-4 bg-[#1836b2] rounded-xl p-6 text-white">
+    <div className="flex flex-col space-y-4 text-lg">
 
-          <div>
-            <p className="font-semibold">Join</p>
-            <div className="ml-4 space-y-2">
-              <Link href="/home1" className="mobile-link">Realtor</Link>
-              <Link href="/home2" className="mobile-link">Tenant</Link>
-            </div>
-          </div>
+      <Link href="/" className="mobile-link">Home</Link>
+      <Link href="/home3" className="mobile-link">Properties</Link>
+      <Link href="/service" className="mobile-link">Services</Link>
+      <Link href="/subscription" className="mobile-link">Pricing</Link>
 
-          {isSignedIn && !onboardingComplete && (
+      {/* Join Section */}
+          <div className="flex flex-col space-y-2">
+           <p className="font-semibold">Join</p>
+          <div className="ml-4 flex flex-col space-y-2">
+          <Link href="/home1" className="mobile-link">Realtor</Link>
+          <Link href="/home2" className="mobile-link">Tenant</Link>
+         <Link href="/home1" className="mobile-link">Agency</Link>
+
+             </div>
+         </div>
+
+      {/* Onboarding */}
+           {isSignedIn && !onboardingComplete && (
             <Link href="/onboarding" className="mobile-link">
               Complete Onboarding
-            </Link>
-          )}
+             </Link>
+            )}
 
-          {isSignedIn && onboardingComplete && (
-            <Link href="/dashboard" className="mobile-link">
-              Dashboard
-            </Link>
-          )}
+      {/* Dashboard */}
+      {isSignedIn && onboardingComplete && (
+        <Link href="/dashboard" className="mobile-link">Dashboard</Link>
+      )}
 
-          <Link href="/about" className="mobile-link">Our Story</Link>
+      {/* About */}
+      <Link href="/about" className="mobile-link">Our Story</Link>
 
-          {!isSignedIn && (
-            <SignUpButton>
-              <button className="btn-white w-full">Get Started</button>
-            </SignUpButton>
-          )}
+      {/* Get Started */}
+           {!isSignedIn && (
+          <SignUpButton>
+             <button className="btn-white w-full mt-2">Get Started</button>
+           </SignUpButton>
+           )}
 
-          <SignedOut>
-            <SignInButton>
+      {/* Login */}
+              <SignedOut>
+             <SignInButton>
               <button className="mobile-link">Login</button>
             </SignInButton>
-          </SignedOut>
+           </SignedOut>
 
-          <SignedIn>
+           {/* Profile */}
+           <SignedIn>
             <UserButton />
           </SignedIn>
-        </div>
-      )}
+
+           </div>
+       </div>
+        )}
+
     </nav>
   );
 };
