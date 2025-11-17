@@ -15,14 +15,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription} from "@radix-ui/react-dialog"
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
 
 interface ListingFormProps {
-  realtorId: string
+  realtorId?: string
+  companyId?: string
+  mode?: 'create' | 'edit'
+  defaultValues?: FormValues
   onSuccess?: () => void
 }
 
 interface FormValues {
+  id?: string
   property_id: string
   title: string
   description: string
@@ -34,12 +38,13 @@ interface FormValues {
   image_urls: string[]
 }
 
-export default function ListingForm({ realtorId, onSuccess }: ListingFormProps) {
+export default function ListingForm({ realtorId, companyId, mode = 'create', defaultValues, onSuccess }: ListingFormProps) {
   const [loading, setLoading] = useState(false)
   const [properties, setProperties] = useState<{ id: string; title: string }[]>([])
+  const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
 
   const { register, handleSubmit, reset } = useForm<FormValues>({
-    defaultValues: {
+    defaultValues: defaultValues || {
       property_id: '',
       title: '',
       description: '',
@@ -55,11 +60,11 @@ export default function ListingForm({ realtorId, onSuccess }: ListingFormProps) 
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const { data, error } = await supabase
-          .from('properties')
-          .select('id, title')
-          .eq('realtor_id', realtorId)
+        let query = supabase.from('properties').select('id, title')
+        if (realtorId) query = query.eq('realtor_id', realtorId)
+        if (companyId) query = query.eq('company_id', companyId)
 
+        const { data, error } = await query
         if (error) throw error
         setProperties(data ?? [])
       } catch (err: any) {
@@ -69,7 +74,34 @@ export default function ListingForm({ realtorId, onSuccess }: ListingFormProps) 
     }
 
     fetchProperties()
-  }, [realtorId])
+  }, [realtorId, companyId])
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    if (!realtorId && !companyId) {
+      toast.error('Realtor or Company ID required for image upload')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const file = e.target.files[0]
+      const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
+      const filePath = `${folder}/${crypto.randomUUID()}-${file.name}`
+
+      const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true })
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage.from('documents').getPublicUrl(filePath)
+      setImages([...images, data.publicUrl])
+      toast.success('Image uploaded!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to upload image')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const onSubmit = async (values: FormValues) => {
     if (!values.property_id) {
@@ -79,28 +111,30 @@ export default function ListingForm({ realtorId, onSuccess }: ListingFormProps) 
 
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('listings')
-        .insert([
-          {
-            id: crypto.randomUUID(),
-            realtor_id: realtorId,
-            ...values,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+      const payload = {
+        ...values,
+        image_urls: images,
+        realtor_id: realtorId || null,
+        company_id: companyId || null,
+        updated_at: new Date().toISOString(),
+      }
 
-      if (error) throw error
+      if (mode === 'edit' && defaultValues?.id) {
+        const { error } = await supabase.from('listings').update(payload).eq('id', defaultValues.id)
+        if (error) throw error
+        toast.success('Listing updated!')
+      } else {
+        const { error } = await supabase.from('listings').insert([{ id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() }])
+        if (error) throw error
+        toast.success('Listing added!')
+      }
 
-      toast.success('Listing added!')
       reset()
+      setImages([])
       if (onSuccess) onSuccess()
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || 'Failed to add listing')
+      toast.error(err.message || 'Failed to save listing')
     } finally {
       setLoading(false)
     }
@@ -109,45 +143,39 @@ export default function ListingForm({ realtorId, onSuccess }: ListingFormProps) 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">Add Listing</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{mode === 'edit' ? 'Edit Listing' : 'Add Listing'}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        
-          <DialogTitle>Add New Listing</DialogTitle>
-          <DialogDescription>
-            Fill out the form to create a new property listing.
-          </DialogDescription>
-        
+        <DialogTitle>{mode === 'edit' ? 'Edit Listing' : 'Add New Listing'}</DialogTitle>
+        <DialogDescription>
+          Fill out the form to {mode === 'edit' ? 'update' : 'create'} a property listing.
+        </DialogDescription>
 
-        <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
-          <label className="text-gray-700">Property</label>
+        <form className="grid gap-4 mt-4 bg-gray-100 rounded-md border border-gray-400" onSubmit={handleSubmit(onSubmit)}>
+          <label className="text-gray-800">Property</label>
           <Select {...register('property_id')}>
             <SelectTrigger>
               <SelectValue placeholder="Select a property" />
             </SelectTrigger>
             <SelectContent>
               {properties.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.title}
-                </SelectItem>
+                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <label className="text-gray-700">Listing Title</label>
+          <label className="text-gray-800">Listing Title</label>
           <Input {...register('title')} placeholder="Listing Title" />
 
-          <label className="text-gray-700">Description</label>
+          <label className="text-gray-800">Description</label>
           <Textarea {...register('description')} placeholder="Listing Description" />
 
-          <label className="text-gray-700">Price</label>
+          <label className="text-gray-800">Price</label>
           <Input type="number" {...register('price', { valueAsNumber: true })} />
 
-          <label className="text-gray-700">Status</label>
+          <label className="text-gray-800">Status</label>
           <Select {...register('status')}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Available">Available</SelectItem>
               <SelectItem value="Under Contract">Under Contract</SelectItem>
@@ -155,25 +183,25 @@ export default function ListingForm({ realtorId, onSuccess }: ListingFormProps) 
             </SelectContent>
           </Select>
 
-          <label className="text-gray-700">Bedrooms</label>
+          <label className="text-gray-800">Bedrooms</label>
           <Input type="number" {...register('bedrooms', { valueAsNumber: true })} />
 
-          <label className="text-gray-700">Bathrooms</label>
+          <label className="text-gray-800">Bathrooms</label>
           <Input type="number" {...register('bathrooms', { valueAsNumber: true })} />
 
-          <label className="text-gray-700">Size (sq ft)</label>
+          <label className="text-gray-800">Size (sq ft)</label>
           <Input type="number" {...register('size', { valueAsNumber: true })} />
 
-          <label className="text-gray-700">Image URLs (comma separated)</label>
-          <Input
-            {...register('image_urls', {
-              setValueAs: (v) => v.split(',').map((url: string) => url.trim()),
-            })}
-            placeholder="https://image1.com, https://image2.com"
-          />
+          <label className="text-gray-800">Images</label>
+          <div className="flex flex-wrap gap-2 items-center">
+            {images.map((img, idx) => (
+              <img key={idx} src={img} className="w-20 h-20 object-cover rounded-md" />
+            ))}
+            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+          </div>
 
           <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? 'Adding...' : 'Add Listing'}
+            {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Listing' : 'Add Listing')}
           </Button>
         </form>
       </DialogContent>

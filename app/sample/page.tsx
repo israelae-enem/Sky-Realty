@@ -18,41 +18,41 @@ import RentAnalyticsCards from '@/components/RentAnalyticsCards'
 import RentAnalyticsChart from '@/components/RentAnalyticsChart'
 import RentReminders from '@/components/RentReminder'
 import TeamAccordion from '@/components/TeamAccordion'
+import { Building, CheckCircle, FileText, Home, Users, Calendar, Bell } from 'lucide-react'
+import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
 import ListingTable from '@/components/ListingTable'
 import { PLAN_LIMITS } from '@/constants'
-import { AnimatePresence, motion } from 'framer-motion'
-import clsx from 'clsx'
-import { Building, CheckCircle, FileText, Home, Users, Calendar, Bell } from 'lucide-react'
 
-interface Stats { properties: number; occupied: number; leases: number }
+interface Stats {
+  properties: number
+  occupied: number
+  leases: number
+}
+
 type PlanType = 'free' | 'basic' | 'pro' | 'premium' | null
-interface Tenant { id: string; full_name: string | null; email: string; phone: string; property_id: string; realtor_id: string }
-interface Notification { id: string; message: string; read: boolean; created_at: string }
 
-type ModalType = 
-  | 'scheduleViewingModal'
-  | 'tenantTableModal'
-  | 'activeLeasesModal'
-  | 'addPaymentModal'
-  | 'upcomingPaymentModal'
-  | 'latePaymentModal'
-  | 'upcomingReminderModal'
-  | 'scheduleAppointmentModal'
-  | 'viewAppointmentsModal'
-  | 'cancelledAppointmentsModal'
-  | 'pendingAppointmentsModal'
-  | 'completedAppointmentsModal'
-  | 'legalDocumentTableModal'
-  | 'teamMembersModal'
-  | 'recentChatModal'
-  | 'latestChatModal'
-  | null
+interface Tenant {
+  id: string
+  full_name: string | null
+  email: string
+  phone: string
+  property_id: string
+  realtor_id: string
+}
+
+interface Notification {
+  id: string
+  message: string
+  read: boolean
+  created_at: string
+}
 
 export default function RealtorDashboard() {
   const { user } = useUser()
   const router = useRouter()
-  const userId = user?.id || ""
-  const currentPlan = "free"
+  const userId = user?.id || "";
+  const currentPlan = "free";
 
   const [loading, setLoading] = useState(true)
   const [plan, setPlan] = useState<PlanType>(null)
@@ -65,12 +65,17 @@ export default function RealtorDashboard() {
   const [countdown, setCountdown] = useState<string | null>(null)
   const [expired, setExpired] = useState(false)
   const [subscriptionActive, setSubscriptionActive] = useState(false)
+  const maxProperties = PLAN_LIMITS[currentPlan] ?? null;
+  
+
+
   const [activeSection, setActiveSection] = useState('Home')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [openModal, setOpenModal] = useState<ModalType>(null)
   const intervalRef = useRef<number | null>(null)
+
   const unreadCount = notifications.filter((n) => !n.read).length
 
+  // Format countdown
   const formatDuration = (ms: number) => {
     if (ms <= 0) return '00:00:00:00'
     const totalSec = Math.floor(ms / 1000)
@@ -82,20 +87,29 @@ export default function RealtorDashboard() {
     return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
   }
 
+  // Fetch subscription info & start countdown
   useEffect(() => {
     if (!user?.id) return
     let mounted = true
+
     const startCountdown = (targetDate: Date | null) => {
       if (intervalRef.current) window.clearInterval(intervalRef.current)
+
       intervalRef.current = window.setInterval(() => {
         const now = new Date().getTime()
         const target = targetDate?.getTime() ?? null
-        if (!target) { setCountdown(null); return }
+        if (!target) {
+          setCountdown(null)
+          return
+        }
         const diff = target - now
         if (diff <= 0) {
-          setCountdown('00:00:00:00'); setExpired(true); setSubscriptionActive(false)
+          setCountdown('00:00:00:00')
+          setExpired(true)
+          setSubscriptionActive(false)
           toast('⚠ Your trial or subscription has expired. Please renew.')
-          window.clearInterval(intervalRef.current!); intervalRef.current = null
+          window.clearInterval(intervalRef.current!)
+          intervalRef.current = null
           return
         }
         setCountdown(formatDuration(diff))
@@ -106,18 +120,25 @@ export default function RealtorDashboard() {
       try {
         const res = await fetch(`/api/ziina?user=${user.id}`)
         const data = await res.json()
+
         const status: string = data?.status ?? 'none'
         const planId: PlanType = data?.plan ?? null
         const trial = data?.trial_ends_at ? new Date(data.trial_ends_at) : null
         const subExpires = data?.subscription_expires_at ? new Date(data.subscription_expires_at) : null
-        const PLAN_LIMITS: Record<string, number | null> = { free: 1, basic: 10, pro: 20, premium: Infinity }
+
+        const PLAN_LIMITS: Record<string, number | null> = {
+          free: 1,
+          basic: 10,
+          pro: 20,
+          premium: Infinity,
+        }
 
         let isExpired = false
         const now = new Date()
         if (!planId && !trial) isExpired = true
         if (trial && trial <= now) isExpired = true
         if (subExpires && subExpires <= now) isExpired = true
-        if (['expired','none','canceled'].includes(status) && !(trial && trial > now)) isExpired = true
+        if (['expired', 'none', 'canceled'].includes(status) && !(trial && trial > now)) isExpired = true
 
         if (!mounted) return
         setPlan(planId)
@@ -126,151 +147,151 @@ export default function RealtorDashboard() {
         setSubscriptionExpiresAt(subExpires)
         setSubscriptionActive(true)
         setExpired(isExpired)
+
         if (trial && trial > now) startCountdown(trial)
         else if (subExpires && subExpires > now) startCountdown(subExpires)
         else setCountdown(null)
       } catch (err) {
         console.error(err)
         toast('⚠ Unable to verify subscription. Some actions may be disabled.')
-        setPlan(null); setPropertyLimit(1); setSubscriptionActive(false); setExpired(true)
-      } finally { if (mounted) setLoading(false) }
+        setPlan(null)
+        setPropertyLimit(1)
+        setSubscriptionActive(false)
+        setExpired(true)
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
+
     fetchSub()
-    return () => { mounted = false; if (intervalRef.current) window.clearInterval(intervalRef.current) }
+    return () => {
+      mounted = false
+      if (intervalRef.current) window.clearInterval(intervalRef.current)
+    }
   }, [user?.id])
 
+  // Fetch dashboard data
   useEffect(() => {
     const initData = async () => {
       if (!user?.id) return
       setLoading(true)
       try {
-        const { data: properties } = await supabase.from('properties').select('*').eq('realtor_id', user.id)
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('realtor_id', user.id)
+
         updateStats(properties ?? [])
 
-        const { data: tenantsData } = await supabase.from('tenants').select('*').eq('realtor_id', user.id).order('full_name', { ascending: true })
+        const { data: tenantsData } = await supabase
+          .from('tenants')
+          .select('*')
+          .eq('realtor_id', user.id)
+          .order('full_name', { ascending: true })
         if (tenantsData) setTenants(tenantsData)
 
-        const { data: notificationsData } = await supabase.from('notification').select('*').eq('realtor_id', user.id).order('created_at', { ascending: false })
+          
+        const { data: listingData } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('realtor_id', user.id)
+          .order('full_name', { ascending: true })
+        if (listingData) setTenants(listingData)
+
+        const { data: notificationsData } = await supabase
+          .from('notification')
+          .select('*')
+          .eq('realtor_id', user.id)
+          .order('created_at', { ascending: false })
         if (notificationsData) setNotifications(notificationsData)
-      } catch (err) { console.error(err) } finally { setLoading(false) }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
     }
     initData()
   }, [user?.id])
 
   const updateStats = (properties: any[]) => {
     const total = properties.length
-    const occupied = properties.filter(p => p.status === 'Occupied').length
-    const activeLeases = properties.filter(p => p.lease_end && new Date(p.lease_end) > new Date()).length
+    const occupied = properties.filter((p) => p.status === 'Occupied').length
+    const activeLeases = properties.filter((p) => p.lease_end && new Date(p.lease_end) > new Date()).length
     setStats({ properties: total, occupied, leases: activeLeases })
   }
 
+  
+
   const markNotificationsRead = async () => {
     if (!user?.id) return
-    const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
     if (unreadIds.length === 0) return
     const { error } = await supabase.from('notification').update({ read: true }).in('id', unreadIds)
-    if (!error) setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    if (!error) setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }
 
   if (loading) return <p className="p-8 text-center text-gray-800">Loading dashboard...</p>
 
-  // ---------------- Nested Sidebar ----------------
-  const navItems = [
-    { name: 'Home', icon: <Home size={18} /> },
-    { 
-      name: 'Listings', icon: <Building size={18} />, children: [
-        { name: 'View All Listings', page: '/properties' },
-        { name: 'Add Listing', page: '/add-property' },
-        
-      ]
-    },
-    { name: 'Properties', icon: <Building size={18} />, children: [
-        { name: 'Occupied Properties', page: 'properties' },
-        { name: 'Listed Properties', page: '/properties' },
-        { name: 'Add Property', page: 'properties' },
-    ]},
-    { name: 'Tenants', icon: <Users size={18} />, children: [
-        { name: 'Tenant List', modal: 'tenants' },
-        { name: 'Add New Tenants', page: '/tenants' },
-        { name: 'Active Leases', modal: 'tenants' },
-    ]},
-    { name: 'Rent Payment', icon: <FileText size={18} />, children: [
-        { name: 'Add Payment', modal: 'rentPayments' },
-        { name: 'Upcoming Payment', modal: 'rentPayments' },
-        { name: 'Late Payment', modal: 'latePaymentModal' },
-    ]},
-    { name: 'Reminders', icon: <Bell size={18} />, children: [
-        { name: 'Upcoming Reminder', modal: 'rentReminder' },
-    ]},
-    { name: 'Appointments', icon: <Calendar size={18} />, children: [
-        { name: 'Schedule Appointment', modal: 'scheduleAppointmentModal' },
-        { name: 'View All Appointments', modal: 'viewAppointments' },
-        { name: 'Cancelled Appointment', modal: 'cancelledAppointment' },
-        { name: 'Pending', modal: 'pendingAppointmentsModal' },
-        { name: 'Completed', modal: 'completedAppointmentsModal' },
-    ]},
-    { name: 'Legal Documents', icon: <FileText size={18} />, children: [
-        { name: 'View Your Documents', modal: 'legalDocument' },
-        { name: 'Create Document', page: '/legal-doc' },
-    ]},
-    { name: 'Team', icon: <Users size={18} />, children: [
-        { name: 'Team Members', modal: 'team' },
-        { name: 'Invite Team', page: 'team' },
-    ]},
-    { name: 'Chat', icon: <Users size={18} />, children: [
-        { name: 'Recent Chat', modal: 'recentChatModal' },
-        { name: 'Latest Chat', modal: 'latestChatModal' },
-    ]},
-  ]
+ const navItems = [
+  {
+    name: 'Properties',
+    icon: <Building size={18} />,
+    submenu: [
+      { label: 'All Properties', id: 'Properties' },
+      { label: 'Add Property', id: 'PropertyForm' },
+      { label: 'All Listings', id: '/properties' },     // redirect to /properties
+      { label: 'View Listing', id: '/properties/[user.id]' }, // /properties/[id]
+    ],
+  },
 
-  // ---------------- Render ----------------
-  return (
-    <div className="flex min-h-screen bg-gray-300 text-gray-800">
-      {/* Sidebar */}
-      <aside className={clsx(
-        'fixed top-0 left-0 h-full w-64 backdrop-blur-md bg-[#e8ecf1]/80 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-64',
-        'md:translate-x-0'
-      )}>
-        <div className="flex flex-col space-y-4 sticky top-0 z-10">
-          <Profile />
-          <h1 className="text-2xl font-bold text-[#302cfc]">Dashboard</h1>
-        </div>
-        <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
-          {navItems.map((item) => (
-            <div key={item.name}>
-              <button
-                onClick={() => {
-                  if (!item.children) item.page && router.push(item.page)
-                  else setActiveSection(item.name)
-                }}
-                className={clsx(
-                  'flex items-center p-2 rounded-lg w-full justify-between',
-                  activeSection === item.name ? 'bg-[#dbe2ff] text-[#302cfc]' : 'hover:bg-[#dbe2ff]'
-                )}
-              >
-                <span className="flex items-center gap-2">{item.icon}{item.name}</span>
-              </button>
-              {item.children && activeSection === item.name && (
-                <div className="ml-4 mt-1 flex flex-col space-y-1">
-                  {item.children.map((child) => (
-                    <button
-                      key={child.name}
-                      onClick={() => {
-                        if (child.page) router.push(child.page)
-                        if (child.modal) setOpenModal(child.modal)
-                      }}
-                      className="text-left p-1 hover:text-[#302cfc] hover:underline"
-                    >
-                      {child.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </nav>
-      </aside>
+  { name: 'Listings', icon: <Building size={18} />, noSubmenu: true },
+  { name: 'Tenants', icon: <Users size={18} /> },
+  { name: 'Rent Payments', icon: <FileText size={18} /> },
+  { name: 'Maintenance', icon: <FileText size={18} /> },
+  { name: 'Appointments', icon: <Calendar size={18} /> },
+  { name: 'Notifications', icon: <Bell size={18} /> },
+  { name: 'Legal Documents', icon: <Calendar size={18} /> },
+  { name: 'Team', icon: <Users size={18} /> },
+  { name: 'Chat', icon: <Users size={18} /> },
+]
+
+return (
+  <div className="flex min-h-screen bg-gray-300 text-gray-800">
+    {/* Sidebar */}
+
+    <aside className={clsx(
+      'fixed top-0 left-0 h-full w-64 backdrop-blur-md bg-[#e8ecf1]/80 p-6 flex flex-col justify-between transition-transform duration-300 z-50',
+      sidebarOpen ? 'translate-x-0' : '-translate-x-64',
+      'md:translate-x-0'
+    )}>
+      
+      {/* Top section: Profile and heading */}
+      <div className="flex flex-col space-y-4 sticky top-0 z-10">
+        {/* Profile */}
+        <Profile />
+
+        {/* Dashboard heading */}
+        <h1 className="text-2xl font-bold text-[#302cfc]">Dashboard</h1>
+      </div>
+
+      {/* Navigation items */}
+      <nav className="flex flex-col space-y-2 mt-6 overflow-y-auto">
+        {navItems.map((item) => (
+          <button
+            key={item.name}
+            onClick={() => setActiveSection(item.name)}
+            className={clsx(
+              'flex items-center p-2 rounded-lg transition-colors duration-200',
+              activeSection === item.name ? 'bg-[#dbe2ff] text-[#302cfc]' : 'hover:bg-[#dbe2ff]'
+            )}
+          >
+            <span className="mr-3">{item.icon}</span>
+            {item.name}
+          </button>
+        ))}
+      </nav>
+    </aside>
+   
 
       {/* Mobile Hamburger */}
       <div className="md:hidden fixed top-4 left-4 z-50">
@@ -286,20 +307,23 @@ export default function RealtorDashboard() {
 
       {/* Main Content */}
       <main className={clsx(
-        'flex-1 flex flex-col ml-0 md:ml-64 transition-all duration-300 relative',
-        !subscriptionActive && 'blur-sm pointer-events-none select-none'
-      )}>
+          'flex-1 flex flex-col ml-0 md:ml-64 transition-all duration-300 relative',
+          !subscriptionActive && 'blur-sm pointer-events-none select-none'
+        )}
+      > 
+      
         <div className="flex items-center justify-between h-16 px-6 bg-white shadow-sm">
           <h2 className="text-lg font-semibold">{activeSection}</h2>
+          
         </div>
 
         <div className="flex-1 p-6 overflow-auto">
+          {/* Countdown banner */}
           {!expired && countdown && (
             <div className="bg-yellow-500 text-black text-center py-2 rounded-md font-semibold mb-4">
               ⏳ Trial / Subscription countdown — <span className="font-mono">{countdown}</span>
             </div>
           )}
-
 
           <AnimatePresence mode="wait">
             {activeSection === 'Home' && (
@@ -407,7 +431,7 @@ export default function RealtorDashboard() {
 
             {activeSection === 'Chat' && (
               <motion.div key="chat" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-                {user ? <RealtorChat tenants={tenants} user={{ id: user.id }} /> : null}
+                {user ? <RealtorChat  user={{ id: user.id }} /> : null}
               </motion.div>
             )}
           </AnimatePresence>
@@ -415,7 +439,7 @@ export default function RealtorDashboard() {
       </main>
 
 
-      {/* ⚠ Subscription Modal 
+      {/* ⚠ Subscription Modal *
       {!subscriptionActive && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -444,7 +468,7 @@ export default function RealtorDashboard() {
           </motion.div>
         </motion.div>
       )}
-       */}
+        */}
       
     </div>
   )

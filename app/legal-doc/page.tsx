@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import React from "react";
-import LegalDocumentForm from "@/components/LegalDocumentForm";
+import LegalDocumentForm from "@/components/forms/LegalDocumentForm";
 
 const LegalDocument = () => {
   return (

@@ -18,11 +18,15 @@ import {
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@radix-ui/react-dialog'
 
 interface TenantFormProps {
-  realtorId: string
+  realtorId?: string
+  companyId?: string
+  mode?: 'create' | 'edit'
+  defaultValues?: FormValues
   onSuccess?: () => void
 }
 
 interface FormValues {
+  id?: string
   full_name: string
   phone: string
   email: string
@@ -32,12 +36,15 @@ interface FormValues {
   status: 'Active' | 'Inactive'
 }
 
-export default function TenantForm({ realtorId, onSuccess }: TenantFormProps) {
+export default function TenantForm({ realtorId, companyId, mode = 'create', defaultValues, onSuccess }: TenantFormProps) {
   const [loading, setLoading] = useState(false)
   const [properties, setProperties] = useState<{ id: string; title: string }[]>([])
 
-  const { register, handleSubmit, reset } = useForm<FormValues>({
-    defaultValues: {
+  const ownerColumn = realtorId ? 'realtor_id' : 'company_id'
+  const ownerId = realtorId || companyId || ''
+
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>({
+    defaultValues: defaultValues || {
       full_name: '',
       phone: '',
       email: '',
@@ -48,14 +55,17 @@ export default function TenantForm({ realtorId, onSuccess }: TenantFormProps) {
     },
   })
 
+  /* ---------------------------------------
+     Fetch properties for owner
+  ---------------------------------------- */
   useEffect(() => {
     const fetchProperties = async () => {
       try {
+        if (!ownerId) return
         const { data, error } = await supabase
           .from('properties')
           .select('id, title')
-          .eq('realtor_id', realtorId)
-
+          .eq(ownerColumn, ownerId)
         if (error) throw error
         setProperties(data ?? [])
       } catch (err: any) {
@@ -63,57 +73,84 @@ export default function TenantForm({ realtorId, onSuccess }: TenantFormProps) {
         toast.error('Failed to load properties')
       }
     }
-
     fetchProperties()
-  }, [realtorId])
+  }, [ownerId, ownerColumn])
 
+  /* ---------------------------------------
+     Fill form if editing
+  ---------------------------------------- */
+  useEffect(() => {
+    if (defaultValues) {
+      Object.entries(defaultValues).forEach(([key, value]) => {
+        setValue(key as keyof FormValues, value)
+      })
+    }
+  }, [defaultValues, setValue])
+
+  /* ---------------------------------------
+     Submit handler
+  ---------------------------------------- */
   const onSubmit = async (values: FormValues) => {
     if (!values.property_id) {
       toast.error('Please select a property')
       return
     }
 
+    if (!ownerId) {
+      toast.error('Missing realtor or company ID')
+      return
+    }
+
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('tenants')
-        .insert([
-          {
-            id: crypto.randomUUID(),
-            realtor_id: realtorId,
-            ...values,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+      if (mode === 'edit' && defaultValues?.id) {
+        const { error } = await supabase
+          .from('tenants')
+          .update({ ...values, updated_at: new Date().toISOString() })
+          .eq('id', defaultValues.id)
+        if (error) throw error
+        toast.success('Tenant updated!')
+      } else {
+        const { data, error } = await supabase
+          .from('tenants')
+          .insert([
+            {
+              id: crypto.randomUUID(),
+              [ownerColumn]: ownerId,
+              ...values,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single()
+        if (error) throw error
+        toast.success('Tenant added!')
+      }
 
-      if (error) throw error
-
-      toast.success('Tenant added!')
       reset()
-      if (onSuccess) onSuccess()
+      onSuccess && onSuccess()
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || 'Failed to add tenant')
+      toast.error(err.message || 'Failed to save tenant')
     } finally {
       setLoading(false)
     }
   }
 
+  /* ---------------------------------------
+     UI
+  ---------------------------------------- */
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">Add Tenant</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{mode === 'edit' ? 'Edit Tenant' : 'Add Tenant'}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        
-          <DialogTitle>Add New Tenant</DialogTitle>
-          <DialogDescription>
-            Fill out the form to create a new tenant.
-          </DialogDescription>
-        
+        <DialogTitle>{mode === 'edit' ? 'Edit Tenant' : 'Add New Tenant'}</DialogTitle>
+        <DialogDescription>
+          Fill out the form to {mode === 'edit' ? 'update' : 'create'} a tenant.
+        </DialogDescription>
 
         <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           <label className="text-gray-700">Full Name</label>
@@ -132,21 +169,19 @@ export default function TenantForm({ realtorId, onSuccess }: TenantFormProps) {
           <Input {...register('country')} placeholder="Country" />
 
           <label className="text-gray-700">Property</label>
-          <Select {...register('property_id')}>
+          <Select onValueChange={(v) => setValue('property_id', v)}>
             <SelectTrigger>
               <SelectValue placeholder="Select a property" />
             </SelectTrigger>
             <SelectContent>
               {properties.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.title}
-                </SelectItem>
+                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <label className="text-gray-700">Status</label>
-          <Select {...register('status')}>
+          <Select onValueChange={(v) => setValue('status', v as any)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -157,7 +192,7 @@ export default function TenantForm({ realtorId, onSuccess }: TenantFormProps) {
           </Select>
 
           <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? 'Adding...' : 'Add Tenant'}
+            {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Tenant' : 'Add Tenant')}
           </Button>
         </form>
       </DialogContent>

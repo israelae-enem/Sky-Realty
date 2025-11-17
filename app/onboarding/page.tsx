@@ -68,6 +68,14 @@ export default function OnboardingPage() {
             >
               I’m a Tenant
             </Link>
+
+            
+            <Link
+              href="/company"
+              className="px-10 py-5 bg-white hover:bg-gray-200 text-[#302cfc] rounded-lg text-xl font-semibold shadow-lg transition transform hover:scale-105"
+            >
+              I’m an Agency/Company
+            </Link>
           </motion.div>
         ) : (
           // Show sign in / sign up if not signed in

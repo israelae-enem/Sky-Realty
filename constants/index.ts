@@ -299,6 +299,12 @@ export const logos = [
   },
 ];
 
+export const StatusIcon = {
+  scheduled: "/assets/icons/logo1.jpg",
+  pending: "/assets/icons/logo1.jpg",
+  cancelled: "/assets/icons/logo1.jpg",
+};
+
 export const socials = [
   {
     id: "0",

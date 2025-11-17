@@ -53,7 +53,7 @@ const Page = () => {
   }, [isVideoOpen])
 
   return (
-    <main className="flex flex-col w-full text-gray-900 bg-gray-100">
+    <main className="min-h-screen mx-auto px-4 sm:px-6 lg:px-12 w-full text-gray-900 bg-gray-100">
 
     <HeroSection />
 

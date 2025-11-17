@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
 
@@ -18,11 +18,15 @@ import {
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
 
 interface PropertyFormProps {
-  realtorId: string
+  realtorId?: string
+  companyId?: string
+  mode?: 'create' | 'edit'
+  defaultValues?: FormValues
   onSuccess?: () => void
 }
 
 interface FormValues {
+  id?: string
   title: string
   address: string
   description: string
@@ -36,12 +40,13 @@ interface FormValues {
   image_urls: string[]
 }
 
-export default function PropertyForm({ realtorId, onSuccess }: PropertyFormProps) {
+export default function PropertyForm({ realtorId, companyId, mode = 'create', defaultValues, onSuccess }: PropertyFormProps) {
   const [loading, setLoading] = useState(false)
   const [propertyTypeOptions] = useState(['Apartment', 'House', 'Condo', 'Townhouse'])
+  const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
 
-  const { register, handleSubmit, control, reset } = useForm<FormValues>({
-    defaultValues: {
+  const { register, handleSubmit, reset } = useForm<FormValues>({
+    defaultValues: defaultValues || {
       title: '',
       address: '',
       description: '',
@@ -56,31 +61,60 @@ export default function PropertyForm({ realtorId, onSuccess }: PropertyFormProps
     },
   })
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    if (!realtorId && !companyId) {
+      toast.error('Realtor or Company ID required for image upload')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const file = e.target.files[0]
+      const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
+      const filePath = `${folder}/${crypto.randomUUID()}-${file.name}`
+
+      const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true })
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage.from('documents').getPublicUrl(filePath)
+      setImages([...images, data.publicUrl])
+      toast.success('Image uploaded!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to upload image')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .insert([
-          {
-            id: crypto.randomUUID(),
-            realtor_id: realtorId,
-            ...values,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+      const payload = {
+        ...values,
+        image_urls: images,
+        realtor_id: realtorId || null,
+        company_id: companyId || null,
+        updated_at: new Date().toISOString(),
+      }
 
-      if (error) throw error
+      if (mode === 'edit' && defaultValues?.id) {
+        const { error } = await supabase.from('properties').update(payload).eq('id', defaultValues.id)
+        if (error) throw error
+        toast.success('Property updated!')
+      } else {
+        const { error } = await supabase.from('properties').insert([{ id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() }])
+        if (error) throw error
+        toast.success('Property added!')
+      }
 
-      toast.success('Property added!')
       reset()
+      setImages([])
       if (onSuccess) onSuccess()
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || 'Failed to add property')
+      toast.error(err.message || 'Failed to save property')
     } finally {
       setLoading(false)
     }
@@ -89,15 +123,13 @@ export default function PropertyForm({ realtorId, onSuccess }: PropertyFormProps
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">Add Property</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{mode === 'edit' ? 'Edit Property' : 'Add Property'}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        
-          <DialogTitle>Add New Property</DialogTitle>
-          <DialogDescription>
-            Fill out the form to add a new property.
-          </DialogDescription>
-        
+        <DialogTitle>{mode === 'edit' ? 'Edit Property' : 'Add New Property'}</DialogTitle>
+        <DialogDescription>
+          Fill out the form to {mode === 'edit' ? 'update' : 'create'} a property.
+        </DialogDescription>
 
         <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           <label className="text-gray-700">Title</label>
@@ -114,9 +146,7 @@ export default function PropertyForm({ realtorId, onSuccess }: PropertyFormProps
 
           <label className="text-gray-700">Status</label>
           <Select {...register('status')}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Occupied">Occupied</SelectItem>
               <SelectItem value="Vacant">Vacant</SelectItem>
@@ -128,9 +158,7 @@ export default function PropertyForm({ realtorId, onSuccess }: PropertyFormProps
 
           <label className="text-gray-700">Property Type</label>
           <Select {...register('property_type')}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {propertyTypeOptions.map(type => (
                 <SelectItem key={type} value={type}>{type}</SelectItem>
@@ -147,11 +175,16 @@ export default function PropertyForm({ realtorId, onSuccess }: PropertyFormProps
           <label className="text-gray-700">Size (sq ft)</label>
           <Input type="number" {...register('size', { valueAsNumber: true })} />
 
-          <label className="text-gray-700">Image URLs (comma separated)</label>
-          <Input {...register('image_urls', { setValueAs: v => v.split(',').map((url: string) => url.trim()) })} placeholder="https://image1.com, https://image2.com" />
+          <label className="text-gray-700">Images</label>
+          <div className="flex flex-wrap gap-2 items-center">
+            {images.map((img, idx) => (
+              <img key={idx} src={img} className="w-20 h-20 object-cover rounded-md" />
+            ))}
+            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+          </div>
 
           <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? 'Adding...' : 'Add Property'}
+            {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Property' : 'Add Property')}
           </Button>
         </form>
       </DialogContent>

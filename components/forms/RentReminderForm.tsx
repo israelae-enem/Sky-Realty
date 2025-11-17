@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -14,10 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogTrigger,  DialogTitle, DialogDescription } from '@radix-ui/react-dialog'
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@radix-ui/react-dialog'
 
 interface RentReminderFormProps {
   realtorId: string
+  defaultValues?: {
+    id: string
+    tenant_id: string
+    property_id: string
+    payment_status: 'Paid' | 'Pending' | 'Overdue'
+  }
   onSuccess?: () => void
 }
 
@@ -27,13 +32,13 @@ interface FormValues {
   payment_status: 'Paid' | 'Pending' | 'Overdue'
 }
 
-export default function RentReminderForm({ realtorId, onSuccess }: RentReminderFormProps) {
+export default function RentReminderForm({ realtorId, defaultValues, onSuccess }: RentReminderFormProps) {
   const [loading, setLoading] = useState(false)
   const [tenants, setTenants] = useState<{ id: string; full_name: string }[]>([])
   const [properties, setProperties] = useState<{ id: string; title: string }[]>([])
 
-  const { register, handleSubmit, reset } = useForm<FormValues>({
-    defaultValues: {
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>({
+    defaultValues: defaultValues || {
       tenant_id: '',
       property_id: '',
       payment_status: 'Pending',
@@ -58,31 +63,39 @@ export default function RentReminderForm({ realtorId, onSuccess }: RentReminderF
     fetchData()
   }, [realtorId])
 
+  useEffect(() => {
+    if (defaultValues) {
+      Object.entries(defaultValues).forEach(([key, value]) => {
+        setValue(key as keyof FormValues, value)
+      })
+    }
+  }, [defaultValues, setValue])
+
   const onSubmit = async (values: FormValues) => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('rent_reminder')
-        .insert([
-          {
-            id: crypto.randomUUID(),
-            realtor_id: realtorId,
-            ...values,
-            sent_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+      if (defaultValues?.id) {
+        // Edit
+        const { error } = await supabase
+          .from('rent_reminder')
+          .update(values)
+          .eq('id', defaultValues.id)
+        if (error) throw error
+        toast.success('Rent reminder updated!')
+      } else {
+        // Create
+        const { error } = await supabase
+          .from('rent_reminder')
+          .insert([{ id: crypto.randomUUID(), ...values, realtor_id: realtorId, sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }])
+        if (error) throw error
+        toast.success('Rent reminder sent!')
+      }
 
-      if (error) throw error
-
-      toast.success('Rent reminder sent!')
       reset()
       if (onSuccess) onSuccess()
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || 'Failed to send reminder')
+      toast.error(err.message || 'Failed to save reminder')
     } finally {
       setLoading(false)
     }
@@ -91,15 +104,13 @@ export default function RentReminderForm({ realtorId, onSuccess }: RentReminderF
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">Send Rent Reminder</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{defaultValues ? 'Edit Rent Reminder' : 'Send Rent Reminder'}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
-        
-          <DialogTitle>New Rent Reminder</DialogTitle>
-          <DialogDescription>
-            Select tenant and property to send a rent reminder.
-          </DialogDescription>
-        
+        <DialogTitle>{defaultValues ? 'Edit Rent Reminder' : 'New Rent Reminder'}</DialogTitle>
+        <DialogDescription>
+          Select tenant and property to {defaultValues ? 'update' : 'send'} a rent reminder.
+        </DialogDescription>
 
         <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           <label className="text-gray-700">Tenant</label>
@@ -139,7 +150,7 @@ export default function RentReminderForm({ realtorId, onSuccess }: RentReminderF
           </Select>
 
           <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? 'Sending...' : 'Send Reminder'}
+            {loading ? 'Saving...' : defaultValues ? 'Update Reminder' : 'Send Reminder'}
           </Button>
         </form>
       </DialogContent>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useUser } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
 
@@ -27,36 +26,44 @@ interface LegalDocument {
   properties?: { address: string }
 }
 
-export default function LegalDocumentManager() {
-  const { user } = useUser()
-  const [type, setType] = useState('lease')
-  const [tenantId, setTenantId] = useState('')
-  const [propertyId, setPropertyId] = useState('')
-  const [content, setContent] = useState('')
+interface LegalDocumentFormProps {
+  defaultValues?: LegalDocument
+  onSuccess?: () => void
+  realtorId?: string
+  companyId?: string
+}
+
+export default function LegalDocumentForm({ defaultValues, onSuccess, realtorId, companyId }: LegalDocumentFormProps) {
+  const [type, setType] = useState(defaultValues?.type || 'lease')
+  const [tenantId, setTenantId] = useState(defaultValues?.tenant_id || '')
+  const [propertyId, setPropertyId] = useState(defaultValues?.property_id || '')
+  const [content, setContent] = useState(defaultValues?.content || '')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [properties, setProperties] = useState<Property[]>([])
   const [documents, setDocuments] = useState<LegalDocument[]>([])
 
-  // 🧩 Fetch properties, tenants, and existing documents
-  useEffect(() => {
-    if (!user?.id) return
+  const ownerColumn = realtorId ? 'realtor_id' : 'company_id'
+  const ownerId = realtorId || companyId || ''
 
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        const [{ data: props }, { data: tnts }, { data: docs }] = await Promise.all([
-          supabase.from('properties').select('id, address').eq('realtor_id', user.id),
-          supabase.from('tenants').select('id, full_name').eq('realtor_id', user.id),
+        if (!ownerId) return
+
+        const [propsRes, tenantsRes, docsRes] = await Promise.all([
+          supabase.from('properties').select('id, address').eq(ownerColumn, ownerId),
+          supabase.from('tenants').select('id, full_name').eq(ownerColumn, ownerId),
           supabase
             .from('legal_documents')
             .select('*, tenants(full_name), properties(address)')
             .order('created_at', { ascending: false }),
         ])
 
-        setProperties(props || [])
-        setTenants(tnts || [])
-        setDocuments(docs || [])
+        setProperties(propsRes.data || [])
+        setTenants(tenantsRes.data || [])
+        setDocuments(docsRes.data || [])
       } catch (err) {
         console.error('❌ Fetch failed:', err)
         toast.error('Failed to load data')
@@ -64,15 +71,18 @@ export default function LegalDocumentManager() {
     }
 
     fetchData()
-  }, [user?.id])
+  }, [ownerId, ownerColumn])
 
-  // 🧾 Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    if (!ownerId) {
+      toast.error('Missing realtor or company ID')
+      return
+    }
 
+    setLoading(true)
     try {
-      let fileUrl: string | null = null
+      let fileUrl: string | null = defaultValues?.file_url || null
 
       if (file) {
         const filePath = `legal/${Date.now()}-${file.name}`
@@ -82,41 +92,57 @@ export default function LegalDocumentManager() {
         fileUrl = publicUrl.publicUrl
       }
 
-      const { data, error: insertError } = await supabase
-        .from('legal_documents')
-        .insert({
-          type,
-          tenant_id: tenantId,
-          property_id: propertyId,
-          content,
-          file_url: fileUrl,
-          created_at: new Date().toISOString(),
-        })
-        .select('*, tenants(full_name), properties(address)')
-        .single()
+      if (defaultValues?.id) {
+        // Edit
+        const { data, error } = await supabase
+          .from('legal_documents')
+          .update({ type, tenant_id: tenantId, property_id: propertyId, content, file_url: fileUrl, updated_at: new Date().toISOString() })
+          .eq('id', defaultValues.id)
+          .select('*, tenants(full_name), properties(address)')
+          .single()
+        if (error) throw error
+        toast.success('Legal document updated!')
+        setDocuments(prev => prev.map(doc => doc.id === data.id ? data : doc))
+      } else {
+        // Create
+        const { data, error } = await supabase
+          .from('legal_documents')
+          .insert({
+            id: crypto.randomUUID(),
+            [ownerColumn]: ownerId,
+            type,
+            tenant_id: tenantId,
+            property_id: propertyId,
+            content,
+            file_url: fileUrl,
+            created_at: new Date().toISOString()
+          })
+          .select('*, tenants(full_name), properties(address)')
+          .single()
+        if (error) throw error
+        toast.success('Legal document created!')
+        setDocuments(prev => [data, ...prev])
+      }
 
-      if (insertError) throw insertError
-
-      toast.success('Legal document created!')
-      setDocuments((prev) => [data, ...prev]) // instantly add to table
+      // Reset form
       setType('lease')
       setTenantId('')
       setPropertyId('')
       setContent('')
       setFile(null)
-    } catch (err) {
+      if (onSuccess) onSuccess()
+    } catch (err: any) {
       console.error(err)
-      toast.error('Failed to create document')
+      toast.error(err.message || 'Failed to save document')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
-      {/* 📝 Form */}
-      <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded-lg text-gray-800 space-y-4 mt-20 mb-6 ">
-        <h2 className="text-xl font-semibold">New Legal Document</h2>
+      <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded-md border border-gray-400 text-gray-800 space-y-4 mt-5 mb-6">
+        <h2 className="text-xl font-semibold">{defaultValues ? 'Edit Legal Document' : 'New Legal Document'}</h2>
 
         <div>
           <label className="block text-sm mb-1">Document Type</label>
@@ -129,11 +155,9 @@ export default function LegalDocumentManager() {
 
         <div>
           <label className="block text-sm mb-1">Tenant</label>
-          <select value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="w-full bg-gray-100 text-gray-800 px-3 py-2 rounded">
+          <select value={tenantId} onChange={(e) => setTenantId(e.target.value)} className="w-full bg-gray-300 text-gray-800 px-3 py-2 rounded">
             <option value="">Select tenant</option>
-            {tenants.map((t) => (
-              <option key={t.id} value={t.id}>{t.full_name}</option>
-            ))}
+            {tenants.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
           </select>
         </div>
 
@@ -141,9 +165,7 @@ export default function LegalDocumentManager() {
           <label className="block text-sm mb-1">Property</label>
           <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} className="w-full bg-gray-100 text-gray-800 px-3 py-2 rounded">
             <option value="">Select property</option>
-            {properties.map((p) => (
-              <option key={p.id} value={p.id}>{p.address}</option>
-            ))}
+            {properties.map(p => <option key={p.id} value={p.id}>{p.address}</option>)}
           </select>
         </div>
 
@@ -159,23 +181,15 @@ export default function LegalDocumentManager() {
 
         <div>
           <label className="block text-sm mb-1">Upload File (any type)</label>
-          <input
-            type="file"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="w-full text-sm text-gray-700"
-          />
+          <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} className="w-full text-sm text-gray-700" />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? 'Saving...' : 'Save Document'}
+        <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded disabled:opacity-50">
+          {loading ? 'Saving...' : defaultValues ? 'Update Document' : 'Save Document'}
         </button>
       </form>
 
-      {/* 📜 Table */}
+      {/* Table */}
       <div className="bg-gray-100 p-6 rounded-lg text-gray-800">
         <h2 className="text-xl font-semibold mb-4">Legal Documents</h2>
         {documents.length === 0 ? (
@@ -192,23 +206,19 @@ export default function LegalDocumentManager() {
               </tr>
             </thead>
             <tbody>
-              {documents.map((doc) => (
+              {documents.map(doc => (
                 <tr key={doc.id} className="border-b border-gray-500 hover:bg-gray-500/50">
                   <td className="py-2 px-3 capitalize">{doc.type}</td>
                   <td className="py-2 px-3">{doc.tenants?.full_name || '—'}</td>
                   <td className="py-2 px-3">{doc.properties?.address || '—'}</td>
                   <td className="py-2 px-3">
                     {doc.file_url ? (
-                      <a href={doc.file_url} target="_blank" className="text-blue-400 hover:underline">
-                        View / Download
-                      </a>
+                      <a href={doc.file_url} target="_blank" className="text-blue-400 hover:underline">View / Download</a>
                     ) : (
                       <span className="text-gray-800">No file</span>
                     )}
                   </td>
-                  <td className="py-2 px-3 text-gray-800 text-sm">
-                    {new Date(doc.created_at).toLocaleDateString()}
-                  </td>
+                  <td className="py-2 px-3 text-gray-800 text-sm">{new Date(doc.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

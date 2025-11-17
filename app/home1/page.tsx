@@ -14,7 +14,7 @@ import FreeTrialSection from "@/components/FreeTrial";
 
 export default function HomePage() {
   return (
-    <main className="overflow-x-hidden bg-gray-100">
+    <main className="overflow-x-hidden min-h-screen bg-gray-100">
     
       <HeroSection />
 

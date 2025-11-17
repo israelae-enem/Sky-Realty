@@ -90,7 +90,7 @@ export default function PropertyPage() {
     : properties
 
   return (
-    <div className="w-full">
+    <div className="w-full min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[450px] bg-gray-100 flex items-center justify-center">
         <img

@@ -8,7 +8,11 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { PlusCircle, UserMinus, Users, ChevronDown, ChevronUp } from 'lucide-react'
 
-export default function Team() {
+interface TeamProps {
+  companyId?: string
+}
+
+export default function Team({ companyId }: TeamProps) {
   const { user } = useUser()
   const { organization, invitations, memberships, isLoaded } = useOrganization({
     invitations: { pageSize: 10 },
@@ -21,12 +25,15 @@ export default function Team() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState<'free' | 'basic' | 'pro' | 'premium'>('free')
-
   const [membersCollapsed, setMembersCollapsed] = useState(false)
   const [invitationsCollapsed, setInvitationsCollapsed] = useState(false)
   const [inviteCollapsed, setInviteCollapsed] = useState(false)
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
 
   const TEAM_LIMITS = { free: 0, basic: 2, pro: 5, premium: 10 }
+
+  const ownerColumn = companyId ? 'company_id' : 'realtor_id'
+  const ownerId = companyId || user?.id
 
   // 🟦 Fetch subscription plan
   useEffect(() => {
@@ -44,27 +51,55 @@ export default function Team() {
     fetchPlan()
   }, [user?.id])
 
+  // 🟧 Fetch team members from Supabase
+  useEffect(() => {
+    if (!ownerId) return
+    const fetchTeam = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('team_members')
+          .select('*')
+          .eq(ownerColumn, ownerId)
+        if (error) throw error
+        setTeamMembers(data || [])
+      } catch (err) {
+        console.error(err)
+        toast.error('Failed to fetch team members')
+      }
+    }
+    fetchTeam()
+  }, [ownerId, ownerColumn])
+
   // 🟩 Invite member
   const handleInvite = async () => {
     if (!email.trim()) return toast.error('Enter a valid email')
-    if (!organization) return toast.error('No active organization found')
+    if (!ownerId) return toast.error('No active organization found')
     if (plan === 'free') return toast.error('Upgrade your plan to add members')
-    if ((memberships?.data?.length || 0) >= TEAM_LIMITS[plan])
+    if ((teamMembers?.length || 0) >= TEAM_LIMITS[plan])
       return toast.error(`Team limit reached for ${plan} plan`)
 
     try {
       setLoading(true)
-      await organization.inviteMember({ emailAddress: email, role: 'org:member' })
-      toast.success('Invitation sent!')
 
-      await supabase.from('team_members').insert({
+      // Optional: send invite via Clerk if realtor (organization exists)
+      if (!companyId && organization) {
+        await organization.inviteMember({ emailAddress: email, role: 'org:member' })
+      }
+
+      // Store team member in Supabase
+      const payload: any = {
         id: crypto.randomUUID(),
-        team_id: user?.id,
         member_id: email,
         role: 'pending',
         created_at: new Date().toISOString(),
-      })
+      }
+      payload[ownerColumn] = ownerId
 
+      const { error } = await supabase.from('team_members').insert([payload])
+      if (error) throw error
+
+      toast.success('Invitation sent!')
+      setTeamMembers(prev => [...prev, payload])
       setEmail('')
     } catch (err) {
       console.error(err)
@@ -77,11 +112,17 @@ export default function Team() {
   // 🟥 Remove member
   const handleRemove = async (memberId: string) => {
     try {
-      const membership = memberships?.data?.find(
-        (m) => m.publicUserData?.identifier === memberId
-      )
-      if (membership) await membership.destroy()
-      await supabase.from('team_members').delete().eq('member_id', memberId)
+      // Remove from Clerk org if realtor
+      if (!companyId && memberships?.data) {
+        const membership = memberships.data.find(
+          (m) => m.publicUserData?.identifier === memberId
+        )
+        if (membership) await membership.destroy()
+      }
+
+      // Remove from Supabase
+      await supabase.from('team_members').delete().eq(ownerColumn, ownerId).eq('member_id', memberId)
+      setTeamMembers(prev => prev.filter(m => m.member_id !== memberId))
       toast.success('Member removed')
     } catch (err) {
       console.error(err)
@@ -93,7 +134,7 @@ export default function Team() {
     return <p className="text-gray-500 text-center mt-10">Loading team...</p>
 
   const canInvite = plan !== 'free'
-  const memberCount = memberships?.data?.length || 0
+  const memberCount = teamMembers?.length || 0
   const limit = TEAM_LIMITS[plan]
 
   return (
@@ -126,11 +167,7 @@ export default function Team() {
             onClick={() => setInviteCollapsed((prev) => !prev)}
           >
             <span className="font-medium text-gray-900">Invite Member</span>
-            {inviteCollapsed ? (
-              <ChevronUp size={18} className="text-blue-600" />
-            ) : (
-              <ChevronDown size={18} className="text-blue-600" />
-            )}
+            {inviteCollapsed ? <ChevronUp size={18} className="text-blue-600" /> : <ChevronDown size={18} className="text-blue-600" />}
           </button>
           {!inviteCollapsed && (
             <div className="flex flex-col sm:flex-row gap-2 mt-2">
@@ -168,46 +205,29 @@ export default function Team() {
           onClick={() => setMembersCollapsed((prev) => !prev)}
         >
           <span className="font-medium text-gray-900">Your Team</span>
-          {membersCollapsed ? (
-            <ChevronUp size={18} className="text-blue-600" />
-          ) : (
-            <ChevronDown size={18} className="text-blue-600" />
-          )}
+          {membersCollapsed ? <ChevronUp size={18} className="text-blue-600" /> : <ChevronDown size={18} className="text-blue-600" />}
         </button>
 
         {!membersCollapsed && (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-            {memberships?.data?.length ? (
-              memberships.data.map((member) => (
-                <li
-                  key={member.id}
-                  className="bg-white border border-gray-200 rounded-md shadow-sm p-4 flex flex-col justify-between space-y-2 hover:shadow-md transition"
-                >
+            {teamMembers?.length ? (
+              teamMembers.map((member) => (
+                <li key={member.id} className="bg-white border border-gray-200 rounded-md shadow-sm p-4 flex flex-col justify-between space-y-2 hover:shadow-md transition">
                   <div>
-                    <p className="font-medium text-gray-900 truncate">
-                      {member.publicUserData?.identifier || 'Unknown'}
-                    </p>
-                    <p className="text-sm text-gray-600 capitalize">
-                      {member.role?.replace('org:', '')}
-                    </p>
+                    <p className="font-medium text-gray-900 truncate">{member.member_id}</p>
+                    <p className="text-sm text-gray-600 capitalize">{member.role}</p>
                   </div>
-                  {member.role !== 'org:admin' && (
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        handleRemove(member.publicUserData?.identifier || '')
-                      }
-                      className="bg-red-600 hover:bg-red-700 text-white mt-2 w-full"
-                    >
-                      <UserMinus size={14} className="mr-1" /> Remove
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => handleRemove(member.member_id)}
+                    className="bg-red-600 hover:bg-red-700 text-white mt-2 w-full"
+                  >
+                    <UserMinus size={14} className="mr-1" /> Remove
+                  </Button>
                 </li>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-3 col-span-full">
-                No team members yet.
-              </p>
+              <p className="text-gray-500 text-center py-3 col-span-full">No team members yet.</p>
             )}
           </ul>
         )}
@@ -221,11 +241,7 @@ export default function Team() {
             onClick={() => setInvitationsCollapsed((prev) => !prev)}
           >
             <span className="font-medium text-gray-900">Pending Invitations</span>
-            {invitationsCollapsed ? (
-              <ChevronUp size={18} className="text-blue-600" />
-            ) : (
-              <ChevronDown size={18} className="text-blue-600" />
-            )}
+            {invitationsCollapsed ? <ChevronUp size={18} className="text-blue-600" /> : <ChevronDown size={18} className="text-blue-600" />}
           </button>
           {!invitationsCollapsed && (
             <ul className="space-y-2 mt-2">
@@ -234,9 +250,7 @@ export default function Team() {
                   key={inv.id}
                   className="flex flex-col sm:flex-row justify-between sm:items-center bg-white border border-gray-200 rounded-md p-4 shadow-sm hover:shadow-md transition"
                 >
-                  <p className="text-gray-700 mb-2 sm:mb-0">
-                    {inv.emailAddress}
-                  </p>
+                  <p className="text-gray-700 mb-2 sm:mb-0">{inv.emailAddress}</p>
                   <Button
                     size="sm"
                     onClick={async () => {

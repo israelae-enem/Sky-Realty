@@ -20,15 +20,21 @@ import { Calendar } from '@/components/ui/calendar'
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
 
 interface AppointmentFormProps {
-  realtorId: string
+  realtorId?: string
+  companyId?: string
+  mode?: 'create' | 'edit'
+  defaultValues?: FormValues
   onSuccess?: () => void
+  type?: 'meeting' | 'maintenance' | 'viewing'
 }
 
 interface FormValues {
+  id?: string
   tenant_id: string
   appointment_date: Date
   appointment_time: string
   status: 'Scheduled' | 'Completed' | 'Canceled'
+  type: 'Meeting' | 'Maintenance' | 'Viewing'
 }
 
 interface Tenant {
@@ -36,38 +42,45 @@ interface Tenant {
   full_name: string
 }
 
-export default function AppointmentForm({ realtorId, onSuccess }: AppointmentFormProps) {
+export default function AppointmentForm({ realtorId, companyId, mode = 'create', defaultValues, onSuccess }: AppointmentFormProps) {
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
 
+  const ownerColumn = realtorId ? 'realtor_id' : 'company_id'
+  const ownerId = realtorId || companyId || ''
+
   const { register, handleSubmit, control, reset } = useForm<FormValues>({
-    defaultValues: {
+    defaultValues: defaultValues || {
       tenant_id: '',
       appointment_date: new Date(),
       appointment_time: '',
       status: 'Scheduled',
+      type: 'Maintenance',
     },
   })
 
+  // Fetch tenants for realtor or company
   useEffect(() => {
-    if (!realtorId) return
+    if (!ownerId) return
     const fetchTenants = async () => {
-      const { data, error } = await supabase
-        .from('tenants')
-        .select('id, full_name')
-        .eq('realtor_id', realtorId)
-      if (error) {
-        console.error('❌ Fetch tenants error:', error)
-      } else {
+      try {
+        const { data, error } = await supabase
+          .from('tenants')
+          .select('id, full_name')
+          .eq(ownerColumn, ownerId)
+        if (error) throw error
         setTenants(data || [])
+      } catch (err) {
+        console.error('❌ Fetch tenants error:', err)
+        toast.error('Failed to fetch tenants')
       }
     }
     fetchTenants()
-  }, [realtorId])
+  }, [ownerId, ownerColumn])
 
   const onSubmit = async (values: FormValues) => {
-    if (!values.tenant_id || !values.appointment_date || !values.appointment_time) {
+    if (!values.tenant_id || !values.appointment_date || !values.appointment_time || !values.type) {
       toast.error('Please fill all fields')
       return
     }
@@ -78,33 +91,45 @@ export default function AppointmentForm({ realtorId, onSuccess }: AppointmentFor
         `${format(values.appointment_date, 'yyyy-MM-dd')}T${values.appointment_time}`
       ).toISOString()
 
-      const { data, error } = await supabase
-        .from('appointments')
-        .insert([
-          {
-            id: crypto.randomUUID(),
+      const tenantName = tenants.find(t => t.id === values.tenant_id)?.full_name || ''
+
+      if (mode === 'edit' && defaultValues?.id) {
+        const { error } = await supabase
+          .from('appointments')
+          .update({
             tenant_id: values.tenant_id,
-            tenant_name: tenants.find(t => t.id === values.tenant_id)?.full_name || '',
+            tenant_name: '',
             appointment_date: dateTime,
             status: values.status,
-            realtor_id: realtorId,
-            created_at: new Date().toISOString(),
+            type: values.type,
             updated_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-        .single()
+          })
+          .eq('id', defaultValues.id)
+        if (error) throw error
+        toast.success('Appointment updated!')
+      } else {
+        const payload: any = {
+          id: crypto.randomUUID(),
+          tenant_id: values.tenant_id,
+          tenant_name: '',
+          appointment_date: dateTime,
+          status: values.status,
+          type: values.type,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+        payload[ownerColumn] = ownerId
 
-      if (error) throw error
+        const { error } = await supabase.from('appointments').insert([payload])
+        if (error) throw error
+        toast.success('Appointment added!')
+      }
 
-      toast.success('Appointment added!')
-
-      // Reset form
       reset()
       if (onSuccess) onSuccess()
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || 'Failed to add appointment')
+      toast.error(err.message || 'Failed to save appointment')
     } finally {
       setLoading(false)
     }
@@ -113,19 +138,17 @@ export default function AppointmentForm({ realtorId, onSuccess }: AppointmentFor
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">New Appointment</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{mode === 'edit' ? 'Edit Appointment' : 'New Appointment'}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        
-          <DialogTitle>Schedule Appointment</DialogTitle>
-          <DialogDescription>
-            Fill out the form to add a new maintenance appointment.
-          </DialogDescription>
-        
+        <DialogTitle>{mode === 'edit' ? 'Edit Appointment' : 'Schedule Appointment'}</DialogTitle>
+        <DialogDescription>
+          Fill out the form to {mode === 'edit' ? 'update' : 'add'} an appointment.
+        </DialogDescription>
 
-        <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="grid gap-4 bg-gray-300 rounded-md border border-gray-400 mt-4" onSubmit={handleSubmit(onSubmit)}>
           {/* Tenant */}
-          <label className="text-gray-700">Tenant</label>
+          <label className="text-gray-800">Tenant</label>
           <Select {...register('tenant_id')}>
             <SelectTrigger>
               <SelectValue placeholder="Select tenant" />
@@ -140,7 +163,7 @@ export default function AppointmentForm({ realtorId, onSuccess }: AppointmentFor
           </Select>
 
           {/* Date */}
-          <label className="text-gray-700">Date</label>
+          <label className="text-gray-800">Date</label>
           <Controller
             control={control}
             name="appointment_date"
@@ -163,11 +186,24 @@ export default function AppointmentForm({ realtorId, onSuccess }: AppointmentFor
           />
 
           {/* Time */}
-          <label className="text-gray-700">Time</label>
+          <label className="text-gray-800">Time</label>
           <Input type="time" {...register('appointment_time')} />
 
+          {/* Type */}
+          <label className="text-gray-800">Type</label>
+          <Select {...register('type')}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Maintenance">Maintenance</SelectItem>
+              <SelectItem value="Meeting">Meeting</SelectItem>
+              <SelectItem value="Viewing">Viewing</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* Status */}
-          <label className="text-gray-700">Status</label>
+          <label className="text-gray-800">Status</label>
           <Select {...register('status')}>
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
@@ -180,7 +216,7 @@ export default function AppointmentForm({ realtorId, onSuccess }: AppointmentFor
           </Select>
 
           <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? 'Adding...' : 'Add Appointment'}
+            {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Appointment' : 'Add Appointment')}
           </Button>
         </form>
       </DialogContent>

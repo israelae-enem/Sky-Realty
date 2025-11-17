@@ -17,7 +17,12 @@ const schema = z.object({
 
 type MaintenanceFormData = z.infer<typeof schema>
 
-export const MaintenanceForm = () => {
+interface MaintenanceFormProps {
+  defaultValues?: MaintenanceFormData & { id?: string; media_url?: string; complaint_id?: string }
+  onSuccess?: () => void
+}
+
+export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormProps) => {
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -33,7 +38,6 @@ export const MaintenanceForm = () => {
 
   useEffect(() => {
     if (!user?.id) return
-
     const fetchTenant = async () => {
       const { data, error } = await supabase
         .from('tenants')
@@ -46,25 +50,19 @@ export const MaintenanceForm = () => {
         toast.error('Tenant record not found.')
         return
       }
-
       setTenantInfo(data)
     }
-
     fetchTenant()
   }, [user?.id])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<MaintenanceFormData>({
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<MaintenanceFormData>({
     resolver: zodResolver(schema),
-    defaultValues: { priority: 'medium' },
+    defaultValues: defaultValues || { priority: 'medium' },
   })
 
   // Preview file
   useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null)
-      return
-    }
-
+    if (!file) return setPreviewUrl(null)
     const url = URL.createObjectURL(file)
     setPreviewUrl(url)
     return () => URL.revokeObjectURL(url)
@@ -75,72 +73,57 @@ export const MaintenanceForm = () => {
       toast.error('Tenant information not found.')
       return
     }
-
     setLoading(true)
-
     try {
-      let fileUrl: string | null = null
-
+      let fileUrl: string | null = defaultValues?.media_url || null
       if (file) {
         const filePath = `maintenance/${user.id}-${Date.now()}-${file.name}`
         const { data: uploadedFile, error: fileError } = await supabase.storage
           .from('documents')
           .upload(filePath, file)
-
-        if (fileError || !uploadedFile?.path) {
-          console.error('File upload error:', fileError)
-          toast.error('Failed to upload file')
-          setLoading(false)
-          return
-        }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('documents')
-          .getPublicUrl(uploadedFile.path)
+        if (fileError || !uploadedFile?.path) throw fileError
+        const { data: publicUrlData } = supabase.storage.from('documents').getPublicUrl(uploadedFile.path)
         fileUrl = publicUrlData.publicUrl
       }
 
-      // Insert maintenance request
-      const { data: inserted, error: maintenanceError } = await supabase
-        .from('maintenance_request')
-        .insert({
-          id: crypto.randomUUID(),
-          tenant_id: tenantInfo.id,
-          property_id: tenantInfo.property_id,
-          realtor_id: tenantInfo.realtor_id,
-          title: data.title,
-          description: data.description,
-          status: 'pending',
-          priority: data.priority,
-          media_url: fileUrl,
-        })
-        .select()
-
-      console.log('Maintenance insert result:', { inserted, maintenanceError })
-
-      if (maintenanceError) {
-        toast.error('Failed to submit request')
-        setLoading(false)
-        return
+      if (defaultValues?.complaint_id || defaultValues?.id) {
+        // Edit existing complaint or maintenance request
+        const idToUpdate = defaultValues.complaint_id || defaultValues.id
+        const { error } = await supabase
+          .from('maintenance_request')
+          .update({
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            media_url: fileUrl,
+          })
+          .eq('id', idToUpdate)
+        if (error) throw error
+        toast.success('Maintenance request updated!')
+      } else {
+        // Create new
+        const { error } = await supabase
+          .from('maintenance_request')
+          .insert({
+            id: crypto.randomUUID(),
+            tenant_id: tenantInfo.id,
+            property_id: tenantInfo.property_id,
+            realtor_id: tenantInfo.realtor_id,
+            title: data.title,
+            description: data.description,
+            status: 'pending',
+            priority: data.priority,
+            media_url: fileUrl,
+          })
+        if (error) throw error
+        toast.success('Maintenance request submitted!')
       }
 
-      console.log ('insert success:', inserted)
-
-      // Insert notification for realtor
-      const { error: notifError } = await supabase.from('notification').insert({
-        type: 'maintenance',
-        message: `New maintenance request: ${data.title}`,
-        realtor_id: tenantInfo.realtor_id,
-        read: false,
-      })
-
-      if (notifError) console.error('Notification error:', notifError)
-
-      toast.success('Maintenance request submitted!')
+      if (onSuccess) onSuccess()
       router.push(`/tenant/${user.id}/dashboard?success=maintenance`)
     } catch (err) {
-      console.error('Maintenance submit error:', err)
-      toast.error('Something went wrong')
+      console.error(err)
+      toast.error('Failed to save request')
     } finally {
       setLoading(false)
     }
@@ -170,7 +153,7 @@ export const MaintenanceForm = () => {
         <label className="block mb-1 text-gray-300">Priority</label>
         <select
           {...register('priority')}
-          className="w-full p-2 rounded bg-gtay-500 border border-gray-300 text-white"
+          className="w-full p-2 rounded bg-gray-500 border border-gray-300 text-white"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -203,7 +186,7 @@ export const MaintenanceForm = () => {
         disabled={loading}
         className="bg-blue-600 mt-4 hover:bg-blue-500 w-full text-white px-4 py-2 rounded disabled:opacity-50"
       >
-        {loading ? 'Submitting...' : 'Submit Request'}
+        {loading ? 'Saving...' : defaultValues?.id || defaultValues?.complaint_id ? 'Update Request' : 'Submit Request'}
       </button>
     </form>
   )
