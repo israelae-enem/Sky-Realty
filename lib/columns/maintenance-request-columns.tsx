@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 import FormDialog from "@/components/dialogs/FormDialog";
 import MaintenanceForm from "@/components/forms/MaintenanceForm";
-import { StatusBadge } from "@/components/StatusBadge";
 
 export const maintenanceRequestColumns: ColumnDef<any>[] = [
   { header: "#", cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p> },
@@ -34,7 +33,6 @@ export const maintenanceRequestColumns: ColumnDef<any>[] = [
   },
   { accessorKey: "tenant_name", header: "Tenant", cell: ({ row }) => <p>{row.original.tenant_name ?? row.original.tenant?.full_name ?? "—"}</p> },
   { accessorKey: "priority", header: "Priority", cell: ({ row }) => <p className="capitalize">{row.original.priority ?? "—"}</p> },
-  { accessorKey: "status", header: "Status", cell: ({ row }) => <div className="min-w-[115px]"><StatusBadge status={row.original.status} /></div> },
   { accessorKey: "created_at", header: "Requested On", cell: ({ row }) => <p>{row.original.created_at ? new Date(row.original.created_at).toLocaleDateString() : "—"}</p> },
   {
     id: "actions",

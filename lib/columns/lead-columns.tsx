@@ -6,14 +6,14 @@ import { supabase } from '@/lib/supabaseClient';
 
 import FormDialog from '@/components/dialogs/FormDialog';
 import LeadForm from '@/components/forms/LeadForm';
-import { StatusBadge } from '@/components/StatusBadge';
+
 
 export const leadColumns: ColumnDef<any>[] = [
   { header: '#', cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p> },
   { accessorKey: 'name', header: 'Lead Name', cell: ({ row }) => <p>{row.original.name ?? '—'}</p> },
   { accessorKey: 'email', header: 'Email', cell: ({ row }) => <p>{row.original.email ?? '—'}</p> },
   { accessorKey: 'phone', header: 'Phone', cell: ({ row }) => <p>{row.original.phone ?? '—'}</p> },
-  { accessorKey: 'status', header: 'Status', cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+
   {
     accessorKey: 'created_at',
     header: 'Created On',
@@ -45,7 +45,7 @@ export const leadColumns: ColumnDef<any>[] = [
 
           {/* Edit button */}
           <FormDialog trigger={<button className="text-sm px-2 py-1 rounded border">Edit</button>} title="Edit Lead">
-            <LeadForm lead={lead} onSuccess={() => window.location.reload()} />
+            <LeadForm  onSuccess={() => window.location.reload()} />
           </FormDialog>
 
           {/* Delete button */}

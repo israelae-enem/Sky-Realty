@@ -624,31 +624,72 @@ export default function RealtorDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <RealtorSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <main className={clsx('flex-1 p-6 transition-all duration-300', !subscriptionActive && 'blur-sm pointer-events-none select-none')}>
-        {/* Top bar */}
-        <div className="flex items-center justify-between bg-white p-4 rounded shadow mb-6">
-          <div className="flex items-center gap-4">
-            
-            <h2 className="text-lg font-semibold">{activeTab}</h2>
+     <div className="flex min-h-screen bg-gray-50">
+
+  {/* SIDEBAR — becomes hidden on mobile, slide-in menu */}
+  <div className="hidden md:block">
+    <RealtorSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+  </div>
+
+  {/* MOBILE HAMBURGER BUTTON */}
+  <button
+    className="md:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded shadow"
+    onClick={() => setSidebarOpen(!sidebarOpen)}
+  >
+    ☰
+  </button>
+
+  {/* MOBILE SLIDE-IN SIDEBAR */}
+  {sidebarOpen && (
+    <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSidebarOpen(false)} />
+  )}
+
+  <div
+    className={clsx(
+      "fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 md:hidden",
+      sidebarOpen ? "translate-x-0" : "-translate-x-full"
+    )}
+  >
+    <RealtorSidebar activeTab={activeTab} setActiveTab={setActiveTab} isMobile onClose={() => setSidebarOpen(false)} />
+  </div>
+
+  {/* MAIN CONTENT */}
+  <main
+    className={clsx(
+      "flex-1 p-4 md:p-6 transition-all duration-300",
+      !subscriptionActive && "blur-sm pointer-events-none select-none"
+    )}
+  >
+
+    {/* TOP BAR */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-4 rounded shadow mb-6">
+
+      <h2 className="text-lg font-semibold">{activeTab}</h2>
+
+      <div className="flex items-center gap-4">
+
+        {countdown && !expired && (
+          <div className="bg-yellow-400 text-black px-3 py-1 rounded font-mono text-sm">
+            {countdown}
           </div>
+        )}
 
-          <div className="flex items-center gap-4">
-            {countdown && !expired && (
-              <div className="bg-yellow-400 text-black px-3 py-1 rounded font-mono">{countdown}</div>
-            )}
-            <div className="text-sm text-gray-700">Plan: <span className="font-medium">{plan ?? 'free'}</span></div>
-          </div>
+        <div className="text-sm text-gray-700">
+          Plan: <span className="font-medium">{plan ?? "free"}</span>
         </div>
+      </div>
+    </div>
 
-        <div className="flex-1 overflow-auto">
-          <AnimatePresence mode="wait" initial={false}>
-            {renderSection(activeTab)}
-          </AnimatePresence>
-        </div>
-      </main>
+    {/* PAGE CONTENT AREA */}
+    <div className="flex-1 overflow-x-auto">
+      <AnimatePresence mode="wait" initial={false}>
+        {renderSection(activeTab)}
+      </AnimatePresence>
+    </div>
+
+  </main>
+
 
 
 

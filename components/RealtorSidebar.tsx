@@ -18,9 +18,18 @@ import ProfileSidebar from './Profile'
 interface Props {
   activeTab: string
   setActiveTab: (tab: string) => void
+
+  // 🔥 Added
+  isMobile?: boolean
+  onClose?: () => void
 }
 
-export default function RealtorSidebar({ activeTab, setActiveTab }: Props) {
+export default function RealtorSidebar({
+  activeTab,
+  setActiveTab,
+  isMobile = false,
+  onClose = () => {},
+}: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
 
   const menu = [
@@ -69,7 +78,6 @@ export default function RealtorSidebar({ activeTab, setActiveTab }: Props) {
       icon: <CreditCard size={16} className="mr-2" />,
       submenu: [
         { label: 'All Payments', key: 'rentPayments' },
-        
       ],
     },
     {
@@ -78,7 +86,6 @@ export default function RealtorSidebar({ activeTab, setActiveTab }: Props) {
       icon: <FileText size={16} className="mr-2" />,
       submenu: [
         { label: 'All Documents', key: 'legalDocuments' },
-        
       ],
     },
     { label: 'Maintenance', key: 'maintenance', icon: <FileText size={16} className="mr-2" />, submenu: [] },
@@ -105,6 +112,7 @@ export default function RealtorSidebar({ activeTab, setActiveTab }: Props) {
               onClick={() => {
                 if (item.submenu.length === 0) {
                   setActiveTab(item.key)
+                  if (isMobile) onClose()     // 🔥 close mobile sidebar
                 } else {
                   toggleMenu(item.key)
                 }
@@ -126,8 +134,10 @@ export default function RealtorSidebar({ activeTab, setActiveTab }: Props) {
                     onClick={() => {
                       if (sub.external) {
                         window.location.href = sub.key
+                        if (isMobile) onClose()  // 🔥 close mobile sidebar
                       } else {
                         setActiveTab(sub.key)
+                        if (isMobile) onClose()  // 🔥 close mobile sidebar
                       }
                     }}
                     className={`w-full text-left px-3 py-1 rounded text-sm hover:bg-white hover:text-[#1836b2]

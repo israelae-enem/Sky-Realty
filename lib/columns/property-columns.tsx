@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 import FormDialog from "@/components/dialogs/FormDialog";
 import PropertyForm from "@/components/forms/PropertyForm";
-import { StatusBadge } from "@/components/StatusBadge";
+
 
 export const propertyColumns: ColumnDef<any>[] = [
   {
@@ -35,11 +35,7 @@ export const propertyColumns: ColumnDef<any>[] = [
       );
     },
   },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <div className="min-w-[115px]"><StatusBadge status={row.original.status} /></div>,
-  },
+  
   {
     accessorKey: "price",
     header: "Price (AED)",

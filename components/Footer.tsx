@@ -72,7 +72,7 @@ const Footer = () => {
 
             <div className="flex gap-4 mt-1 text-2xl">
   <a
-    href="https://www.linkedin.com/company/sky-realty"
+    href="https://www.linkedin.com/company/skyrealtyae/"
     target="_blank"
     rel="noopener noreferrer"
     className="transition transform hover:scale-125 hover:text-white duration-300"

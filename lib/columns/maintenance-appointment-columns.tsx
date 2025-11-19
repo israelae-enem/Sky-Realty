@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 import FormDialog from "@/components/dialogs/FormDialog";
 import AppointmentForm from "@/components/forms/AppointmentForm";
-import { StatusBadge } from "@/components/StatusBadge";
+
 
 export const appointmentColumns: ColumnDef<any>[] = [
   { header: "#", cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p> },
@@ -21,7 +21,7 @@ export const appointmentColumns: ColumnDef<any>[] = [
     },
   },
   { accessorKey: "contractor", header: "Contractor", cell: ({ row }) => <p>{row.original.contractor ?? "—"}</p> },
-  { accessorKey: "status", header: "Status", cell: ({ row }) => <div className="min-w-[115px]"><StatusBadge status={row.original.status} /></div> },
+  
   {
     id: "actions",
     header: () => <div className="pl-4">Actions</div>,

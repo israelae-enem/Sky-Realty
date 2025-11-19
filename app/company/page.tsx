@@ -5,7 +5,7 @@ import Image from "next/image";
 import React from "react";
 import CompanySignUpForm from "@/components/CompanySignupForm";
 
-const Realtor = () => {
+const Page = () => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -36,4 +36,4 @@ const Realtor = () => {
   );
 };
 
-export default Realtor;
+export default Page;

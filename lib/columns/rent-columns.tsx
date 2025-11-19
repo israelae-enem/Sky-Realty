@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import FormDialog from "@/components/dialogs/FormDialog";
 import RentPaymentForm from "@/components/forms/RentPaymentForm";
 import RentReminderForm from "@/components/forms/RentReminderForm";
-import { StatusBadge } from "@/components/StatusBadge";
+
 
 export const rentColumns: ColumnDef<any>[] = [
   { header: "#", cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p> },
@@ -34,7 +34,7 @@ export const rentColumns: ColumnDef<any>[] = [
   { accessorKey: "property_name", header: "Property", cell: ({ row }) => <p>{row.original.property_name || row.original.property_title || "—"}</p> },
   { accessorKey: "amount", header: "Amount", cell: ({ row }) => <p>AED {row.original.amount ?? "—"}</p> },
   { accessorKey: "due_date", header: "Due Date", cell: ({ row }) => <p>{row.original.due_date ? format(new Date(row.original.due_date), "yyyy-MM-dd") : "—"}</p> },
-  { accessorKey: "status", header: "Status", cell: ({ row }) => <div className="min-w-[115px]"><StatusBadge status={row.original.status || row.original.payment_status} /></div> },
+  
   { accessorKey: "paid_on", header: "Paid On", cell: ({ row }) => row.original.paid_on ? <p>{new Date(row.original.paid_on).toLocaleDateString()}</p> : <span>—</span> },
   {
     id: "actions",

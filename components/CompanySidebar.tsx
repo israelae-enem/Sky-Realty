@@ -22,9 +22,18 @@ import ProfileSidebar from './Profile'
 interface Props {
   activeTab: string
   setActiveTab: (tab: string) => void
+
+  // 🔥 Added
+  isMobile?: boolean
+  onClose?: () => void
 }
 
-export default function CompanySidebar({ activeTab, setActiveTab }: Props) {
+export default function CompanySidebar({
+  activeTab,
+  setActiveTab,
+  isMobile = false,
+  onClose = () => {},
+}: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
 
   const menu = [
@@ -103,11 +112,10 @@ export default function CompanySidebar({ activeTab, setActiveTab }: Props) {
 
   return (
     <aside className="w-64 bg-[#1836b2] text-white shadow flex flex-col">
-      
-
       <nav className="flex-1 overflow-y-auto p-2 space-y-1">
 
         <ProfileSidebar />
+
         {menu.map((item) => (
           <div key={item.key}>
             {/* Main menu button */}
@@ -115,6 +123,7 @@ export default function CompanySidebar({ activeTab, setActiveTab }: Props) {
               onClick={() => {
                 if (item.submenu.length === 0) {
                   setActiveTab(item.key)
+                  if (isMobile) onClose()  // 🔥 close on mobile
                 } else {
                   toggleMenu(item.key)
                 }
@@ -133,7 +142,10 @@ export default function CompanySidebar({ activeTab, setActiveTab }: Props) {
                 {item.submenu.map((sub) => (
                   <button
                     key={sub.key}
-                    onClick={() => setActiveTab(sub.key)}
+                    onClick={() => {
+                      setActiveTab(sub.key)
+                      if (isMobile) onClose()  // 🔥 close on mobile
+                    }}
                     className={`w-full text-left px-3 py-1 rounded text-sm hover:bg-gray-100 text-black transition
                       ${activeTab === sub.key ? 'bg-gray-200 font-bold text-black' : ''}
                     `}

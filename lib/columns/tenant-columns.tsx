@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 import FormDialog from "@/components/dialogs/FormDialog";
 import TenantForm from "@/components/forms/TenantForm";
-import { StatusBadge } from "@/components/StatusBadge";
+
 
 export const tenantColumns: ColumnDef<any>[] = [
   { header: "#", cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p> },
@@ -40,7 +40,7 @@ export const tenantColumns: ColumnDef<any>[] = [
     header: "Joined",
     cell: ({ row }) => <p>{row.original.created_at ? new Date(row.original.created_at).toLocaleDateString() : "—"}</p>,
   },
-  { accessorKey: "status", header: "Status", cell: ({ row }) => <div className="min-w-[115px]"><StatusBadge status={row.original.status} /></div> },
+
   {
     id: "actions",
     header: () => <div className="pl-4">Actions</div>,

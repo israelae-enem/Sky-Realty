@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 import FormDialog from "@/components/dialogs/FormDialog";
 import ListingForm from "@/components/forms/ListingForm";
-import { StatusBadge } from "@/components/StatusBadge";
 
 export const listingColumns: ColumnDef<any>[] = [
   { header: "#", cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p> },
@@ -32,12 +31,7 @@ export const listingColumns: ColumnDef<any>[] = [
       );
     },
   },
-  { accessorKey: "price", header: "Price (AED)", cell: ({ row }) => <p>AED {row.original.price ?? "—"}</p> },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => <div className="min-w-[115px]"><StatusBadge status={row.original.status} /></div>,
-  },
+  
   { accessorKey: "views", header: "Views", cell: ({ row }) => <p>{row.original.views ?? 0}</p> },
   {
     accessorKey: "created_at",
