@@ -60,6 +60,10 @@ interface Stats {
   properties: number
   occupied: number
   leases: number
+  tenants: number
+  listings: number
+  leads: number
+  
 }
 
 interface Notification {
@@ -100,7 +104,7 @@ export default function RealtorDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([])
 
   // stats derived from properties
-  const [stats, setStats] = useState<Stats>({ properties: 0, occupied: 0, leases: 0 })
+  const [stats, setStats] = useState<Stats>({ properties: 0, occupied: 0, leases: 0, tenants: 0, listings: 0, leads:0})
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -158,8 +162,8 @@ export default function RealtorDashboard() {
 
         const PLAN_LIMITS: Record<string, number | null> = {
           free: 1,
-          basic: 10,
-          pro: 20,
+          basic: 25,
+          pro: 50,
           premium: Infinity,
         }
 
@@ -216,6 +220,7 @@ export default function RealtorDashboard() {
           appointRes,
           paymentRes,
           legalRes,
+          leadRes,
           maintenanceRes,
           notifRes
         ] = await Promise.all([
@@ -226,7 +231,8 @@ export default function RealtorDashboard() {
           supabase.from('rent_payment').select('*').eq('realtor_id', user.id),
           supabase.from('legal_documents').select('*'),
           supabase.from('maintenance_request').select('*').eq('realtor_id', user.id),
-          supabase.from('notification').select('*').eq('realtor_id', user.id).order('created_at', { ascending: false })
+          supabase.from('notification').select('*').eq('realtor_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('leads').select('*').eq('realtor_id', user.id)
         ])
 
         setProperties(propRes.data ?? [])
@@ -237,9 +243,17 @@ export default function RealtorDashboard() {
         setLegalDocuments(legalRes.data ?? [])
         setMaintenanceRequests(maintenanceRes.data ?? [])
         setNotifications(notifRes.data ?? [])
+        setLeads(leadRes.data ?? [])
 
-        // update stats
-        updateStats(propRes.data ?? [])
+  // Update stats with all relevant data
+  updateStats(
+    propRes.data ?? [],
+    tenantRes.data ?? [],
+    listingRes.data ?? [],
+    leadRes.data ?? []
+  )
+
+        
       } catch (err) {
         console.error('Failed to load dashboard data', err)
         toast.error('Failed to load dashboard data')
@@ -258,34 +272,111 @@ export default function RealtorDashboard() {
 }, [activeTab, router])
 
   // Realtime listeners (optional: insert-only shown)
-  useEffect(() => {
-    if (!user?.id) return
+ 
 
-    // Listen for new notifications and maintenance requests
-    const notifChannel = supabase
-      .channel(`notifications-${user.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notification' }, (payload) => {
-        const n = payload.new as Notification
-        setNotifications(prev => [n, ...prev])
+    useEffect(() => {
+  if (!user?.id) return
+
+  const channel = supabase.channel(`dashboard-${user.id}`)
+
+  // Properties
+  channel
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'properties' }, payload => {
+      setProperties(prev => {
+        const updated = [payload.new, ...prev]
+        updateStats(updated, tenants, listings, leads)
+        return updated
       })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'maintenance_request' }, (payload) => {
-        const m = payload.new as any
-        setMaintenanceRequests(prev => [m, ...prev])
-        toast.success(`New maintenance: ${m.title}`)
+      toast.success(`New property added: ${payload.new.title}`)
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'properties' }, payload => {
+      setProperties(prev => {
+        const updated = prev.map(p => p.id === payload.new.id ? payload.new : p)
+        updateStats(updated, tenants, listings, leads)
+        return updated
       })
-      .subscribe()
+      toast.success(`Property updated: ${payload.new.title}`)
+    })
 
-    return () => {
-      supabase.removeChannel(notifChannel)
-    }
-  }, [user?.id])
+  // Tenants
+  channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tenants' }, payload => {
+    setTenants(prev => {
+      const updated = [payload.new, ...prev]
+      updateStats(properties, updated, listings, leads)
+      return updated
+    })
+    toast.success(`New tenant added: ${payload.new.full_name}`)
+  })
 
-  const updateStats = (properties: any[]) => {
-    const total = properties.length
-    const occupied = properties.filter(p => p.status === 'Occupied').length
-    const activeLeases = properties.filter(p => p.lease_end && new Date(p.lease_end) > new Date()).length
-    setStats({ properties: total, occupied, leases: activeLeases })
+  // Listings
+  channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, payload => {
+    setListings(prev => {
+      const updated = [payload.new, ...prev]
+      updateStats(properties, tenants, updated, leads)
+      return updated
+    })
+    toast.success(`New listing added: ${payload.new.title || payload.new.name}`)
+  })
+
+  // Leads
+  channel.on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, payload => {
+    setLeads(prev => {
+      const updated = [payload.new, ...prev]
+      updateStats(properties, tenants, listings, updated)
+      return updated
+    })
+    toast.success(`New lead added: ${payload.new.name}`)
+  })
+
+  // Notifications & Maintenance
+  const notifChannel = supabase
+    .channel(`notifications-${user.id}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notification' }, payload => {
+      const n = payload.new as Notification
+      setNotifications(prev => [n, ...prev])
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'maintenance_request' }, payload => {
+      const m = payload.new as any
+      setMaintenanceRequests(prev => [m, ...prev])
+      toast.success(`New maintenance: ${m.title}`)
+    })
+    .subscribe()
+
+  // Subscribe the main channel
+  channel.subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+    supabase.removeChannel(notifChannel)
   }
+}, [user?.id, tenants, listings, leads, properties])
+
+// Updated stats function
+const updateStats = (
+  properties: any[],
+  tenants: any[],
+  listings: any[],
+  leads: any[]
+) => {
+  const totalProperties = properties.length
+  const occupied = properties.filter(p => p.status === 'Occupied').length
+  const activeLeases = properties.filter(p => p.lease_end && new Date(p.lease_end) > new Date()).length
+  const totalTenants = tenants.length
+  const totalListings = listings.length
+  const totalLeads = leads.length
+
+  setStats({
+    properties: totalProperties,
+    occupied,
+    leases: activeLeases,
+    tenants: totalTenants,
+    listings: totalListings,
+    leads: totalLeads
+  })
+}
+
+
+
 
   // mark notifications read
   const markNotificationsRead = async () => {
@@ -325,6 +416,9 @@ export default function RealtorDashboard() {
               <StatCard icon={<CheckCircle />} title="Occupied Units" value={stats.occupied} />
               <StatCard icon={<FileText />} title="Active Leases" value={stats.leases} />
               <StatCard icon={<Bell />} title="Unread Notifications" value={unreadCount} />
+              <StatCard title="Tenants" value={stats.tenants} icon="👥" />
+              <StatCard title="Listings" value={stats.listings} icon="📃" />
+              <StatCard title="Leads" value={stats.leads} icon="📬" />
             </div>
 
             <RentAnalyticsCards />
@@ -575,8 +669,8 @@ export default function RealtorDashboard() {
           </motion.div>
         )
 
-          case 'newLeads':
-        case 'contactedLeads':
+          case 'leads':
+        
          return (
           <motion.div
       key="leads"
@@ -586,14 +680,21 @@ export default function RealtorDashboard() {
       transition={{ duration: 0.25 }}
       className="p-4"
     >
-           <LeadsTable realtorId={user?.id} />
+         <DataTable columns={leadColumns} data={leads} />
+
     </motion.div>
   )
 
-      case 'chat':
+      case 'chats':
         return (
-          <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <RealtorChat  realtorId={ user?.id} />
+          <motion.div key="chats" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            {user && (
+              <RealtorChat 
+              
+             user={{ id: user.id }} 
+             />
+              )}
+  
           </motion.div>
         )
 

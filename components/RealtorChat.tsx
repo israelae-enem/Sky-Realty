@@ -32,7 +32,7 @@ interface Message {
 interface ChatProps {
   realtorId?: string
   companyId?: string
-  user?: { id: string } // made optional to allow companyId-only usage
+  user?: { id: string } // optional, fallback
 }
 
 export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
@@ -46,14 +46,14 @@ export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
   const [ownerPic, setOwnerPic] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  // Determine owner column & ID
-  const ownerColumn = realtorId ? 'realtor_id' : 'company_id'
-  const ownerId = realtorId || companyId || ''
-  const senderId = user?.id || ownerId // fallback to ownerId if user not passed
+  const ownerId = realtorId || companyId || user?.id
+  const ownerColumn = realtorId ? 'realtor_id' : companyId ? 'company_id' : 'realtor_id' // default
+  const senderId = user?.id || ownerId || ''
 
+  // scroll to bottom
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
 
-  // Fetch tenants
+  // Fetch tenants for this owner
   useEffect(() => {
     if (!ownerId) return
     const fetchTenants = async () => {
@@ -72,7 +72,7 @@ export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
     fetchTenants()
   }, [ownerId, ownerColumn])
 
-  // Fetch messages & subscribe
+  // Fetch messages and subscribe
   useEffect(() => {
     if (!selectedTenant || !ownerId) return
 
@@ -80,7 +80,6 @@ export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
 
     const fetchAndSubscribe = async () => {
       try {
-        // Fetch messages
         const { data, error } = await supabase
           .from('message')
           .select('*')
@@ -95,7 +94,6 @@ export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
         }))
         setMessages(enriched)
 
-        // Subscribe to new messages
         subscription = supabase
           .channel(`conversation-${selectedTenant.id}-${ownerId}`)
           .on(
@@ -158,7 +156,6 @@ export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
     fetchPics()
   }, [selectedTenant, ownerId, realtorId])
 
-  // Send message
   const handleSend = async () => {
     if (!newMessage.trim() && !file) return toast.error('Enter a message or select a file')
     if (!selectedTenant || !ownerId) return
@@ -217,6 +214,9 @@ export default function RealtorChat({ realtorId, companyId, user }: ChatProps) {
       </a>
     )
   }
+
+  // Render only if ownerId exists
+  if (!ownerId) return <p className="text-red-500">Owner ID missing</p>
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">

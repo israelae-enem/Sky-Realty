@@ -101,9 +101,8 @@ export default function RealtorSidebar({
 
   return (
     <aside className="w-64 bg-[#1836b2] text-white shadow flex flex-col">
+      <ProfileSidebar />
       <nav className="flex-1 overflow-y-auto mt-10 p-2 space-y-1">
-
-        <ProfileSidebar />
 
         {menu.map(item => (
           <div key={item.key}>
@@ -117,7 +116,7 @@ export default function RealtorSidebar({
                   toggleMenu(item.key)
                 }
               }}
-              className={`w-full text-left mt-5 px-4 py-2 rounded flex items-center font-semibold hover:bg-[#132a8e] transition
+              className={`w-full text-left px-4 py-2 rounded flex items-center font-semibold hover:bg-[#132a8e] transition
                 ${activeTab === item.key ? 'bg-white text-[#1836b2]' : ''}
               `}
             >

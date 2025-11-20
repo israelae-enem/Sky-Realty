@@ -12,8 +12,8 @@ const PLAN_PRICES: Record<string, number> = {
 
 const PLAN_LIMITS: Record<string, number | null> = {
   free: 1,
-  basic: 10,
-  pro: 20,
+  basic: 25,
+  pro: 50,
   premium: null,
 };
 

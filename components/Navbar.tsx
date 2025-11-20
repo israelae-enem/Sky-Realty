@@ -12,35 +12,98 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 const Navbar = () => {
   const { user, isSignedIn } = useUser();
+  const pathname = usePathname();
+
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [dashboardUrl, setDashboardUrl] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Check user role and set dashboard URL
   useEffect(() => {
-    if (user?.publicMetadata) {
-      setOnboardingComplete(
-        (user.publicMetadata.hasCompletedOnboarding as boolean) ?? false
-      );
-    }
+    const checkRole = async () => {
+      if (!user) return;
+
+      // Check Realtor
+      let { data: realtor } = await supabase
+        .from("realtors")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (realtor) {
+        setOnboardingComplete(true);
+        setDashboardUrl(`/realtor/${user.id}/dashboard`);
+        return;
+      }
+
+      // Check Tenant
+      let { data: tenant } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (tenant) {
+        setOnboardingComplete(true);
+        setDashboardUrl(`/tenant/${user.id}/dashboard`);
+        return;
+      }
+
+      // Check Company
+      let { data: company } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (company) {
+        setOnboardingComplete(true);
+        setDashboardUrl(`/company/${user.id}/dashboard`);
+        return;
+      }
+
+      // No role found
+      setOnboardingComplete(false);
+      setDashboardUrl(null);
+    };
+
+    checkRole();
   }, [user]);
+
+  // Reusable nav link component
+  const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <Link
+      href={href}
+      className={`nav-item ${
+        pathname === href ? "text-yellow-300 font-semibold" : "hover:text-yellow-300"
+      }`}
+    >
+      {children}
+    </Link>
+  );
 
   return (
     <nav className="w-full bg-[#1836b2] text-white px-4 py-3 relative z-50 shadow-md">
-     <div className="flex items-center justify-between">
-      
-      <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
-        <Image
-          src="/assets/icons/logo4.jpg"
-          alt="logo"
-          width={80}
-          height={15}
-          className="object-contain"
-        />
-      </Link>
-          <button
+      <div className="flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
+          <Image
+            src="/assets/icons/logo4.jpg"
+            alt="logo"
+            width={80}
+            height={15}
+            className="object-contain"
+          />
+        </Link>
+
+        {/* Mobile Menu Button */}
+        <button
           className="text-white md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
         >
@@ -48,11 +111,11 @@ const Navbar = () => {
         </button>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-8">
-          <Link href="/" className="nav-item">Home</Link>
-          <Link href="/home3" className="nav-item">Properties</Link>
-          <Link href="/service" className="nav-item">Services</Link>
-          <Link href="/subscription" className="nav-item">Pricing</Link>
+        <div className="hidden md:flex items-center gap-8">
+          <NavLink href="/">Home</NavLink>
+          <NavLink href="/home3">Properties</NavLink>
+          <NavLink href="/service">Services</NavLink>
+          <NavLink href="/subscription">Pricing</NavLink>
 
           {/* Join Dropdown */}
           <div
@@ -60,48 +123,37 @@ const Navbar = () => {
             onMouseEnter={() => setIsDropdownOpen(true)}
             onMouseLeave={() => setIsDropdownOpen(false)}
           >
-            <button className="nav-item flex items-center gap-1">
-              Join <span className="text-sm">▼</span>
+            <button className="nav-item flex items-center gap-1 hover:text-yellow-300">
+              Join ▼
             </button>
-
             {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-40 text-black bg-white rounded-lg shadow-xl z-50">
-                <Link
-                  href="/home1"
-                  className="dropdown-item"
-                >
+              <div className="absolute left-0 mt-2 w-40 bg-white text-black rounded-lg shadow-xl z-50 flex flex-col">
+                <Link href="/home1" className="px-4 py-2 hover:bg-gray-200">
                   Realtor
                 </Link>
-                <Link
-                  href="/home1"
-                  className="dropdown-item"
-                >
+                <Link href="/home1" className="px-4 py-2 hover:bg-gray-200">
                   Agency
                 </Link>
-                <Link
-                  href="/home2"
-                  className="dropdown-item"
-                >
+                <Link href="/home2" className="px-4 py-2 hover:bg-gray-200">
                   Tenant
                 </Link>
               </div>
             )}
           </div>
 
+          {/* Onboarding */}
           {isSignedIn && !onboardingComplete && (
-            <Link href="/onboarding" className="nav-item">
-              Complete Onboarding
-            </Link>
+            <NavLink href="/onboarding">Complete Onboarding</NavLink>
           )}
 
-          {isSignedIn && onboardingComplete && (
-            <Link href="/dashboard" className="nav-item">
-              Dashboard
-            </Link>
+          {/* Dashboard */}
+          {isSignedIn && onboardingComplete && dashboardUrl && (
+            <NavLink href={dashboardUrl}>Dashboard</NavLink>
           )}
 
-          <Link href="/about" className="nav-item">Our Story</Link>
+          <NavLink href="/about">Our Story</NavLink>
 
+          {/* Auth Buttons */}
           {!isSignedIn && (
             <SignUpButton>
               <button className="btn-white">Get Started</button>
@@ -110,78 +162,63 @@ const Navbar = () => {
 
           <SignedOut>
             <SignInButton>
-              <button className="nav-item">Login</button>
+              <button className="nav-item hover:text-yellow-300">Login</button>
             </SignInButton>
           </SignedOut>
 
           <SignedIn>
             <UserButton />
-      
           </SignedIn>
         </div>
       </div>
-   
 
-      
-
+      {/* Mobile Menu */}
       {mobileOpen && (
-  <div className="md:hidden mt-4 bg-[#1836b2] rounded-xl p-6 text-white">
-    <div className="flex flex-col space-y-4 text-lg">
+        <div className="md:hidden mt-2 flex flex-col gap-2 bg-[#1836b2] p-4 rounded-lg">
+          <NavLink href="/">Home</NavLink>
+          <NavLink href="/home3">Properties</NavLink>
+          <NavLink href="/service">Services</NavLink>
+          <NavLink href="/subscription">Pricing</NavLink>
 
-      <Link href="/" className="mobile-link">Home</Link>
-      <Link href="/home3" className="mobile-link">Properties</Link>
-      <Link href="/service" className="mobile-link">Services</Link>
-      <Link href="/subscription" className="mobile-link">Pricing</Link>
+          {/* Join Dropdown (Mobile) */}
+          <div className="flex flex-col">
+            <span className="nav-item">Join ▼</span>
+            <div className="ml-4 flex flex-col gap-1 mt-1">
+              <Link href="/home1" className="px-4 py-2 hover:bg-gray-200 rounded">
+                Realtor
+              </Link>
+              <Link href="/home1" className="px-4 py-2 hover:bg-gray-200 rounded">
+                Agency
+              </Link>
+              <Link href="/home2" className="px-4 py-2 hover:bg-gray-200 rounded">
+                Tenant
+              </Link>
+            </div>
+          </div>
 
-      {/* Join Section */}
-          <div className="flex flex-col space-y-2">
-           <p className="font-semibold">Join</p>
-          <div className="ml-4 flex flex-col space-y-2">
-          <Link href="/home1" className="mobile-link">Realtor</Link>
-          <Link href="/home2" className="mobile-link">Tenant</Link>
-         <Link href="/home1" className="mobile-link">Agency</Link>
+          {isSignedIn && !onboardingComplete && (
+            <NavLink href="/onboarding">Complete Onboarding</NavLink>
+          )}
 
-             </div>
-         </div>
+          {isSignedIn && onboardingComplete && dashboardUrl && (
+            <NavLink href={dashboardUrl}>Dashboard</NavLink>
+          )}
 
-      {/* Onboarding */}
-           {isSignedIn && !onboardingComplete && (
-            <Link href="/onboarding" className="mobile-link">
-              Complete Onboarding
-             </Link>
-            )}
+          <NavLink href="/about">Our Story</NavLink>
 
-      {/* Dashboard */}
-      {isSignedIn && onboardingComplete && (
-        <Link href="/dashboard" className="mobile-link">Dashboard</Link>
-      )}
+          {!isSignedIn && (
+            <SignUpButton>
+              <button className="btn-white w-full mt-2">Get Started</button>
+            </SignUpButton>
+          )}
 
-      {/* About */}
-      <Link href="/about" className="mobile-link">Our Story</Link>
-
-      {/* Get Started */}
-           {!isSignedIn && (
-          <SignUpButton>
-             <button className="btn-white w-full mt-2">Get Started</button>
-           </SignUpButton>
-           )}
-
-      {/* Login */}
-              <SignedOut>
-             <SignInButton>
-              <button className="mobile-link">Login</button>
+          <SignedOut>
+            <SignInButton>
+              <button className="nav-item hover:text-yellow-300 w-full mt-1">Login</button>
             </SignInButton>
-           </SignedOut>
-
-           {/* Profile */}
-           <SignedIn>
-            <UserButton />
-          </SignedIn>
-
-           </div>
-       </div>
-        )}
-
+          </SignedOut>
+        </div>
+      )}
     </nav>
   );
 };

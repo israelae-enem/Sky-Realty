@@ -128,7 +128,7 @@ export default function CompanySidebar({
                   toggleMenu(item.key)
                 }
               }}
-              className={`w-full text-left px-4 mt-5 py-2 font-semibold rounded flex items-center 'hover:bg-gray-100 text-black' transition
+              className={`w-full text-left px-4 py-2 font-semibold rounded flex items-center 'hover:bg-gray-100 text-black' transition
                 ${activeTab === item.key ? 'bg-gray-200 text-black' : ''}
               `}
             >

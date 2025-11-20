@@ -44,6 +44,8 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
   const [loading, setLoading] = useState(false)
   const [propertyTypeOptions] = useState(['Apartment', 'House', 'Condo', 'Townhouse'])
   const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
+  const [planLimit, setPlanLimit] = useState<number | null>(null)
+  const [currentPropertyCount, setCurrentPropertyCount] = useState(0)
 
   const { register, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: defaultValues || {
@@ -60,6 +62,33 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
       image_urls: [],
     },
   })
+
+  useEffect(() => {
+    if (!realtorId && !companyId) return
+
+    const fetchLimitAndCount = async () => {
+      try {
+        // Get plan & property limit from Ziina API
+        const res = await fetch(`/api/ziina?${realtorId ? `realtorId=${realtorId}` : `companyId=${companyId}`}`)
+        const data = await res.json()
+        setPlanLimit(data.propertyLimit || null)
+
+        // Count current properties
+        const { data: propsData, error } = await supabase
+          .from('properties')
+          .select('id')
+          .eq(realtorId ? 'realtor_id' : 'company_id', realtorId || companyId)
+        if (error) throw error
+        setCurrentPropertyCount(propsData?.length || 0)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchLimitAndCount()
+  }, [realtorId, companyId])
+
+  // -----------------------------
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
