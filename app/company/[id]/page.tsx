@@ -339,6 +339,7 @@ export default function CompanyDashboardPage() {
               <h2 className="text-lg font-semibold">Add Listing</h2>
               <ListingForm
                 companyId={user?.id ?? ''}
+                
                 onSuccess={async () => {
                   const { data } = await supabase
                     .from('listings')

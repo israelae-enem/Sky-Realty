@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { useUser } from "@clerk/nextjs";
-import LeadForm from "@/components/forms/LeadForm";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -18,25 +16,37 @@ interface Property {
   realtor_id: string;
 }
 
+interface Realtor {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  profile_pic?: string;
+}
+
 const PAGE_SIZE = 6;
 
 export default function PropertiesPage() {
-  const { user } = useUser();
   const [properties, setProperties] = useState<Property[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const [openLeadForm, setOpenLeadForm] = useState(false);
+  const [openRealtorModal, setOpenRealtorModal] = useState(false);
+  const [selectedRealtor, setSelectedRealtor] = useState<Realtor | null>(null);
 
+  // Fetch properties
   const fetchProperties = async () => {
     setLoading(true);
     try {
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
       const { data, count, error } = await supabase
         .from("properties")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
-        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+        .range(from, to);
 
       if (error) throw error;
 
@@ -52,6 +62,23 @@ export default function PropertiesPage() {
   useEffect(() => {
     fetchProperties();
   }, [page]);
+
+  // Fetch realtor details when Contact Agent is clicked
+  const openAgentModal = async (realtorId: string) => {
+    const { data, error } = await supabase
+      .from("realtors")
+      .select("*")
+      .eq("id", realtorId)
+      .single();
+
+    if (!error) {
+      setSelectedRealtor(data);
+      setOpenRealtorModal(true);
+    }
+  };
+
+  // Clean WhatsApp number
+  const cleanNumber = (num: string) => num.replace(/[^0-9]/g, "");
 
   return (
     <div className="min-h-screen">
@@ -87,41 +114,8 @@ export default function PropertiesPage() {
           >
             Browse verified listings and contact our team instantly.
           </motion.p>
-
-          <motion.div
-            className="bg-white text-[#1836b2] rounded-2xl shadow-xl px-8 py-10 mt-4 max-w-lg w-full flex flex-col items-center space-y-6"
-            animate={{ y: [0, -10, 0] }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              repeatType: "mirror",
-              ease: "easeInOut",
-            }}
-          >
-            <h2 className="text-xl font-semibold normal-case">How can we help?</h2>
-
-            <Button
-              onClick={() => setOpenLeadForm(true)}
-              className="w-full sm:w-auto px-8 py-3 bg-[#302cfc] text-white text-lg rounded-full shadow hover:scale-105 transition-all"
-            >
-              Contact Us
-            </Button>
-          </motion.div>
         </div>
       </section>
-
-      {/* LEAD FORM MODAL */}
-      <Dialog open={openLeadForm} onOpenChange={setOpenLeadForm}>
-        <DialogContent className="max-w-lg">
-          <DialogTitle>Contact Realtor</DialogTitle>
-
-          <LeadForm
-            realtorId=""
-            companyId="public"
-            onSuccess={() => setOpenLeadForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
 
       {/* PROPERTY LISTS */}
       <div className="max-w-7xl mx-auto p-6">
@@ -133,11 +127,11 @@ export default function PropertiesPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties.map((property) => (
-                <Link
-                  href={`/properties/${property.id}`}
+                <div
                   key={property.id}
-                  className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
+                  className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition relative"
                 >
+                  {/* Property Image */}
                   {property.image_urls?.[0] && (
                     <img
                       src={
@@ -149,14 +143,39 @@ export default function PropertiesPage() {
                       className="w-full h-48 object-cover"
                     />
                   )}
+
+                  {/* Floating WhatsApp Button */}
+                  <button
+                    onClick={() => openAgentModal(property.realtor_id)}
+                    className="absolute bottom-3 right-3 bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition flex items-center space-x-2"
+                  >
+                    <span>💬</span>
+                    <span>WhatsApp</span>
+                  </button>
+
+                  {/* Card Body */}
                   <div className="p-4">
-                    <h2 className="font-bold text-xl text-gray-800">{property.title}</h2>
+                    <Link href={`/properties/${property.id}`}>
+                      <h2 className="font-bold text-xl text-gray-800 hover:underline">
+                        {property.title}
+                      </h2>
+                    </Link>
+
                     <p className="text-gray-600">{property.address}</p>
+
+                    {/* Contact Agent Button */}
+                    <button
+                      onClick={() => openAgentModal(property.realtor_id)}
+                      className="mt-3 w-full bg-[#1836b2] text-white py-2 rounded-md hover:bg-blue-600 transition"
+                    >
+                      Contact Agent
+                    </button>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
 
+            {/* PAGINATION */}
             <div className="flex justify-center mt-6 space-x-3">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -179,6 +198,58 @@ export default function PropertiesPage() {
           </>
         )}
       </div>
+
+      {/* AGENT MODAL */}
+      <Dialog open={openRealtorModal} onOpenChange={setOpenRealtorModal}>
+        <DialogContent className="max-w-md">
+          <DialogTitle className="font-bold text-lg">Agent Information</DialogTitle>
+
+          {selectedRealtor ? (
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center space-x-4">
+                {selectedRealtor.profile_pic ? (
+                  <img
+                    src={selectedRealtor.profile_pic}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                    N/A
+                  </div>
+                )}
+
+                <div>
+                  <p className="font-semibold text-lg">{selectedRealtor.full_name}</p>
+                  <p className="text-gray-700"><strong>Email:</strong> {selectedRealtor.email}</p>
+                  <p className="text-gray-700"><strong>Phone:</strong> {selectedRealtor.phone}</p>
+                </div>
+              </div>
+
+              {/* CALL + WHATSAPP BUTTONS */}
+              <div className="flex flex-col space-y-3 pt-2">
+
+                <a
+                  href={`tel:${selectedRealtor.phone}`}
+                  className="w-full bg-blue-600 text-white text-center py-2 rounded-md font-medium hover:bg-blue-700 transition"
+                >
+                  📞 Call Now
+                </a>
+
+                <a
+                  href={`https://wa.me/${cleanNumber(selectedRealtor.phone)}`}
+                  target="_blank"
+                  className="w-full bg-green-600 text-white text-center py-2 rounded-md font-medium hover:bg-green-700 transition"
+                >
+                  💬 WhatsApp Chat
+                </a>
+
+              </div>
+            </div>
+          ) : (
+            <p>Loading agent details...</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

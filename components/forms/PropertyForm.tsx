@@ -15,11 +15,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@radix-ui/react-dialog"
 
 interface PropertyFormProps {
   realtorId?: string
   companyId?: string
+  plan?: string | null       // <-- ADDED
+  propertyLimit?: number | 0 // <-- ADDED
+  currentCount?: number       // <-- You might pass this too
   mode?: 'create' | 'edit'
   defaultValues?: FormValues
   onSuccess?: () => void
@@ -40,14 +47,23 @@ interface FormValues {
   image_urls: string[]
 }
 
-export default function PropertyForm({ realtorId, companyId, mode = 'create', defaultValues, onSuccess }: PropertyFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [propertyTypeOptions] = useState(['Apartment', 'House', 'Condo', 'Townhouse'])
-  const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
-  const [planLimit, setPlanLimit] = useState<number | null>(null)
-  const [currentPropertyCount, setCurrentPropertyCount] = useState(0)
+export default function PropertyForm({
+  realtorId,
+  companyId,
+  plan,
+  propertyLimit = 0,
+  currentCount = 0,
+  mode = 'create',
+  defaultValues,
+  onSuccess
+}: PropertyFormProps) {
 
-  const { register, handleSubmit, reset } = useForm<FormValues>({
+  const [loading, setLoading] = useState(false)
+  const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
+
+  const propertyTypeOptions = ['Apartment', 'House', 'Condo', 'Townhouse']
+
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>({
     defaultValues: defaultValues || {
       title: '',
       address: '',
@@ -63,61 +79,59 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
     },
   })
 
-  useEffect(() => {
-    if (!realtorId && !companyId) return
+  const reachedLimit =
+    plan !== null &&
+    propertyLimit !== null &&
+    currentCount >= propertyLimit &&
+    mode === 'create'
 
-    const fetchLimitAndCount = async () => {
-      try {
-        // Get plan & property limit from Ziina API
-        const res = await fetch(`/api/ziina?${realtorId ? `realtorId=${realtorId}` : `companyId=${companyId}`}`)
-        const data = await res.json()
-        setPlanLimit(data.propertyLimit || null)
+  // -----------------------------------------------
+  // IMAGE UPLOAD
+  // -----------------------------------------------
+ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!e.target.files || e.target.files.length === 0) return
+  setLoading(true)
 
-        // Count current properties
-        const { data: propsData, error } = await supabase
-          .from('properties')
-          .select('id')
-          .eq(realtorId ? 'realtor_id' : 'company_id', realtorId || companyId)
-        if (error) throw error
-        setCurrentPropertyCount(propsData?.length || 0)
-      } catch (err) {
-        console.error(err)
-      }
-    }
+  try {
+    const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
+    const uploadedUrls: string[] = []
 
-    fetchLimitAndCount()
-  }, [realtorId, companyId])
+    for (let i = 0; i < e.target.files.length; i++) {
+      const file = e.target.files[i]
+      const safeFileName = file.name.replace(/\s+/g, '-')
+      const filePath = `${folder}/${crypto.randomUUID()}-${safeFileName}`
 
-  // -----------------------------
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, { upsert: true })
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return
-    if (!realtorId && !companyId) {
-      toast.error('Realtor or Company ID required for image upload')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const file = e.target.files[0]
-      const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
-      const filePath = `${folder}/${crypto.randomUUID()}-${file.name}`
-
-      const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true })
       if (uploadError) throw uploadError
 
       const { data } = supabase.storage.from('documents').getPublicUrl(filePath)
-      setImages([...images, data.publicUrl])
-      toast.success('Image uploaded!')
-    } catch (err) {
-      console.error(err)
-      toast.error('Failed to upload image')
-    } finally {
-      setLoading(false)
-    }
-  }
+      if ( !data?.publicUrl) throw new Error('Failed to get public URL')
 
+      uploadedUrls.push(data.publicUrl)
+    }
+
+    setImages(prev => [...prev, ...uploadedUrls])
+    toast.success('Image(s) uploaded successfully')
+  } catch (err) {
+    console.error(err)
+    toast.error('Image upload failed')
+  } finally {
+    setLoading(false)
+  }
+}
+
+  // -----------------------------------------------
+  // SUBMIT HANDLER
+  // -----------------------------------------------
   const onSubmit = async (values: FormValues) => {
+    if (reachedLimit) {
+      toast.error(`❌ Property limit reached (${currentCount}/${propertyLimit}). Upgrade plan to add more.`)
+      return
+    }
+
     setLoading(true)
     try {
       const payload = {
@@ -129,18 +143,31 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
       }
 
       if (mode === 'edit' && defaultValues?.id) {
-        const { error } = await supabase.from('properties').update(payload).eq('id', defaultValues.id)
+        const { error } = await supabase
+          .from('properties')
+          .update(payload)
+          .eq('id', defaultValues.id)
+
         if (error) throw error
         toast.success('Property updated!')
       } else {
-        const { error } = await supabase.from('properties').insert([{ id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() }])
+        const { error } = await supabase
+          .from('properties')
+          .insert([
+            {
+              id: crypto.randomUUID(),
+              ...payload,
+              created_at: new Date().toISOString(),
+            }
+          ])
+
         if (error) throw error
         toast.success('Property added!')
       }
 
       reset()
       setImages([])
-      if (onSuccess) onSuccess()
+      onSuccess?.()
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || 'Failed to save property')
@@ -152,13 +179,23 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{mode === 'edit' ? 'Edit Property' : 'Add Property'}</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">
+          {mode === 'edit' ? 'Edit Property' : 'Add Property'}
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogTitle>{mode === 'edit' ? 'Edit Property' : 'Add New Property'}</DialogTitle>
-        <DialogDescription>
-          Fill out the form to {mode === 'edit' ? 'update' : 'create'} a property.
-        </DialogDescription>
+
+      <DialogContent className="sm:max-w-lg p-6 bg-white rounded-lg shadow-xl">
+        <h2 className="text-xl font-semibold mb-2">
+          {mode === 'edit' ? 'Edit Property' : 'Add New Property'}
+        </h2>
+
+        {/* LIMIT WARNING */}
+        {reachedLimit && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-md text-sm mb-3">
+            You have reached your property limit ({currentCount}/{propertyLimit}).  
+            Upgrade your plan to add more properties.
+          </div>
+        )}
 
         <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           <label className="text-gray-700">Title</label>
@@ -173,9 +210,13 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
           <label className="text-gray-700">Country</label>
           <Input {...register('country')} placeholder="Country" />
 
+          {/* STATUS SELECT */}
           <label className="text-gray-700">Status</label>
-          <Select {...register('status')}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select
+            onValueChange={(value) => setValue('status', value as any)}
+            defaultValue={defaultValues?.status || 'Vacant'}
+          >
+            <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Occupied">Occupied</SelectItem>
               <SelectItem value="Vacant">Vacant</SelectItem>
@@ -183,11 +224,15 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
           </Select>
 
           <label className="text-gray-700">Price</label>
-          <Input type="number" {...register('price', { valueAsNumber: true })} placeholder="Property Price" />
+          <Input type="number" {...register('price', { valueAsNumber: true })} />
 
+          {/* PROPERTY TYPE SELECT */}
           <label className="text-gray-700">Property Type</label>
-          <Select {...register('property_type')}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select
+            onValueChange={(value) => setValue('property_type', value)}
+            defaultValue={defaultValues?.property_type || 'Apartment'}
+          >
+            <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
             <SelectContent>
               {propertyTypeOptions.map(type => (
                 <SelectItem key={type} value={type}>{type}</SelectItem>
@@ -209,11 +254,21 @@ export default function PropertyForm({ realtorId, companyId, mode = 'create', de
             {images.map((img, idx) => (
               <img key={idx} src={img} className="w-20 h-20 object-cover rounded-md" />
             ))}
-            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+            <input type="file" accept="image/*" multiple onChange={handleImageChange} disabled={loading}/>
           </div>
 
-          <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Property' : 'Add Property')}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-[#302cfc] hover:bg-[#241fd9] mt-4"
+          >
+            {loading
+              ? mode === 'edit'
+                ? 'Updating...'
+                : 'Adding...'
+              : mode === 'edit'
+                ? 'Update Property'
+                : 'Add Property'}
           </Button>
         </form>
       </DialogContent>

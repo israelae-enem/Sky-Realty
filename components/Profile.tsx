@@ -96,23 +96,30 @@ export default function ProfileSidebar() {
       if (!file || !user) return;
 
       setLoading(true);
-      const filePath = `profile-pics/${user.id}-${file.name}`;
 
+      // Ensure safe file name
+      const safeFileName = file.name.replace(/\s+/g, '-');
+      const filePath = `profile-pic/${user.id}-${safeFileName}`;
+
+      // Upload file to Supabase
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file, { upsert: true });
-
       if (uploadError) throw uploadError;
 
+      // Get public URL
       const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
-      const publicUrl = data.publicUrl;
+      const publicUrl = data?.publicUrl;
+      if (!publicUrl) throw new Error('Failed to get public URL');
 
+      // Update DB
       if (isRealtor) {
         await supabase.from('realtors').update({ profile_pic: publicUrl }).eq('id', user.id);
       } else {
         await supabase.from('tenants').update({ profile_pic: publicUrl }).eq('id', user.id);
       }
 
+      // Update state
       setProfilePic(publicUrl);
     } catch (err) {
       console.error('Upload failed', err);
@@ -127,7 +134,7 @@ export default function ProfileSidebar() {
     try {
       if (!user || !profilePic) return;
       const fileName = profilePic.split('/').pop();
-      if (fileName) await supabase.storage.from('documents').remove([`profile-pics/${fileName}`]);
+      if (fileName) await supabase.storage.from('documents').remove([`profile-pic/${fileName}`]);
 
       if (isRealtor) {
         await supabase.from('realtors').update({ profile_pic: null }).eq('id', user.id);
@@ -154,10 +161,7 @@ export default function ProfileSidebar() {
       });
 
       const data = await res.json();
-      if (data.redirectUrl) {
-        // redirect to subscription page
-        window.location.href = data.redirectUrl;
-      }
+      if (data.redirectUrl) window.location.href = data.redirectUrl;
     } catch (err) {
       console.error('Failed to change plan:', err);
       alert('Failed to redirect to subscription page.');
@@ -182,17 +186,17 @@ export default function ProfileSidebar() {
   if (!isLoaded || !user) return null;
 
   return (
-    <div className="bg-[#1836b2] border border-gray-200 text-gray-800 w-full p-4 rounded-md shadow-lg">
+    <div className="bg-[#1836b2] border border-gray-200 text-gray-100 w-full p-4 rounded-md shadow-lg">
       {/* Collapsed Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between w-full hover:bg-gray-100 p-3 rounded-md transition-all duration-300"
+        className="flex items-center justify-between w-full hover:bg-gray-[#1836b2]/50 p-3 rounded-md transition-all duration-300"
       >
         <div className="flex items-center gap-3">
           {profilePic ? (
             <img src={profilePic} alt="Profile" className="w-12 h-12 rounded-full object-cover border border-gray-300" />
           ) : (
-            <UserCircle className="w-12 h-12 text-gray-400" />
+            <UserCircle className="w-12 h-12 text-gray-100" />
           )}
           <span className="font-semibold text-lg truncate">{user.firstName || user.fullName || 'User'}</span>
         </div>
@@ -210,19 +214,19 @@ export default function ProfileSidebar() {
             className="overflow-hidden mt-4 space-y-4"
           >
             <div className="text-sm">
-              <p className="text-[#302cfc] font-semibold">Email:</p>
+              <p className="text-gray-100 font-semibold">Email:</p>
               <p>{user.emailAddresses[0]?.emailAddress}</p>
             </div>
 
             {isRealtor && (
               <div className="text-sm">
-                <p className="text-[#302cfc] font-semibold">Plan:</p>
+                <p className="text-gray-100 font-semibold">Plan:</p>
                 <p className="capitalize">{currentPlan.plan}</p>
               </div>
             )}
 
             <div className="text-sm">
-              <label className="text-[#302cfc] font-semibold cursor-pointer hover:underline">
+              <label className="text-gray-100 font-semibold cursor-pointer hover:underline">
                 {loading ? 'Uploading...' : 'Upload Photo'}
                 <input type="file" accept="image/*" onChange={uploadProfilePic} className="hidden" disabled={loading} />
               </label>
@@ -255,7 +259,7 @@ export default function ProfileSidebar() {
               Delete Account
             </Button>
 
-            <Button variant="outline" onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-100">
+            <Button variant="outline" onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 text-black hover:bg-gray-100">
               <LogOut className="w-4 h-4" /> Sign Out
             </Button>
           </motion.div>

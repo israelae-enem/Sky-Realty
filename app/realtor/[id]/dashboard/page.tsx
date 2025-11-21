@@ -162,8 +162,8 @@ export default function RealtorDashboard() {
 
         const PLAN_LIMITS: Record<string, number | null> = {
           free: 1,
-          basic: 25,
-          pro: 50,
+          basic: 20,
+          pro: 40,
           premium: Infinity,
         }
 
@@ -440,6 +440,8 @@ const updateStats = (
         <h2 className="text-lg font-semibold">Add Property</h2>
         <PropertyForm
           realtorId={user?.id ?? ''}
+          plan={plan ?? null} propertyLimit={propertyLimit ?? 0}
+
           onSuccess={async () => {
             const { data } = await supabase
               .from('properties')
@@ -496,6 +498,8 @@ const updateStats = (
         <h2 className="text-lg font-semibold">Add Listing</h2>
         <ListingForm
           realtorId={user?.id ?? ''}
+          plan={plan ?? null} propertyLimit={propertyLimit ?? 0}
+
           onSuccess={async () => {
             const { data } = await supabase
               .from('listings')

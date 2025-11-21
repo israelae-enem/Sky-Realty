@@ -15,11 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@radix-ui/react-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription
+} from "@radix-ui/react-dialog"
 
 interface ListingFormProps {
   realtorId?: string
   companyId?: string
+  plan?: string | null
+  propertyLimit?: number
+  currentTotal?: number // total properties + listings from dashboard
   mode?: 'create' | 'edit'
   defaultValues?: FormValues
   onSuccess?: () => void
@@ -38,12 +47,29 @@ interface FormValues {
   image_urls: string[]
 }
 
-export default function ListingForm({ realtorId, companyId, mode = 'create', defaultValues, onSuccess }: ListingFormProps) {
+export default function ListingForm({
+  realtorId,
+  companyId,
+  plan,
+  propertyLimit = 0,
+  currentTotal = 0,
+  mode = 'create',
+  defaultValues,
+  onSuccess,
+}: ListingFormProps) {
+
   const [loading, setLoading] = useState(false)
   const [properties, setProperties] = useState<{ id: string; title: string }[]>([])
   const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
 
-  const { register, handleSubmit, reset } = useForm<FormValues>({
+  // SAME LIMIT LOGIC AS PROPERTY FORM
+  const reachedLimit =
+    plan !== null &&
+    propertyLimit !== null &&
+    currentTotal >= propertyLimit &&
+    mode === 'create'
+
+  const { register, handleSubmit, reset, setValue } = useForm<FormValues>({
     defaultValues: defaultValues || {
       property_id: '',
       title: '',
@@ -57,53 +83,66 @@ export default function ListingForm({ realtorId, companyId, mode = 'create', def
     },
   })
 
+  // FETCH PROPERTIES FOR DROPDOWN
   useEffect(() => {
-    const fetchProperties = async () => {
+    const load = async () => {
       try {
-        let query = supabase.from('properties').select('id, title')
-        if (realtorId) query = query.eq('realtor_id', realtorId)
-        if (companyId) query = query.eq('company_id', companyId)
+        let q = supabase.from('properties').select('id, title')
 
-        const { data, error } = await query
+        if (realtorId) q = q.eq('realtor_id', realtorId)
+        if (companyId) q = q.eq('company_id', companyId)
+
+        const { data, error } = await q
         if (error) throw error
-        setProperties(data ?? [])
-      } catch (err: any) {
+        setProperties(data || [])
+      } catch (err) {
         console.error(err)
-        toast.error('Failed to load properties')
+        toast.error('Failed loading properties')
       }
     }
 
-    fetchProperties()
+    load()
   }, [realtorId, companyId])
 
+  // IMAGE UPLOAD
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return
-    if (!realtorId && !companyId) {
-      toast.error('Realtor or Company ID required for image upload')
-      return
-    }
+    if (!e.target.files?.length) return
 
+    const file = e.target.files[0]
     setLoading(true)
+
     try {
-      const file = e.target.files[0]
-      const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
+      const folder = realtorId
+        ? `realtors/${realtorId}`
+        : `companies/${companyId}`
+
       const filePath = `${folder}/${crypto.randomUUID()}-${file.name}`
 
-      const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true })
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, { upsert: true })
+
       if (uploadError) throw uploadError
 
       const { data } = supabase.storage.from('documents').getPublicUrl(filePath)
-      setImages([...images, data.publicUrl])
+      setImages(prev => [...prev, data.publicUrl])
+
       toast.success('Image uploaded!')
     } catch (err) {
       console.error(err)
-      toast.error('Failed to upload image')
+      toast.error('Image upload failed')
     } finally {
       setLoading(false)
     }
   }
 
+  // SUBMIT HANDLER — SAME LIMIT LOGIC AS PROPERTY FORM
   const onSubmit = async (values: FormValues) => {
+    if (reachedLimit) {
+      toast.error(`You reached your plan limit. (${currentTotal}/${propertyLimit})`)
+      return
+    }
+
     if (!values.property_id) {
       toast.error('Please select a property')
       return
@@ -120,21 +159,32 @@ export default function ListingForm({ realtorId, companyId, mode = 'create', def
       }
 
       if (mode === 'edit' && defaultValues?.id) {
-        const { error } = await supabase.from('listings').update(payload).eq('id', defaultValues.id)
+        const { error } = await supabase
+          .from('listing')
+          .update(payload)
+          .eq('id', defaultValues.id)
         if (error) throw error
         toast.success('Listing updated!')
       } else {
-        const { error } = await supabase.from('listings').insert([{ id: crypto.randomUUID(), ...payload, created_at: new Date().toISOString() }])
+        const { error } = await supabase
+          .from('listing')
+          .insert([
+            {
+              id: crypto.randomUUID(),
+              ...payload,
+              created_at: new Date().toISOString(),
+            },
+          ])
         if (error) throw error
         toast.success('Listing added!')
       }
 
       reset()
       setImages([])
-      if (onSuccess) onSuccess()
-    } catch (err: any) {
+      onSuccess?.()
+    } catch (err) {
       console.error(err)
-      toast.error(err.message || 'Failed to save listing')
+      toast.error('Failed to save listing')
     } finally {
       setLoading(false)
     }
@@ -143,38 +193,59 @@ export default function ListingForm({ realtorId, companyId, mode = 'create', def
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">{mode === 'edit' ? 'Edit Listing' : 'Add Listing'}</Button>
+        <Button className="bg-[#302cfc] hover:bg-[#241fd9]">
+          {mode === 'edit' ? 'Edit Listing' : 'Add Listing'}
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogTitle>{mode === 'edit' ? 'Edit Listing' : 'Add New Listing'}</DialogTitle>
+
+      <DialogContent className="sm:max-w-lg bg-white p-6 rounded-lg shadow-xl">
+
+        <DialogTitle>{mode === 'edit' ? 'Edit Listing' : 'Add Listing'}</DialogTitle>
         <DialogDescription>
-          Fill out the form to {mode === 'edit' ? 'update' : 'create'} a property listing.
+          Fill the form to {mode === 'edit' ? 'update' : 'create'} a listing.
         </DialogDescription>
 
-        <form className="grid gap-4 mt-4 bg-gray-100 rounded-md border border-gray-400" onSubmit={handleSubmit(onSubmit)}>
+        {/* LIMIT WARNING */}
+        {reachedLimit && (
+          <div className="bg-red-100 text-red-700 p-3 rounded-md mt-3 text-sm">
+            You reached your plan limit ({currentTotal}/{propertyLimit}).  
+            Upgrade your plan to add more.
+          </div>
+        )}
+
+        <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
+
           <label className="text-gray-800">Property</label>
-          <Select {...register('property_id')}>
+          <Select
+            onValueChange={(v) => setValue('property_id', v)}
+            defaultValue={defaultValues?.property_id}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select a property" />
             </SelectTrigger>
             <SelectContent>
               {properties.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                <SelectItem key={p.id} value={p.id}>
+                  {p.title}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
           <label className="text-gray-800">Listing Title</label>
-          <Input {...register('title')} placeholder="Listing Title" />
+          <Input {...register('title')} />
 
           <label className="text-gray-800">Description</label>
-          <Textarea {...register('description')} placeholder="Listing Description" />
+          <Textarea {...register('description')} />
 
           <label className="text-gray-800">Price</label>
           <Input type="number" {...register('price', { valueAsNumber: true })} />
 
           <label className="text-gray-800">Status</label>
-          <Select {...register('status')}>
+          <Select
+            onValueChange={(v) => setValue('status', v as any)}
+            defaultValue={defaultValues?.status}
+          >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="Available">Available</SelectItem>
@@ -192,17 +263,25 @@ export default function ListingForm({ realtorId, companyId, mode = 'create', def
           <label className="text-gray-800">Size (sq ft)</label>
           <Input type="number" {...register('size', { valueAsNumber: true })} />
 
-          <label className="text-gray-800">Images</label>
+          
+           <label className="text-gray-700">Images</label>
           <div className="flex flex-wrap gap-2 items-center">
             {images.map((img, idx) => (
               <img key={idx} src={img} className="w-20 h-20 object-cover rounded-md" />
             ))}
-            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2" />
+            <input type="file" accept="image/*" multiple onChange={handleImageChange} disabled={loading}/>
           </div>
 
-          <Button type="submit" disabled={loading} className="bg-[#302cfc] hover:bg-[#241fd9] mt-4">
-            {loading ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Listing' : 'Add Listing')}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-[#302cfc] hover:bg-[#241fd9] mt-4"
+          >
+            {loading
+              ? mode === 'edit' ? 'Updating...' : 'Adding...'
+              : mode === 'edit' ? 'Update Listing' : 'Add Listing'}
           </Button>
+
         </form>
       </DialogContent>
     </Dialog>

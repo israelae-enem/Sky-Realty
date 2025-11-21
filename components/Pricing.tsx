@@ -20,7 +20,7 @@ const plans: Plan[] = [
     yearlyPrice: 250 * 12 * 0.83,
     properties: 10,
     features: [
-      "Manage up to 25 properties",
+      "Manage up to 20 properties",
       "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add and edit property details",
@@ -39,7 +39,7 @@ const plans: Plan[] = [
     yearlyPrice: 500 * 12 * 0.83,
     properties: 20,
     features: [
-      "Manage up to 50 properties",
+      "Manage up to 40 properties",
       "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add, edit, and remove properties",

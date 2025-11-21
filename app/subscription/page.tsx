@@ -13,6 +13,7 @@ type Plan = {
   badge: string;
 };
 
+// 🎉 Final discounted prices already applied here
 const plans: Plan[] = [
   {
     id: "basic",
@@ -21,7 +22,7 @@ const plans: Plan[] = [
     yearlyPrice: 250 * 12 * 0.83,
     properties: 10,
     features: [
-      "Manage up to 25 properties",
+      "Manage up to 20 properties",
       "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add and edit property details",
@@ -40,7 +41,7 @@ const plans: Plan[] = [
     yearlyPrice: 500 * 12 * 0.83,
     properties: 20,
     features: [
-      "Manage up to 50 properties",
+      "Manage up to 40 properties",
       "7-day free trial (card required)",
       "Full access to online dashboard",
       "Add, edit, and remove properties",
@@ -88,11 +89,10 @@ export default function PricingSubscription() {
       const res = await fetch("/api/ziina", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planId }), // ✅ removed userId
+        body: JSON.stringify({ plan: planId }),
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Failed to create subscription");
 
       if (data.redirectUrl) {
@@ -114,6 +114,7 @@ export default function PricingSubscription() {
         Sky Realty Plans
       </h1>
 
+      {/* Billing Cycle */}
       <div className="flex justify-center mb-12 space-x-4">
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
@@ -125,6 +126,7 @@ export default function PricingSubscription() {
         >
           Monthly
         </button>
+
         <button
           className={`px-4 py-2 rounded-full font-semibold ${
             billingCycle === "yearly"
@@ -137,10 +139,18 @@ export default function PricingSubscription() {
         </button>
       </div>
 
+      {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {plans.map((plan) => {
           const isFeatured =
             plan.badge === "Most Popular" || plan.badge === "Best Value";
+
+          const originalPrice =
+            plan.id === "basic"
+              ? 150
+              : plan.id === "pro"
+              ? 300
+              : 450;
 
           return (
             <div
@@ -158,6 +168,7 @@ export default function PricingSubscription() {
                 />
               </div>
 
+              {/* Badge */}
               {plan.badge && (
                 <div
                   className={`absolute -mt-4 ml-4 px-4 py-1 rounded-full text-sm font-bold text-white ${
@@ -172,16 +183,27 @@ export default function PricingSubscription() {
                 <h2 className="text-2xl font-semibold mb-2 text-gray-900">
                   {plan.name}
                 </h2>
+
+                {/* FINAL PRICE SECTION WITH DISCOUNT */}
                 <p className="text-3xl font-bold mb-4 text-gray-900">
+
+                  {/* Original Price - only monthly discount */}
+                  {billingCycle === "monthly" && (
+                    <span className="text-lg text-gray-500 line-through block">
+                      ${originalPrice}
+                    </span>
+                  )}
+
+                  {/* Discounted Price */}
                   {billingCycle === "monthly"
-                    ? plan.monthlyPrice
-                    : plan.yearlyPrice.toFixed(0)}{" "}
-                  USD{" "}
+                    ? `$${plan.monthlyPrice}`
+                    : `$${plan.yearlyPrice.toFixed(0)}`}{" "}
                   <span className="text-sm font-normal">
                     / {billingCycle}
                   </span>
                 </p>
 
+                {/* Features */}
                 <ul className="mb-6 space-y-2 text-gray-800">
                   {plan.features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-2">
@@ -192,6 +214,7 @@ export default function PricingSubscription() {
                 </ul>
               </div>
 
+              {/* Subscribe Button */}
               <div className="space-y-2">
                 <button
                   onClick={() => handleSubscribe(plan.id)}
@@ -208,8 +231,7 @@ export default function PricingSubscription() {
                 </button>
 
                 <p className="text-sm text-gray-700 text-center">
-                  Card details collected securely by Ziina. You won't be charged
-                  until the 7-day trial ends.
+                  Card details collected securely by Ziina. You won't be charged until the 7-day trial ends.
                 </p>
               </div>
             </div>
