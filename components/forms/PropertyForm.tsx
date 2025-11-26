@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
+import Image from 'next/image'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
 } from "@radix-ui/react-dialog"
 
@@ -79,58 +81,70 @@ export default function PropertyForm({
     },
   })
 
-  const reachedLimit =
+  /* const reachedLimit =
     plan !== null &&
     propertyLimit !== null &&
     currentCount >= propertyLimit &&
-    mode === 'create'
+    mode === 'create' */
 
   // -----------------------------------------------
   // IMAGE UPLOAD
   // -----------------------------------------------
- const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (!e.target.files || e.target.files.length === 0) return
-  setLoading(true)
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    setLoading(true)
 
-  try {
-    const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
-    const uploadedUrls: string[] = []
+    try {
+      const folder = realtorId
+        ? `realtors/${realtorId}`
+        : `companies/${companyId}`
 
-    for (let i = 0; i < e.target.files.length; i++) {
-      const file = e.target.files[i]
-      const safeFileName = file.name.replace(/\s+/g, '-')
-      const filePath = `${folder}/${crypto.randomUUID()}-${safeFileName}`
+      const uploadedUrls: string[] = []
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, { upsert: true })
+      for (let i = 0; i < e.target.files.length; i++) {
+        const file = e.target.files[i]
+        const safeFileName = file.name.replace(/\s+/g, "-")
+        const filePath = `${folder}/${crypto.randomUUID()}-${safeFileName}`
 
-      if (uploadError) throw uploadError
+        const { error: uploadError } = await supabase.storage
+          .from("property-images")
+          .upload(filePath, file, { upsert: true })
 
-      const { data } = supabase.storage.from('documents').getPublicUrl(filePath)
-      if ( !data?.publicUrl) throw new Error('Failed to get public URL')
+        if (uploadError) throw uploadError
 
-      uploadedUrls.push(data.publicUrl)
+        const { data } = supabase.storage
+          .from("property-images")
+          .getPublicUrl(filePath)
+
+        if (!data?.publicUrl) throw new Error("Failed getting image URL")
+
+        uploadedUrls.push(data.publicUrl)
+      }
+
+      // Add to preview
+      const newImages = [...images, ...uploadedUrls]
+      setImages(newImages)
+
+      // Add to react-hook-form
+      setValue("image_urls", newImages)
+
+      toast.success("Images uploaded successfully!")
+    } catch (err) {
+      console.error(err)
+      toast.error("Image upload failed")
+    } finally {
+      setLoading(false)
     }
-
-    setImages(prev => [...prev, ...uploadedUrls])
-    toast.success('Image(s) uploaded successfully')
-  } catch (err) {
-    console.error(err)
-    toast.error('Image upload failed')
-  } finally {
-    setLoading(false)
   }
-}
 
   // -----------------------------------------------
   // SUBMIT HANDLER
   // -----------------------------------------------
   const onSubmit = async (values: FormValues) => {
-    if (reachedLimit) {
-      toast.error(`❌ Property limit reached (${currentCount}/${propertyLimit}). Upgrade plan to add more.`)
+    /* if (reachedLimit) {
+      toast.error(❌ Property limit reached (${currentCount}/${propertyLimit}). Upgrade plan to add more.)
       return
-    }
+    } */
 
     setLoading(true)
     try {
@@ -185,17 +199,19 @@ export default function PropertyForm({
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-lg p-6 bg-white rounded-lg shadow-xl">
-        <h2 className="text-xl font-semibold mb-2">
+        <DialogTitle className="text-xl font-semibold mb-2">
           {mode === 'edit' ? 'Edit Property' : 'Add New Property'}
-        </h2>
+        </DialogTitle>
 
         {/* LIMIT WARNING */}
+        {/*
         {reachedLimit && (
           <div className="bg-red-100 text-red-700 p-3 rounded-md text-sm mb-3">
             You have reached your property limit ({currentCount}/{propertyLimit}).  
             Upgrade your plan to add more properties.
           </div>
         )}
+        */}
 
         <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           <label className="text-gray-700">Title</label>
@@ -210,7 +226,6 @@ export default function PropertyForm({
           <label className="text-gray-700">Country</label>
           <Input {...register('country')} placeholder="Country" />
 
-          {/* STATUS SELECT */}
           <label className="text-gray-700">Status</label>
           <Select
             onValueChange={(value) => setValue('status', value as any)}
@@ -226,7 +241,6 @@ export default function PropertyForm({
           <label className="text-gray-700">Price</label>
           <Input type="number" {...register('price', { valueAsNumber: true })} />
 
-          {/* PROPERTY TYPE SELECT */}
           <label className="text-gray-700">Property Type</label>
           <Select
             onValueChange={(value) => setValue('property_type', value)}
@@ -252,7 +266,7 @@ export default function PropertyForm({
           <label className="text-gray-700">Images</label>
           <div className="flex flex-wrap gap-2 items-center">
             {images.map((img, idx) => (
-              <img key={idx} src={img} className="w-20 h-20 object-cover rounded-md" />
+              <Image key={idx} src={img} alt="Property Image" width={80} height={80} className="rounded-md object-cover" />
             ))}
             <input type="file" accept="image/*" multiple onChange={handleImageChange} disabled={loading}/>
           </div>

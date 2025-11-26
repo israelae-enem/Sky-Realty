@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import clsx from 'clsx'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import Footer from '@/components/Footer'
 
@@ -11,48 +12,13 @@ interface Property {
   title: string
   address: string
   price: number
-  image_url: string
+  image_urls: string[] | string // can be array or JSON string
   type: 'buy' | 'rent'
 }
 
 export default function PropertyPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [filterType, setFilterType] = useState<'buy' | 'rent' | ''>('')
-
-  const dummyProperties: Property[] = [
-    {
-      id: '1',
-      title: 'Modern Villa',
-      address: 'Palm Jumeirah, Dubai',
-      price: 4500000,
-      image_url: "/assets/images/burj3.jpg",
-      type: 'buy',
-    },
-    {
-      id: '2',
-      title: 'Luxury Apartment',
-      address: 'Downtown Dubai',
-      price: 2500000,
-      image_url: '/assets/images/pic.jpg',
-      type: 'buy',
-    },
-    {
-      id: '3',
-      title: 'Cozy Townhouse',
-      address: 'Jumeirah Village Circle',
-      price: 1800000,
-      image_url: '/assets/images/pic1.jpg',
-      type: 'rent',
-    },
-    {
-      id: '4',
-      title: 'Office Space',
-      address: 'Business Bay',
-      price: 120000,
-      image_url: '/assets/images/burj.jpg',
-      type: 'rent',
-    },
-  ]
 
   const fetchProperties = async () => {
     try {
@@ -62,22 +28,13 @@ export default function PropertyPage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      if (data && data.length > 0) {
-        const fetched: Property[] = data.map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          address: p.address,
-          price: p.price,
-          image_url: p.image_url ?? '/assets/images/property1.jpg',
-          type: p.type ?? 'buy',
-        }))
-        setProperties(fetched)
-      } else {
-        setProperties(dummyProperties)
+
+      if (data) {
+        setProperties(data as Property[])
       }
     } catch (err) {
       console.error('Supabase fetch error:', err)
-      setProperties(dummyProperties)
+      setProperties([])
     }
   }
 
@@ -93,10 +50,11 @@ export default function PropertyPage() {
     <div className="w-full min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[450px] bg-gray-100 flex items-center justify-center">
-        <img
+        <Image
           src="/assets/images/burj4.jpg"
           alt="Hero"
-          className="w-full h-full object-cover opacity-70"
+          fill
+          className="object-cover opacity-70"
         />
         <div className="absolute text-center text-white">
           <h1 className="text-5xl font-bold mb-2">Find Your Dream Property in UAE</h1>
@@ -159,24 +117,58 @@ export default function PropertyPage() {
       <section className="py-12 px-4 bg-gray-100 flex flex-col items-center">
         <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Featured Properties</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-center">
-          {filteredProperties.map((p) => (
-            <motion.div key={p.id} whileHover={{ scale: 1.05 }} className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer">
-              <img src={p.image_url} alt={p.title} className="w-full h-48 object-cover" />
-              <div className="p-4">
-                <h3 className="text-lg font-bold">{p.title}</h3>
-                <p className="text-gray-500">{p.address}</p>
-                <p className="text-[#1836b2] font-semibold mt-2">${p.price.toLocaleString()}</p>
-                <div className="mt-3 flex gap-2">
-                  <a href={`/properties/${p.id}`} className="bg-[#1836b2] text-white px-4 py-2 rounded-full hover:bg-[#0f28a0] transition flex-1 text-center">
-                    View Details
-                  </a>
-                  <a href="/properties" className="bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition flex-1 text-center">
-                    Contact Agent
-                  </a>
+          {filteredProperties.map((p) => {
+            // Parse image_urls safely
+            let images: string[] = []
+            try {
+              images = Array.isArray(p.image_urls)
+                ? p.image_urls
+                : JSON.parse(p.image_urls || '[]')
+            } catch {
+              images = []
+            }
+
+            const firstImage = images.length > 0 ? images[0] : null
+
+            return (
+              <motion.div key={p.id} whileHover={{ scale: 1.05 }} className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer">
+                {firstImage ? (
+                  <div className="relative w-full h-48">
+                    <Image
+                      src={firstImage}
+                      alt={p.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                    No Image
+                  </div>
+                )}
+
+                <div className="p-4">
+                  <h3 className="text-lg font-bold">{p.title}</h3>
+                  <p className="text-gray-500">{p.address}</p>
+                  <p className="text-[#1836b2] font-semibold mt-2">${p.price.toLocaleString()}</p>
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href={`/properties/${p.id}`}
+                      className="bg-[#1836b2] text-white px-4 py-2 rounded-full hover:bg-[#0f28a0] transition flex-1 text-center"
+                    >
+                      View Details
+                    </a>
+                    <a
+                      href="/properties"
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition flex-1 text-center"
+                    >
+                      Contact Agent
+                    </a>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
       </section>
 
@@ -185,29 +177,27 @@ export default function PropertyPage() {
         <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Popular in UAE</h2>
         <div className="flex gap-6 mb-8 justify-center">
           {['Buy', 'Rent'].map((cat) => (
-            <a
+            <button
               key={cat}
-              href="/properties"
+              onClick={() => setFilterType(cat.toLowerCase() as 'buy' | 'rent' | '')}
               className={clsx(
                 'px-8 py-4 rounded-md font-semibold text-white transition',
                 filterType.toLowerCase() === cat.toLowerCase() ? 'bg-[#1836b2]' : 'bg-blue-500'
               )}
-              onClick={() => setFilterType(cat.toLowerCase() as 'buy' | 'rent' | '')}
             >
               {cat}
-            </a>
+            </button>
           ))}
         </div>
 
         <div className="flex flex-wrap gap-6 justify-center">
           {['Villas', 'Apartments', 'Townhouses', 'Offices'].map((cat) => (
-            <a
+            <div
               key={cat}
-              href="/properties"
               className="w-52 h-52 bg-[#1836b2] text-white rounded-full flex items-center justify-center shadow-md font-medium hover:bg-blue-500 transition text-center text-lg"
             >
               {cat}
-            </a>
+            </div>
           ))}
         </div>
       </section>
@@ -225,6 +215,7 @@ export default function PropertyPage() {
           Browse Properties
         </a>
       </section>
+
       <Footer />
     </div>
   )

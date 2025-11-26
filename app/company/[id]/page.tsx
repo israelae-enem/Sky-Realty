@@ -251,7 +251,7 @@ export default function CompanyDashboardPage() {
 
   // ---------- Framer Motion Content ----------
   const renderContent = () => {
-   {/* if (!subscriptionActive) {
+   if (!subscriptionActive) {
       return (
         <motion.div
           key="locked"
@@ -267,7 +267,7 @@ export default function CompanyDashboardPage() {
         </motion.div>
       )
     }
-      */}
+      
 
     switch (activeTab) {
       case 'home':

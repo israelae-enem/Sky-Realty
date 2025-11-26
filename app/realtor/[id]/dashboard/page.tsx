@@ -74,7 +74,8 @@ interface Notification {
 }
 
 export default function RealtorDashboard() {
-  const { user } = useUser()
+  const { user } = useUser();
+  const userId = user?.id;
   const router = useRouter()
 
   // UI state

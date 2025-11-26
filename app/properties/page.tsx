@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabaseClient";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 interface Property {
   id: string;
   title: string;
   address: string;
-  description: string;
-  image_urls: string[];
-  realtor_id: string;
+  description?: string;
+  image_urls: string[] | string;
+  realtor_id?: string | null;
+  company_id?: string | null;
 }
 
 interface Realtor {
@@ -21,23 +22,49 @@ interface Realtor {
   full_name: string;
   email: string;
   phone: string;
-  profile_pic?: string;
+}
+
+interface Company {
+  id: string;
+  company_name: string;
+  email: string;
+  phone: string;
 }
 
 const PAGE_SIZE = 6;
 
+// 💡 FIX — Parses image_urls whether it's a string or array
+const parseImages = (urls: any): string[] => {
+  try {
+    if (!urls) return [];
+    if (Array.isArray(urls)) return urls;
+
+    // If Supabase saved it as a text string
+    const parsed = JSON.parse(urls);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function PropertiesPage() {
+  const { user } = useUser();
+  const userId = user?.id;
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const [openRealtorModal, setOpenRealtorModal] = useState(false);
-  const [selectedRealtor, setSelectedRealtor] = useState<Realtor | null>(null);
+  const [contactData, setContactData] = useState<any>(null);
+  const [openContactModal, setOpenContactModal] = useState(false);
 
-  // Fetch properties
+  // FETCH PROPERTIES
   const fetchProperties = async () => {
+    if (!userId) return;
+
     setLoading(true);
+
     try {
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -45,15 +72,16 @@ export default function PropertiesPage() {
       const { data, count, error } = await supabase
         .from("properties")
         .select("*", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(from, to);
+        .or(`realtor_id.eq.${userId},company_id.eq.${userId}`)
+        .range(from, to)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       setProperties(data || []);
       setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
     } catch (err) {
-      console.error("Failed to fetch properties:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -61,136 +89,129 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     fetchProperties();
-  }, [page]);
+  }, [userId, page]);
 
-  // Fetch realtor details when Contact Agent is clicked
-  const openAgentModal = async (realtorId: string) => {
-    const { data, error } = await supabase
-      .from("realtors")
-      .select("*")
-      .eq("id", realtorId)
-      .single();
+  // OPEN CONTACT MODAL
+  const openContact = async (property: Property) => {
+    try {
+      if (property.realtor_id) {
+        const { data } = await supabase
+          .from("realtors")
+          .select("*")
+          .eq("id", property.realtor_id)
+          .single();
+        setContactData(data);
+      }
 
-    if (!error) {
-      setSelectedRealtor(data);
-      setOpenRealtorModal(true);
+      if (property.company_id) {
+        const { data } = await supabase
+          .from("companies")
+          .select("*")
+          .eq("id", property.company_id)
+          .single();
+        setContactData(data);
+      }
+
+      setOpenContactModal(true);
+    } catch (err) {
+      console.error(err);
     }
   };
-
-  // Clean WhatsApp number
-  const cleanNumber = (num: string) => num.replace(/[^0-9]/g, "");
 
   return (
     <div className="min-h-screen">
 
       {/* HERO SECTION */}
-      <section className="relative w-full h-[90vh] flex items-center justify-center overflow-hidden bg-[#183662]">
+      <section className="relative w-full h-[90vh] flex items-center justify-center bg-[#183662] overflow-hidden">
         <motion.img
           src="/assets/images/burj4.jpg"
-          alt="Hero Background"
-          initial={{ scale: 1.2, opacity: 0 }}
+          alt="Hero"
+          initial={{ scale: 1.05, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.8, ease: "easeInOut" }}
-          className="absolute top-0 left-0 w-full h-full object-cover"
+          transition={{ duration: 1.2 }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
-
         <div className="absolute inset-0 bg-black/60" />
 
-        <div className="relative z-10 flex flex-col items-center text-center px-6 space-y-8 max-w-4xl mx-auto">
-          <motion.h1
-            className="text-4xl md:text-6xl font-extrabold text-white leading-tight"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            Find Your Perfect Property
-          </motion.h1>
-
-          <motion.p
-            className="text-lg md:text-xl text-gray-200 max-w-2xl"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2 }}
-          >
-            Browse verified listings and contact our team instantly.
-          </motion.p>
+        <div className="relative z-10 text-center text-white">
+          <h1 className="text-5xl font-extrabold">My Listed Properties</h1>
+          <p className="mt-3 text-xl opacity-90">Manage your uploaded listings.</p>
         </div>
       </section>
 
-      {/* PROPERTY LISTS */}
+      {/* LIST */}
       <div className="max-w-7xl mx-auto p-6">
-        <h2 className="text-3xl font-bold text-[#302cfc] mb-6">All Properties</h2>
+        <h2 className="text-3xl font-bold text-[#302cfc] mb-6">All Your Properties</h2>
 
         {loading ? (
           <p>Loading properties...</p>
+        ) : properties.length === 0 ? (
+          <p>No properties found.</p>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((property) => (
-                <div
-                  key={property.id}
-                  className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition relative"
-                >
-                  {/* Property Image */}
-                  {property.image_urls?.[0] && (
-                    <img
-                      src={
-                        supabase.storage
-                          .from("property-images")
-                          .getPublicUrl(property.image_urls[0]).data.publicUrl
-                      }
-                      alt={property.title}
-                      className="w-full h-48 object-cover"
-                    />
-                  )}
 
-                  {/* Floating WhatsApp Button */}
-                  <button
-                    onClick={() => openAgentModal(property.realtor_id)}
-                    className="absolute bottom-3 right-3 bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition flex items-center space-x-2"
+              {properties.map((property) => {
+                const images = parseImages(property.image_urls);
+                const cover = images[0]; // FIRST IMAGE
+
+                return (
+                  <div
+                    key={property.id}
+                    className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
                   >
-                    <span>💬</span>
-                    <span>WhatsApp</span>
-                  </button>
+                    <img
+                      src={cover}
+                      alt={property.title}
+                      className="w-full h-48 object-cover bg-gray-200"
+                    />
 
-                  {/* Card Body */}
-                  <div className="p-4">
-                    <Link href={`/properties/${property.id}`}>
-                      <h2 className="font-bold text-xl text-gray-800 hover:underline">
-                        {property.title}
-                      </h2>
-                    </Link>
+                    <div className="p-4">
+                      <Link href={`/properties/${property.id}`}>
+                        <h3 className="font-bold text-xl hover:underline">{property.title}</h3>
+                      </Link>
+                      <p className="text-gray-600">{property.address}</p>
 
-                    <p className="text-gray-600">{property.address}</p>
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          onClick={() => openContact(property)}
+                          className="w-full bg-[#1836b2] text-white py-2 rounded-md"
+                        >
+                          Contact
+                        </button>
 
-                    {/* Contact Agent Button */}
-                    <button
-                      onClick={() => openAgentModal(property.realtor_id)}
-                      className="mt-3 w-full bg-[#1836b2] text-white py-2 rounded-md hover:bg-blue-600 transition"
-                    >
-                      Contact Agent
-                    </button>
+                        <Link
+                          href={`/properties/${property.id}`}
+                          className="px-4 py-2 border rounded-md"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+
             </div>
 
             {/* PAGINATION */}
-            <div className="flex justify-center mt-6 space-x-3">
+            <div className="flex justify-center mt-6 gap-3">
               <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-[#1836b2] text-white rounded disabled:opacity-50"
+                onClick={() => setPage((p) => p - 1)}
+                className="px-4 py-2 bg-[#1836b2] text-white rounded disabled:opacity-40"
               >
                 Prev
               </button>
+
               <span className="px-4 py-2 bg-gray-200 rounded">
                 {page} / {totalPages}
               </span>
+
               <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-[#1836b2] text-white rounded disabled:opacity-50"
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 bg-[#1836b2] text-white rounded disabled:opacity-40"
               >
                 Next
               </button>
@@ -199,54 +220,28 @@ export default function PropertiesPage() {
         )}
       </div>
 
-      {/* AGENT MODAL */}
-      <Dialog open={openRealtorModal} onOpenChange={setOpenRealtorModal}>
+      {/* CONTACT MODAL */}
+      <Dialog open={openContactModal} onOpenChange={setOpenContactModal}>
         <DialogContent className="max-w-md">
-          <DialogTitle className="font-bold text-lg">Agent Information</DialogTitle>
+          <DialogTitle className="font-bold text-xl mb-4">Contact Information</DialogTitle>
 
-          {selectedRealtor ? (
-            <div className="mt-4 space-y-4">
-              <div className="flex items-center space-x-4">
-                {selectedRealtor.profile_pic ? (
-                  <img
-                    src={selectedRealtor.profile_pic}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                    N/A
-                  </div>
-                )}
+          {contactData ? (
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">
+                {contactData.full_name || contactData.company_name}
+              </p>
+              <p>Email: {contactData.email}</p>
+              <p>Phone: {contactData.phone}</p>
 
-                <div>
-                  <p className="font-semibold text-lg">{selectedRealtor.full_name}</p>
-                  <p className="text-gray-700"><strong>Email:</strong> {selectedRealtor.email}</p>
-                  <p className="text-gray-700"><strong>Phone:</strong> {selectedRealtor.phone}</p>
-                </div>
-              </div>
-
-              {/* CALL + WHATSAPP BUTTONS */}
-              <div className="flex flex-col space-y-3 pt-2">
-
-                <a
-                  href={`tel:${selectedRealtor.phone}`}
-                  className="w-full bg-blue-600 text-white text-center py-2 rounded-md font-medium hover:bg-blue-700 transition"
-                >
-                  📞 Call Now
-                </a>
-
-                <a
-                  href={`https://wa.me/${cleanNumber(selectedRealtor.phone)}`}
-                  target="_blank"
-                  className="w-full bg-green-600 text-white text-center py-2 rounded-md font-medium hover:bg-green-700 transition"
-                >
-                  💬 WhatsApp Chat
-                </a>
-
-              </div>
+              <a
+                href={`tel:${contactData.phone}`}
+                className="block w-full bg-[#1836b2] text-white text-center py-2 rounded-md mt-4"
+              >
+                📞 Call Now
+              </a>
             </div>
           ) : (
-            <p>Loading agent details...</p>
+            <p>Loading contact info...</p>
           )}
         </DialogContent>
       </Dialog>
