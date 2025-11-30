@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Roboto, Audiowide } from "next/font/google";
 import { cn } from "../lib/utils";
+
 // @ts-ignore
 import "./globals.css";
 import { Toaster } from "sonner";

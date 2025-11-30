@@ -7,6 +7,7 @@ import { useUser } from '@clerk/nextjs';
 import { User, Mail, Phone, MapPin, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import PhoneInput from 'react-phone-input-2';
 
 export default function CompanySignUpForm() {
   const router = useRouter();
@@ -126,12 +127,6 @@ export default function CompanySignUpForm() {
       icon: <Briefcase className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
     },
     {
-      name: 'phone_number',
-      type: 'tel',
-      placeholder: 'Phone Number',
-      icon: <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
-    },
-    {
       name: 'address',
       type: 'text',
       placeholder: 'Address',
@@ -151,7 +146,7 @@ export default function CompanySignUpForm() {
       initial="hidden"
       animate="visible"
     >
-      {/* Inputs */}
+      {/* Company Name, Address, Country */}
       {formElements.map((field, idx) => (
         <motion.div
           key={field.name}
@@ -172,10 +167,33 @@ export default function CompanySignUpForm() {
         </motion.div>
       ))}
 
-      {/* Email readonly */}
+      {/* Phone Number Input using react-phone-input-2 */}
       <motion.div
         className="relative"
         custom={formElements.length}
+        variants={fadeUpVariant}
+      >
+        <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400 z-10" />
+        <PhoneInput
+          country={'us'} // default country ISO code lowercase
+          value={form.phone_number.replace('+', '')} // remove + for component
+          onChange={(value, countryData) => {
+            if (!value) return setForm({ ...form, phone_number: '' });
+            const phoneE164 = '+' + value.replace(/\D/g, '');
+            setForm({ ...form, phone_number: phoneE164 });
+          }}
+          enableAreaCodes
+          countryCodeEditable={false}
+          preferredCountries={['us', 'gb', 'ca', 'au', 'in']}
+          inputClass="pl-10 w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          containerClass="w-full"
+        />
+      </motion.div>
+
+      {/* Email readonly */}
+      <motion.div
+        className="relative"
+        custom={formElements.length + 1}
         variants={fadeUpVariant}
       >
         <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -190,7 +208,7 @@ export default function CompanySignUpForm() {
       {/* Profile pic upload */}
       <motion.div
         className="relative"
-        custom={formElements.length + 1}
+        custom={formElements.length + 2}
         variants={fadeUpVariant}
       >
         <label className="cursor-pointer text-blue-600 hover:underline">
@@ -198,7 +216,7 @@ export default function CompanySignUpForm() {
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => handleFileChange(e)}
+            onChange={handleFileChange}
             className="hidden"
           />
         </label>
@@ -210,7 +228,7 @@ export default function CompanySignUpForm() {
         type="submit"
         disabled={loading}
         className="w-full bg-[#302cfc] text-white py-2 rounded-md hover:bg-blue-700 transition flex justify-center"
-        custom={formElements.length + 2}
+        custom={formElements.length + 3}
         variants={fadeUpVariant}
       >
         {loading ? (

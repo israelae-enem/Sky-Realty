@@ -19,7 +19,7 @@ const HeroSection = () => {
       </div>
 
       {/* ===== Content ===== */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6 space-y-8">
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6 space-y-6">
         {/* Premium Headline */}
         <motion.h1
           className="text-4xl md:text-6xl font-extrabold text-white leading-tight max-w-4xl drop-shadow-2xl"
@@ -30,22 +30,41 @@ const HeroSection = () => {
           List. Showcase. Sell Faster with Sky Realty.
         </motion.h1>
 
-        {/* Subtext */}
-        <motion.p
-          className="text-lg md:text-2xl text-gray-200 max-w-2xl drop-shadow-lg"
-          initial={{ opacity: 0, y: 40 }}
+        {/* Tagline */}
+        <motion.h2
+          className="text-xl md:text-2xl text-[#59fcf7] font-semibold drop-shadow-lg max-w-3xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.1 }}
+        >
+          Dubai’s Smartest Real Estate Marketplace  Buy, Sell & Rent Property With Confidence
+        </motion.h2>
+
+        {/* CTA Buttons */}
+        <motion.div
+          className="flex flex-col sm:flex-row gap-4 justify-center mt-4"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2 }}
         >
-          Showcase your properties in a modern, curated marketplace designed for
-          <span className="text-[#4cc9f0] font-semibold"> visibility</span>,{" "}
-          <span className="text-[#4cc9f0] font-semibold">credibility</span>, and{" "}
-          <span className="text-[#4cc9f0] font-semibold">premium real-estate success</span>.
-        </motion.p>
+          <a
+            href="/signin"
+            className="px-6 py-3 rounded-full bg-[#302cfc] text-white font-semibold shadow hover:scale-105 transition-all"
+          >
+            List Your Property
+          </a>
+
+          <a
+            href="/signin"
+            className="px-6 py-3 rounded-full border border-white text-white font-semibold hover:bg-white hover:text-[#302cfc] transition-all"
+          >
+            Explore Properties
+          </a>
+        </motion.div>
 
         {/* Floating CTA Card */}
         <motion.div
-          className="bg-white/90 backdrop-blur-md text-[#1836b2] rounded-2xl shadow-2xl px-8 py-8 mt-4 max-w-lg w-full flex flex-col items-center space-y-6 border border-white/30"
+          className="bg-white/90 backdrop-blur-md text-[#1836b2] rounded-2xl shadow-2xl px-8 py-8 mt-6 max-w-lg w-full flex flex-col items-center space-y-6 border border-white/30"
           animate={{ y: [0, -10, 0] }}
           transition={{
             duration: 4,

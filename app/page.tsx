@@ -56,6 +56,7 @@ const Page = () => {
     <main className="min-h-screen overflow-x-hidden w-full text-gray-900 p-0 m-0">
     <HeroSection />
     <AboutUsSection />
+    <WhySkyRealty />
     <CTASection />
 
      <section>

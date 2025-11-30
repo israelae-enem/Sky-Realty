@@ -29,46 +29,39 @@ const Navbar = () => {
     const checkRole = async () => {
       if (!user) return;
 
-      // Check Realtor
-      let { data: realtor } = await supabase
+      const { data: realtor } = await supabase
         .from("realtors")
         .select("id")
         .eq("id", user.id)
         .maybeSingle();
-
       if (realtor) {
         setOnboardingComplete(true);
         setDashboardUrl(`/realtor/${user.id}/dashboard`);
         return;
       }
 
-      // Check Tenant
-      let { data: tenant } = await supabase
+      const { data: tenant } = await supabase
         .from("tenants")
         .select("id")
         .eq("id", user.id)
         .maybeSingle();
-
       if (tenant) {
         setOnboardingComplete(true);
         setDashboardUrl(`/tenant/${user.id}/dashboard`);
         return;
       }
 
-      // Check Company
-      let { data: company } = await supabase
+      const { data: company } = await supabase
         .from("companies")
         .select("id")
         .eq("id", user.id)
         .maybeSingle();
-
       if (company) {
         setOnboardingComplete(true);
         setDashboardUrl(`/company/${user.id}/dashboard`);
         return;
       }
 
-      // No role found
       setOnboardingComplete(false);
       setDashboardUrl(null);
     };
@@ -81,7 +74,9 @@ const Navbar = () => {
     <Link
       href={href}
       className={`nav-item ${
-        pathname === href ? "text-yellow-300 font-semibold" : "hover:text-yellow-300"
+        pathname === href
+          ? "text-yellow-400 font-semibold"
+          : "text-gray-200 hover:text-yellow-400 transition-colors"
       }`}
     >
       {children}
@@ -89,13 +84,13 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="w-full bg-[#1836b2] text-white px-4 py-3 relative z-50 shadow-md">
+    <nav className="w-full bg-[#1836b2] text-gray-100 px-4 py-3 relative z-50 shadow-md">
       <div className="flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
           <Image
             src="/assets/icons/logo4.jpg"
-            alt="logo"
+            alt="Sky Realty Logo"
             width={80}
             height={15}
             className="object-contain"
@@ -113,7 +108,7 @@ const Navbar = () => {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
           <NavLink href="/">Home</NavLink>
-          <NavLink href="/home3">Properties</NavLink>
+          <NavLink href="/properties">Properties</NavLink>
           <NavLink href="/service">Services</NavLink>
           <NavLink href="/subscription">Pricing</NavLink>
 
@@ -123,18 +118,18 @@ const Navbar = () => {
             onMouseEnter={() => setIsDropdownOpen(true)}
             onMouseLeave={() => setIsDropdownOpen(false)}
           >
-            <button className="nav-item flex items-center gap-1 hover:text-yellow-300">
+            <button className="nav-item flex items-center gap-1 text-gray-200 hover:text-yellow-400">
               Join ▼
             </button>
             {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-40 bg-white text-black rounded-lg shadow-xl z-50 flex flex-col">
-                <Link href="/home1" className="px-4 py-2 hover:bg-gray-200">
+              <div className="absolute left-0 mt-2 w-40 bg-gray-900 text-gray-200 rounded-lg shadow-xl z-50 flex flex-col">
+                <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
                   Realtor
                 </Link>
-                <Link href="/home1" className="px-4 py-2 hover:bg-gray-200">
+                <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
                   Agency
                 </Link>
-                <Link href="/home2" className="px-4 py-2 hover:bg-gray-200">
+                <Link href="/home2" className="px-4 py-2 hover:bg-gray-800 rounded">
                   Tenant
                 </Link>
               </div>
@@ -156,13 +151,15 @@ const Navbar = () => {
           {/* Auth Buttons */}
           {!isSignedIn && (
             <SignUpButton>
-              <button className="btn-white">Get Started</button>
+              <button className="bg-yellow-400 text-[#0f0f2a] px-5 py-2 rounded-md font-semibold hover:bg-yellow-300 transition">
+                Get Started
+              </button>
             </SignUpButton>
           )}
 
           <SignedOut>
             <SignInButton>
-              <button className="nav-item hover:text-yellow-300">Login</button>
+              <button className="nav-item hover:text-yellow-400">Login</button>
             </SignInButton>
           </SignedOut>
 
@@ -174,23 +171,23 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden mt-2 flex flex-col gap-2 bg-[#1836b2] p-4 rounded-lg">
+        <div className="md:hidden mt-2 flex flex-col gap-2 bg-[#0f0f2a] p-4 rounded-lg">
           <NavLink href="/">Home</NavLink>
-          <NavLink href="/home3">Properties</NavLink>
+          <NavLink href="/properties">Properties</NavLink>
           <NavLink href="/service">Services</NavLink>
           <NavLink href="/subscription">Pricing</NavLink>
 
           {/* Join Dropdown (Mobile) */}
           <div className="flex flex-col">
-            <span className="nav-item">Join ▼</span>
+            <span className="nav-item text-gray-200">Join ▼</span>
             <div className="ml-4 flex flex-col gap-1 mt-1">
-              <Link href="/home1" className="px-4 py-2 hover:bg-gray-200 rounded">
+              <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
                 Realtor
               </Link>
-              <Link href="/home1" className="px-4 py-2 hover:bg-gray-200 rounded">
+              <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
                 Agency
               </Link>
-              <Link href="/home2" className="px-4 py-2 hover:bg-gray-200 rounded">
+              <Link href="/home2" className="px-4 py-2 hover:bg-gray-800 rounded">
                 Tenant
               </Link>
             </div>
@@ -208,13 +205,15 @@ const Navbar = () => {
 
           {!isSignedIn && (
             <SignUpButton>
-              <button className="btn-white w-full mt-2">Get Started</button>
+              <button className="bg-yellow-400 text-[#0f0f2a] px-5 py-2 rounded-md font-semibold hover:bg-yellow-300 transition w-full mt-2">
+                Get Started
+              </button>
             </SignUpButton>
           )}
 
           <SignedOut>
             <SignInButton>
-              <button className="nav-item hover:text-yellow-300 w-full mt-1">Login</button>
+              <button className="nav-item hover:text-yellow-400 w-full mt-1">Login</button>
             </SignInButton>
           </SignedOut>
         </div>

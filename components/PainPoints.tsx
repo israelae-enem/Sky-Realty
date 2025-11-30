@@ -51,79 +51,81 @@ const fadeUp = {
   }),
 };
 
-export default function CircularSolutionsSection() {
+export default function SolutionsSection() {
   return (
-    <section className="bg-white py-20 px-6 text-gray-800 overflow-hidden">
-      {/* Heading */}
-      <motion.div
-        className="text-center mb-16"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <h2 className="text-4xl md:text-5xl text-[#1836b2] font-bold mb-4">
-          Turning Real Estate Challenges Into Smart Solutions
-        </h2>
-        <p className="text-lg md:text-xl max-w-3xl mx-auto text-gray-700">
-          Each circle represents a core area where Sky Realty simplifies real
-          estate management from automation to insights.
-        </p>
-      </motion.div>
-
-      {/* Circular Cards */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14 place-items-center">
-        {cards.map((card, i) => (
-          <motion.div
-            key={i}
-            className="relative bg-[#1836b2] w-72 h-72 rounded-full shadow-lg flex flex-col items-center justify-center text-center p-8 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            custom={i}
-          >
-            {/* Logo */}
-            <div className="absolute top-6 w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-md">
-              <Image
-                src="/assets/icons/logo4.jpg"
-                alt="Sky Realty Logo"
-                width={40}
-                height={40}
-                className="object-contain rounded-full"
-              />
-            </div>
-
-            {/* Card Content */}
-            <h3 className="text-xl font-semibold text-white mb-3 mt-10">
-              {card.title}
-            </h3>
-            <div className="text-gray-100 text-sm mb-2 font-medium">
-              <span className="block">Pain:</span> {card.pain}
-            </div>
-            <div className="bg-white/90 text-gray-900 text-sm rounded-lg px-4 py-2 leading-relaxed">
-              <span className="font-semibold">Solution:</span> {card.solution}
-            </div>
-          </motion.div>
-        ))}
+    <section className="relative w-full min-h-screen overflow-hidden">
+      {/* Background Image + Overlay */}
+      <div className="absolute inset-0">
+        <Image
+          src="/assets/images/burj4.jpg"
+          alt="Sky Realty Background"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/50" />
       </div>
 
-      {/* CTA */}
-      <motion.div
-        className="text-center mt-20"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <h2 className="text-3xl font-semibold text-[#1836b2] mb-4">
-          Ready to experience smarter property management?
-        </h2>
-        <a
-          href="/sign-in"
-          className="inline-block bg-[#1836b2] text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-[0_0_15px_#59fcf7] transition-all duration-300"
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center space-y-16 px-6 py-20">
+        {/* Heading */}
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          Get Started
-        </a>
-      </motion.div>
+          <h2 className="text-4xl md:text-5xl text-yellow-500 font-bold mb-4 drop-shadow-lg">
+            Turning Real Estate Challenges Into Smart Solutions
+          </h2>
+          <p className="text-lg md:text-xl max-w-3xl mx-auto text-gray-100 drop-shadow-md">
+            Each card represents a core area where Sky Realty simplifies real estate management from automation to insights.
+          </p>
+        </motion.div>
+
+        {/* Cards */}
+        <div className="max-w-6xl w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center">
+          {cards.map((card, i) => (
+            <motion.div
+              key={i}
+              className="bg-[#1836b2]/90 w-72 rounded-xl shadow-lg flex flex-col items-center text-center p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2"
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={i}
+            >
+              <h3 className="text-xl font-semibold text-yellow-500 mb-2">
+                {card.title}
+              </h3>
+              <p className="text-gray-100 text-sm mb-2 font-medium">
+                <span className="block">Pain:</span> {card.pain}
+              </p>
+              <div className="bg-white/90 text-gray-900 text-sm rounded-lg px-4 py-2 leading-relaxed">
+                <span className="font-semibold">Solution:</span> {card.solution}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h2 className="text-3xl font-semibold text-yellow-500 mb-4 drop-shadow-lg">
+            Ready to experience smarter property management?
+          </h2>
+          <a
+            href="/sign-in"
+            className="inline-block bg-[#1836b2] text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-[0_0_15px_#59fcf7] transition-all duration-300"
+          >
+            Get Started
+          </a>
+        </motion.div>
+      </div>
     </section>
   );
 }

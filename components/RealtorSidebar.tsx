@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import {
-  List,
   FilePlus,
   Users,
   Calendar,
@@ -15,11 +14,22 @@ import {
 } from 'lucide-react'
 import ProfileSidebar from './Profile'
 
+interface SubMenuItem {
+  label: string
+  key: string
+  external?: boolean
+}
+
+interface MenuItem {
+  label: string
+  key: string
+  icon: React.ReactNode
+  submenu: SubMenuItem[]
+}
+
 interface Props {
   activeTab: string
   setActiveTab: (tab: string) => void
-
-  // 🔥 Added
   isMobile?: boolean
   onClose?: () => void
 }
@@ -32,25 +42,24 @@ export default function RealtorSidebar({
 }: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
 
-  const menu = [
+  const menu: MenuItem[] = [
     { label: 'Home', key: 'home', icon: <Home size={16} className="mr-2" />, submenu: [] },
     {
-      label: 'Properties',
-      key: 'properties',
-      icon: <List size={16} className="mr-2" />,
+      label: 'Rent Analytics',
+      key: 'rentAnalytics',
+      icon: <CreditCard size={16} className="mr-2" />,
       submenu: [
-        { label: 'All Properties', key: 'properties' },
-        { label: 'Add Property', key: 'addProperty' },
+        { label: 'Rent Analytics', key: 'rentAnalytics' },
+        { label: 'Rent Reminder', key: 'rentReminder' },
       ],
     },
     {
-      label: 'Listings',
-      key: 'listings',
+      label: 'Properties',
+      key: 'properties',
       icon: <FilePlus size={16} className="mr-2" />,
       submenu: [
-        { label: 'All Listings', key: '/properties', external: true },
-        { label: 'Add Listing', key: 'addListing' },
-        { label: 'View Listing', key: '/properties/[id]', external: true },
+        { label: 'All Properties', key: 'properties' },
+        { label: 'Add Property', key: 'addProperty' },
       ],
     },
     {
@@ -76,17 +85,13 @@ export default function RealtorSidebar({
       label: 'Payments',
       key: 'payments',
       icon: <CreditCard size={16} className="mr-2" />,
-      submenu: [
-        { label: 'All Payments', key: 'rentPayments' },
-      ],
+      submenu: [{ label: 'All Payments', key: 'rentPayments' }],
     },
     {
       label: 'Legal Docs',
       key: 'legalDocs',
       icon: <FileText size={16} className="mr-2" />,
-      submenu: [
-        { label: 'All Documents', key: 'legalDocuments' },
-      ],
+      submenu: [{ label: 'All Documents', key: 'legalDocuments' }],
     },
     { label: 'Maintenance', key: 'maintenance', icon: <FileText size={16} className="mr-2" />, submenu: [] },
     { label: 'Notifications', key: 'notifications', icon: <Bell size={16} className="mr-2" />, submenu: [] },
@@ -102,16 +107,14 @@ export default function RealtorSidebar({
   return (
     <aside className="w-64 bg-[#1836b2] text-white shadow flex flex-col">
       <ProfileSidebar />
-      <nav className="flex-1 overflow-y-auto mt-10 p-2 space-y-1">
-
-        {menu.map(item => (
+      <nav className="flex-1 overflow-y-auto  p-2 space-y-1">
+        {menu.map((item) => (
           <div key={item.key}>
-            {/* Main item button */}
             <button
               onClick={() => {
                 if (item.submenu.length === 0) {
                   setActiveTab(item.key)
-                  if (isMobile) onClose()     // 🔥 close mobile sidebar
+                  if (isMobile) onClose()
                 } else {
                   toggleMenu(item.key)
                 }
@@ -124,19 +127,18 @@ export default function RealtorSidebar({
               {item.label}
             </button>
 
-            {/* Submenu only for items that have it */}
             {item.submenu.length > 0 && openMenu === item.key && (
               <div className="ml-6 mt-1 space-y-1">
-                {item.submenu.map(sub => (
+                {item.submenu.map((sub) => (
                   <button
                     key={sub.key}
                     onClick={() => {
                       if (sub.external) {
                         window.location.href = sub.key
-                        if (isMobile) onClose()  // 🔥 close mobile sidebar
+                        if (isMobile) onClose()
                       } else {
                         setActiveTab(sub.key)
-                        if (isMobile) onClose()  // 🔥 close mobile sidebar
+                        if (isMobile) onClose()
                       }
                     }}
                     className={`w-full text-left px-3 py-1 rounded text-sm hover:bg-white hover:text-[#1836b2]
@@ -150,7 +152,6 @@ export default function RealtorSidebar({
             )}
           </div>
         ))}
-
       </nav>
     </aside>
   )

@@ -1,222 +1,224 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import clsx from 'clsx'
-import Image from 'next/image'
-import { supabase } from '@/lib/supabaseClient'
-import Footer from '@/components/Footer'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabaseClient";
+import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
+import { motion } from "framer-motion";
 
 interface Property {
-  id: string
-  title: string
-  address: string
-  price: number
-  image_urls: string[] | string // can be array or JSON string
-  type: 'buy' | 'rent'
+  id: string;
+  title: string;
+  address: string;
+  description?: string;
+  image_urls: string[] | string;
+  realtor_id?: string | null;
+  company_id?: string | null;
 }
 
-export default function PropertyPage() {
-  const [properties, setProperties] = useState<Property[]>([])
-  const [filterType, setFilterType] = useState<'buy' | 'rent' | ''>('')
+interface Realtor {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+}
 
-  const fetchProperties = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .order('created_at', { ascending: false })
+interface Company {
+  id: string;
+  company_name: string;
+  email: string;
+  phone: string;
+}
 
-      if (error) throw error
+const PAGE_SIZE = 6;
 
-      if (data) {
-        setProperties(data as Property[])
-      }
-    } catch (err) {
-      console.error('Supabase fetch error:', err)
-      setProperties([])
-    }
+// 💡 FIX — Parses image_urls whether it's a string or array
+const parseImages = (urls: any): string[] => {
+  try {
+    if (!urls) return [];
+    if (Array.isArray(urls)) return urls;
+
+    // If Supabase saved it as a text string
+    const parsed = JSON.parse(urls);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
   }
+};
+
+export default function PropertiesPage() {
+  const { user } = useUser();
+  const userId = user?.id;
+
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const [contactData, setContactData] = useState<any>(null);
+  const [openContactModal, setOpenContactModal] = useState(false);
+
+  // FETCH PROPERTIES
+  const fetchProperties = async () => {
+    if (!userId) return;
+
+    setLoading(true);
+
+    try {
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, count, error } = await supabase
+        .from("properties")
+        .select("*", { count: "exact" })
+        .or(`realtor_id.eq.${userId},company_id.eq.${userId}`)
+        .range(from, to)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setProperties(data || []);
+      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchProperties()
-  }, [])
+    fetchProperties();
+  }, [userId, page]);
 
-  const filteredProperties = filterType
-    ? properties.filter((p) => p.type === filterType)
-    : properties
+  // OPEN CONTACT MODAL
+  const openContact = async (property: Property) => {
+    try {
+      if (property.realtor_id) {
+        const { data } = await supabase
+          .from("realtors")
+          .select("*")
+          .eq("id", property.realtor_id)
+          .single();
+        setContactData(data);
+      }
+
+      if (property.company_id) {
+        const { data } = await supabase
+          .from("companies")
+          .select("*")
+          .eq("id", property.company_id)
+          .single();
+        setContactData(data);
+      }
+
+      setOpenContactModal(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div className="w-full min-h-screen">
-      {/* Hero Section */}
-      <section className="relative h-[450px] bg-gray-100 flex items-center justify-center">
-        <Image
-          src="/assets/images/burj4.jpg"
+    <div className="min-h-screen">
+
+      {/* HERO SECTION */}
+      <section className="relative w-full h-[90vh] flex items-center justify-center bg-[#183662] overflow-hidden">
+        <motion.img
+          src="/assets/images/burj3.jpg"
           alt="Hero"
-          fill
-          className="object-cover opacity-70"
+          initial={{ scale: 1.05, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2 }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute text-center text-white">
-          <h1 className="text-5xl font-bold mb-2">Find Your Dream Property in UAE</h1>
-          <p className="text-xl text-gray-800">
-            Explore Properties, Transactions, and Realtors all in one platform
-          </p>
-        </div>
+        <div className="absolute inset-0 bg-black/60" />
 
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-white rounded-full p-2 shadow-md">
-          {['Properties', 'Transactions', 'Realtors'].map((item) => (
-            <a
-              key={item}
-              href="/properties"
-              className="px-4 py-2 font-medium text-gray-800 hover:text-blue-600 transition-colors"
-            >
-              {item}
-            </a>
-          ))}
+        <div className="relative z-10 text-center text-white">
+          <h1 className="text-5xl font-extrabold">My Listed Properties</h1>
+          <p className="mt-3 text-xl opacity-90">Manage your uploaded listings.</p>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-12 text-center bg-gray-100 flex flex-col items-center justify-center">
-        <h2 className="text-3xl font-bold mb-4 text-gray-800">Start Your Property Journey</h2>
-        <p className="text-gray-700 mb-6 text-center max-w-2xl">
-          Browse properties and find your perfect home today. Connect with verified agents across UAE.
-        </p>
-        <a
-          href="/properties"
-          className="bg-[#1836b2] text-white px-6 py-3 rounded-full hover:bg-[#0f28a0] transition"
-        >
-          Browse Properties
-        </a>
-      </section>
+      {/* LIST */}
+      <div className="max-w-7xl mx-auto p-6">
+        <h2 className="text-3xl font-bold text-[#302cfc] mb-6">All Your Properties</h2>
 
-      {/* Swipeable Cards */}
-      <section className="py-12 px-4 bg-white flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Why Choose Us</h2>
-        <div className="flex overflow-x-auto gap-6 justify-center">
-          <motion.div whileHover={{ y: -10 }} className="flex-none w-72 h-48 bg-[#1836b2] text-white rounded-lg p-6 shadow-lg flex flex-col justify-center items-center text-center cursor-pointer">
-            <h3 className="text-xl font-bold mb-2">UAE Transactions</h3>
-            <p>Transparent, safe, and fully documented property transactions across UAE.</p>
-          </motion.div>
-          <motion.div whileHover={{ y: -10 }} className="flex-none w-72 h-48 bg-blue-500 text-white rounded-lg p-6 shadow-lg flex flex-col justify-center items-center text-center cursor-pointer">
-            <h3 className="text-xl font-bold mb-2">Sky Realty</h3>
-            <p>Your trusted partner in real estate investments, ensuring top returns.</p>
-          </motion.div>
-          <motion.div whileHover={{ y: -10 }} className="flex-none w-72 h-48 bg-[#1836b2] text-white rounded-lg p-6 shadow-lg flex flex-col justify-center items-center text-center cursor-pointer">
-            <h3 className="text-xl font-bold mb-2">Property Management</h3>
-            <p>Manage your properties effortlessly with professional support and services.</p>
-          </motion.div>
-          <motion.div whileHover={{ y: -10 }} className="flex-none w-72 h-48 bg-blue-500 text-white rounded-lg p-6 shadow-lg flex flex-col justify-center items-center text-center cursor-pointer">
-            <h3 className="text-xl font-bold mb-2">Roth</h3>
-            <p>Comprehensive analytics and insights to maximize your property investments.</p>
-          </motion.div>
-        </div>
-      </section>
+        {loading ? (
+          <p>Loading properties...</p>
+        ) : properties.length === 0 ? (
+          <p>No properties found.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      {/* Properties Grid */}
-      <section className="py-12 px-4 bg-gray-100 flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Featured Properties</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 justify-center">
-          {filteredProperties.map((p) => {
-            // Parse image_urls safely
-            let images: string[] = []
-            try {
-              images = Array.isArray(p.image_urls)
-                ? p.image_urls
-                : JSON.parse(p.image_urls || '[]')
-            } catch {
-              images = []
-            }
+              {properties.map((property) => {
+                const images = parseImages(property.image_urls);
+                const cover = images[0]; // FIRST IMAGE
 
-            const firstImage = images.length > 0 ? images[0] : null
-
-            return (
-              <motion.div key={p.id} whileHover={{ scale: 1.05 }} className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer">
-                {firstImage ? (
-                  <div className="relative w-full h-48">
-                    <Image
-                      src={firstImage}
-                      alt={p.title}
-                      fill
-                      className="object-cover"
+                return (
+                  <div
+                    key={property.id}
+                    className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
+                  >
+                    <img
+                      src={cover}
+                      alt={property.title}
+                      className="w-full h-48 object-cover bg-gray-200"
                     />
-                  </div>
-                ) : (
-                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
-                    No Image
-                  </div>
-                )}
 
-                <div className="p-4">
-                  <h3 className="text-lg font-bold">{p.title}</h3>
-                  <p className="text-gray-500">{p.address}</p>
-                  <p className="text-[#1836b2] font-semibold mt-2">${p.price.toLocaleString()}</p>
-                  <div className="mt-3 flex gap-2">
-                    <a
-                      href={`/properties/${p.id}`}
-                      className="bg-[#1836b2] text-white px-4 py-2 rounded-full hover:bg-[#0f28a0] transition flex-1 text-center"
-                    >
-                      View Details
-                    </a>
-                    <a
-                      href="/properties"
-                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition flex-1 text-center"
-                    >
-                      Contact Agent
-                    </a>
+                    <div className="p-4">
+                      <Link href={`/properties/${property.id}`}>
+                        <h3 className="font-bold text-xl hover:underline">{property.title}</h3>
+                      </Link>
+                      <p className="text-gray-600">{property.address}</p>
+
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          onClick={() => openContact(property)}
+                          className="w-full bg-[#1836b2] text-white py-2 rounded-md"
+                        >
+                          Contact
+                        </button>
+
+                        <Link
+                          href={`/properties/${property.id}`}
+                          className="px-4 py-2 border rounded-md"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-      </section>
+                );
+              })}
 
-      {/* Popular in UAE Section */}
-      <section className="py-12 px-4 bg-white flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Popular in UAE</h2>
-        <div className="flex gap-6 mb-8 justify-center">
-          {['Buy', 'Rent'].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilterType(cat.toLowerCase() as 'buy' | 'rent' | '')}
-              className={clsx(
-                'px-8 py-4 rounded-md font-semibold text-white transition',
-                filterType.toLowerCase() === cat.toLowerCase() ? 'bg-[#1836b2]' : 'bg-blue-500'
-              )}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-6 justify-center">
-          {['Villas', 'Apartments', 'Townhouses', 'Offices'].map((cat) => (
-            <div
-              key={cat}
-              className="w-52 h-52 bg-[#1836b2] text-white rounded-full flex items-center justify-center shadow-md font-medium hover:bg-blue-500 transition text-center text-lg"
-            >
-              {cat}
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* CTA Section Again */}
-      <section className="py-12 text-center bg-gray-100 flex flex-col items-center justify-center">
-        <h2 className="text-3xl font-bold mb-4 text-gray-800">Start Your Property Journey</h2>
-        <p className="text-gray-700 mb-6 text-center max-w-2xl">
-          Browse properties and find your perfect home today. Connect with verified agents across UAE.
-        </p>
-        <a
-          href="/properties"
-          className="bg-[#1836b2] text-white px-6 py-3 rounded-full hover:bg-[#0f28a0] transition"
-        >
-          Browse Properties
-        </a>
-      </section>
+            {/* PAGINATION */}
+            <div className="flex justify-center mt-6 gap-3">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-4 py-2 bg-[#1836b2] text-white rounded disabled:opacity-40"
+              >
+                Prev
+              </button>
 
-      <Footer />
+              <span className="px-4 py-2 bg-gray-200 rounded">
+                {page} / {totalPages}
+              </span>
+
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 bg-[#1836b2] text-white rounded disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
-  )
+  );
 }

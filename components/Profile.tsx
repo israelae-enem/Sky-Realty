@@ -186,7 +186,7 @@ export default function ProfileSidebar() {
   if (!isLoaded || !user) return null;
 
   return (
-    <div className="bg-[#1836b2] border border-gray-200 text-gray-100 w-full p-4 rounded-md shadow-lg">
+    <div className="bg-[#1836b2]  text-gray-100 w-full p-4 rounded-md">
       {/* Collapsed Header */}
       <button
         onClick={() => setExpanded(!expanded)}

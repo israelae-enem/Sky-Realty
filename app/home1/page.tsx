@@ -17,22 +17,12 @@ export default function HomePage() {
     <main className="overflow-x-hidden min-h-screen p-0 m-0">
       <HeroSection />
       <WhySkyRealty />
-
       <CTASection />
-
-      
       <RentSection />
-
       <FreeTrialSection />
-
       <TestimonialCards />
-
-    
       <CommunicationSection />
-
       <PainPointsPage />
-
-
       <Footer />
     </main>
   );

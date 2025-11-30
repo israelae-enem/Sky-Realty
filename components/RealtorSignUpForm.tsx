@@ -7,16 +7,27 @@ import { useUser } from '@clerk/nextjs';
 import { User, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import PhoneInput from 'react-phone-input-2';
+
+interface FormState {
+  full_name: string;
+  phone_number: string; // E.164 format with +
+  company_name: string;
+  address: string;
+  country: string; // ISO 2-letter code
+  dial_code: string; // +1, +44, etc.
+}
 
 export default function RealtorSignUpForm() {
   const router = useRouter();
   const { user } = useUser();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     full_name: '',
     phone_number: '',
     company_name: '',
     address: '',
     country: '',
+    dial_code: '',
   });
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -49,10 +60,28 @@ export default function RealtorSignUpForm() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handlePhoneChange = (value: string, countryData: any) => {
+    // value comes without '+', add it for E.164
+    const phoneE164 = '+' + value.replace(/\D/g, '');
+
+    setForm({
+      ...form,
+      phone_number: phoneE164,
+      country: countryData.countryCode.toUpperCase(), // ISO 2-letter
+      dial_code: '+' + countryData.dialCode,          // +1, +44
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!user) {
       toast.error('You must be logged in to complete onboarding.');
+      return;
+    }
+
+    if (!form.phone_number) {
+      toast.error('Please enter a valid phone number');
       return;
     }
 
@@ -79,7 +108,6 @@ export default function RealtorSignUpForm() {
 
       toast.success('✅ Realtor profile created!');
       router.push(`/realtor/${user.id}/dashboard`);
-;
     } catch (err: any) {
       console.error('Onboarding error:', err);
       setErrorMsg(err?.message || 'Failed to complete onboarding');
@@ -108,12 +136,6 @@ export default function RealtorSignUpForm() {
       icon: <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
     },
     {
-      name: 'phone_number',
-      type: 'tel',
-      placeholder: 'Phone Number',
-      icon: <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
-    },
-    {
       name: 'company_name',
       type: 'text',
       placeholder: 'Company Name',
@@ -122,11 +144,6 @@ export default function RealtorSignUpForm() {
       name: 'address',
       type: 'text',
       placeholder: 'Address',
-    },
-    {
-      name: 'country',
-      type: 'text',
-      placeholder: 'Country',
     },
   ];
 
@@ -137,7 +154,6 @@ export default function RealtorSignUpForm() {
       initial="hidden"
       animate="visible"
     >
-      {/* Full Name + inputs */}
       {formElements.map((field, idx) => (
         <motion.div
           key={field.name}
@@ -158,10 +174,29 @@ export default function RealtorSignUpForm() {
         </motion.div>
       ))}
 
-      {/* Email readonly */}
+      {/* Phone input */}
       <motion.div
         className="relative"
         custom={formElements.length}
+        variants={fadeUpVariant}
+      >
+        <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400 z-10" />
+        <PhoneInput
+          country={'us'} // lowercase ISO code
+          value={form.phone_number.replace('+','')} // remove + for the component
+          onChange={handlePhoneChange}
+          enableAreaCodes
+          countryCodeEditable={false}
+          preferredCountries={['us','gb','ca','au','in']}
+          inputClass="pl-10 w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          containerClass="w-full"
+        />
+      </motion.div>
+
+      {/* Email readonly */}
+      <motion.div
+        className="relative"
+        custom={formElements.length + 1}
         variants={fadeUpVariant}
       >
         <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -180,7 +215,7 @@ export default function RealtorSignUpForm() {
         type="submit"
         disabled={loading}
         className="w-full bg-[#302cfc] text-white py-2 rounded-md hover:bg-blue-700 transition flex justify-center"
-        custom={formElements.length + 1}
+        custom={formElements.length + 2}
         variants={fadeUpVariant}
       >
         {loading ? (

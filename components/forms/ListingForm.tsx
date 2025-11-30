@@ -28,7 +28,7 @@ interface ListingFormProps {
   companyId?: string
   plan?: string | null
   propertyLimit?: number
-  currentTotal?: number // total properties + listings from dashboard
+  currentTotal?: number
   mode?: 'create' | 'edit'
   defaultValues?: FormValues
   onSuccess?: () => void
@@ -60,9 +60,8 @@ export default function ListingForm({
 
   const [loading, setLoading] = useState(false)
   const [properties, setProperties] = useState<{ id: string; title: string }[]>([])
-  const [images, setImages] = useState<string[]>(defaultValues?.image_urls || [])
+  const [images, setImages] = useState<string[]>(Array.isArray(defaultValues?.image_urls) ? defaultValues.image_urls : [])
 
-  // SAME LIMIT LOGIC AS PROPERTY FORM
   const reachedLimit =
     plan !== null &&
     propertyLimit !== null &&
@@ -83,15 +82,13 @@ export default function ListingForm({
     },
   })
 
-  // FETCH PROPERTIES FOR DROPDOWN
+  // Fetch properties for dropdown
   useEffect(() => {
     const load = async () => {
       try {
         let q = supabase.from('properties').select('id, title')
-
         if (realtorId) q = q.eq('realtor_id', realtorId)
         if (companyId) q = q.eq('company_id', companyId)
-
         const { data, error } = await q
         if (error) throw error
         setProperties(data || [])
@@ -100,34 +97,34 @@ export default function ListingForm({
         toast.error('Failed loading properties')
       }
     }
-
     load()
   }, [realtorId, companyId])
 
-  // IMAGE UPLOAD
+  // Image upload handler
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return
-
-    const file = e.target.files[0]
+    const files = Array.from(e.target.files)
     setLoading(true)
 
     try {
-      const folder = realtorId
-        ? `realtors/${realtorId}`
-        : `companies/${companyId}`
+      const folder = `realtorId ? realtors/${realtorId} : companies/${companyId}`
+      const uploadedUrls: string[] = []
 
-      const filePath = `${folder}/${crypto.randomUUID()}-${file.name}`
+      for (const file of files) {
+        const filePath = `${folder}/${crypto.randomUUID()}-${file.name}`
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(filePath, file, { upsert: true })
+        if (uploadError) throw uploadError
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, { upsert: true })
+        const { data } = supabase.storage.from('property-images').getPublicUrl(filePath)
+        if (data?.publicUrl) uploadedUrls.push(data.publicUrl)
+      }
 
-      if (uploadError) throw uploadError
-
-      const { data } = supabase.storage.from('documents').getPublicUrl(filePath)
-      setImages(prev => [...prev, data.publicUrl])
-
-      toast.success('Image uploaded!')
+      if (uploadedUrls.length) {
+        setImages(prev => [...prev, ...uploadedUrls])
+        toast.success('Image(s) uploaded!')
+      }
     } catch (err) {
       console.error(err)
       toast.error('Image upload failed')
@@ -136,13 +133,12 @@ export default function ListingForm({
     }
   }
 
-  // SUBMIT HANDLER — SAME LIMIT LOGIC AS PROPERTY FORM
+  // Submit handler
   const onSubmit = async (values: FormValues) => {
     if (reachedLimit) {
       toast.error(`You reached your plan limit. (${currentTotal}/${propertyLimit})`)
       return
     }
-
     if (!values.property_id) {
       toast.error('Please select a property')
       return
@@ -199,22 +195,18 @@ export default function ListingForm({
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-lg bg-white p-6 rounded-lg shadow-xl">
-
         <DialogTitle>{mode === 'edit' ? 'Edit Listing' : 'Add Listing'}</DialogTitle>
         <DialogDescription>
           Fill the form to {mode === 'edit' ? 'update' : 'create'} a listing.
         </DialogDescription>
 
-        {/* LIMIT WARNING */}
         {reachedLimit && (
           <div className="bg-red-100 text-red-700 p-3 rounded-md mt-3 text-sm">
-            You reached your plan limit ({currentTotal}/{propertyLimit}).  
-            Upgrade your plan to add more.
+            You reached your plan limit ({currentTotal}/{propertyLimit}). Upgrade your plan to add more.
           </div>
         )}
 
         <form className="grid gap-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
-
           <label className="text-gray-800">Property</label>
           <Select
             onValueChange={(v) => setValue('property_id', v)}
@@ -263,13 +255,25 @@ export default function ListingForm({
           <label className="text-gray-800">Size (sq ft)</label>
           <Input type="number" {...register('size', { valueAsNumber: true })} />
 
-          
-           <label className="text-gray-700">Images</label>
+          <label className="text-gray-700">Images</label>
           <div className="flex flex-wrap gap-2 items-center">
-            {images.map((img, idx) => (
-              <img key={idx} src={img} className="w-20 h-20 object-cover rounded-md" />
-            ))}
-            <input type="file" accept="image/*" multiple onChange={handleImageChange} disabled={loading}/>
+            {Array.isArray(images) &&
+              images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Listing image ${idx + 1}`}
+                  className="w-20 h-20 object-cover rounded-md border"
+                />
+              ))}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              disabled={loading}
+              className="mt-2"
+            />
           </div>
 
           <Button
@@ -281,7 +285,6 @@ export default function ListingForm({
               ? mode === 'edit' ? 'Updating...' : 'Adding...'
               : mode === 'edit' ? 'Update Listing' : 'Add Listing'}
           </Button>
-
         </form>
       </DialogContent>
     </Dialog>

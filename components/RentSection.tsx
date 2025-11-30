@@ -24,7 +24,7 @@ export default function RentSection() {
       {/* Right Side - Content Cards */}
       <div className="w-full md:w-1/2 flex flex-col gap-8">
         <motion.h2
-          className="text-4xl font-bold text-[#1836b2] mb-6 text-center md:text-left"
+          className="text-4xl font-bold text-[#CFAE70] mb-6 text-center md:text-left"
           initial={{ opacity: 0, y: -40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}

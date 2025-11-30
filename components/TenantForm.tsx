@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import PhoneInput from 'react-phone-input-2';
 
 const TenantForm = () => {
   const router = useRouter();
@@ -13,7 +14,7 @@ const TenantForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [full_name, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(''); // will store E.164 with +
   const [properties, setProperties] = useState<any[]>([]);
   const [realtors, setRealtors] = useState<any[]>([]);
   const [searchProperty, setSearchProperty] = useState('');
@@ -75,7 +76,6 @@ const TenantForm = () => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }],
-        // ensure upsert works
         );
 
       if (error) throw error;
@@ -115,22 +115,35 @@ const TenantForm = () => {
       </motion.h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {[
-          { label: 'Full Name', value: full_name, set: setFullName, type: 'text' },
-          { label: 'Phone Number', value: phone, set: setPhone, type: 'tel' },
-        ].map((field, idx) => (
-          <motion.input
-            key={field.label}
-            type={field.type}
-            placeholder={field.label}
-            value={field.value}
-            onChange={(e) => field.set(e.target.value)}
-            className="w-full p-2 rounded border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            custom={idx + 1}
-            variants={fadeUpVariant}
+        {/* Full Name Input */}
+        <motion.input
+          type="text"
+          placeholder="Full Name"
+          value={full_name}
+          onChange={(e) => setFullName(e.target.value)}
+          className="w-full p-2 rounded border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+          custom={1}
+          variants={fadeUpVariant}
+        />
+
+        {/* Phone Number Input using react-phone-input-2 */}
+        <motion.div custom={2} variants={fadeUpVariant}>
+          <PhoneInput
+            country={'us'} // lowercase ISO code
+            value={phone.replace('+','')} // remove + for the component
+            onChange={(value, countryData) => {
+              if (!value) return setPhone('');
+              const phoneE164 = '+' + value.replace(/\D/g, '');
+              setPhone(phoneE164);
+            }}
+            enableAreaCodes
+            countryCodeEditable={false}
+            preferredCountries={['us','gb','ca','au','in']}
+            inputClass="w-full p-2 rounded border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            containerClass="w-full"
           />
-        ))}
+        </motion.div>
 
         {/* Email readonly */}
         <motion.input

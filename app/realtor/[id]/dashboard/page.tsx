@@ -268,7 +268,7 @@ export default function RealtorDashboard() {
 
   useEffect(() => {
   if (activeTab === 'listings' && typeof window !== 'undefined') {
-    router.push('/properties')
+    router.push('/home3')
   }
 }, [activeTab, router])
 
@@ -422,11 +422,48 @@ const updateStats = (
               <StatCard title="Leads" value={stats.leads} icon="📬" />
             </div>
 
-            <RentAnalyticsCards />
-            <RentAnalyticsChart />
-            <RentReminders />
+            
           </motion.div>
         )
+
+
+
+  case 'rentAnalytics':
+  return (
+    <motion.div
+      key="rentAnalytics"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-6"
+    >
+      {/* Rent Analytics Cards */}
+      <h2 className="text-lg font-semibold">Rent Analytics Overview</h2>
+      <RentAnalyticsCards />
+
+      {/* Rent Analytics Chart */}
+      <h2 className="text-lg font-semibold mt-6">Analytics Chart</h2>
+      <RentAnalyticsChart />
+    </motion.div>
+  )
+
+case 'rentReminder':
+  return (
+    <motion.div
+      key="rentReminder"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-6"
+    >
+      {/* Rent Reminders */}
+      <h2 className="text-lg font-semibold">Rent Reminders</h2>
+      <RentReminders />
+    </motion.div>
+  )
+  
 
       case 'properties':
     return (
@@ -480,47 +517,7 @@ const updateStats = (
       </motion.div>
     )
 
-  case 'listings':
-    return (
-      <motion.div key="listings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <p>Redirecting to listings page...</p>
-      </motion.div>
-    )
-
-  case 'addListing':
-    return (
-      <motion.div
-        key="addListing"
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        className="space-y-6"
-      >
-        <h2 className="text-lg font-semibold">Add Listing</h2>
-        <ListingForm
-          realtorId={user?.id ?? ''}
-          plan={plan ?? null} propertyLimit={propertyLimit ?? 0}
-
-          onSuccess={async () => {
-            const { data } = await supabase
-              .from('listings')
-              .select('*')
-              .eq('realtor_id', user?.id)
-            setListings(data ?? [])
-          }}
-        />
-
-        <h2 className="text-lg font-semibold mt-6">All Listings</h2>
-        <DataTable columns={listingColumns} data={listings} />
-      </motion.div>
-    )
-
-  case 'viewListing':
-    return (
-      <motion.div key="viewListing" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <p>Select a listing from the All Listings page. To view a specific listing, open <code>/properties/[id]</code></p>
-      </motion.div>
-    )
+  
 
   case 'tenants':
     return (
@@ -775,7 +772,7 @@ const updateStats = (
 
       <div className="flex items-center gap-4">
 
-        {countdown && !expired && (
+     {/*   {countdown && !expired && (
           <div className="bg-yellow-400 text-black px-3 py-1 rounded font-mono text-sm">
             {countdown}
           </div>
@@ -783,7 +780,7 @@ const updateStats = (
 
         <div className="text-sm text-gray-700">
           Plan: <span className="font-medium">{plan ?? "free"}</span>
-        </div>
+        </div>   */}
       </div>
     </div>
 
