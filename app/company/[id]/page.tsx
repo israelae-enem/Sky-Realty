@@ -293,30 +293,10 @@ export default function CompanyDashboardPage() {
         // ---------- PROPERTIES ----------
 case 'properties':
 case 'addProperty':
-case 'properties-all':
-case 'properties-buy':
-case 'properties-rent':
-case 'properties-offplan':
-case 'properties-projects':
-case 'properties-payment-plan':
-case 'properties-handover': {
-  const filter = getPropertyFilter(activeTab)
 
-  // Type-safe filter
-  const filteredProperties = Object.keys(filter).length > 0
-    ? properties.filter(p =>
-        Object.entries(filter).every(([key, value]) => (p as any)[key] === value)
-      )
-    : properties
+  
 
-  // Set sensible default values for the form based on filter
-  const formDefaults = {
-    type: filter.type || 'Apartment',                  // default to Apartment
-    listing_category:  'For Sale', // default
-    status: 'Vacant'                                   // default status
-  }
-
-  return (
+   (
     <motion.div
       key={activeTab}
       className="space-y-4"
@@ -332,10 +312,10 @@ case 'properties-handover': {
         
         onSuccess={fetchAllData}
       />
-      <DataTable columns={propertyColumns} data={filteredProperties} />
+      <DataTable columns={propertyColumns} data={properties} />
     </motion.div>
   )
-}
+
 
       // ---------- TENANTS ----------
       case 'tenants':
@@ -347,26 +327,6 @@ case 'properties-handover': {
           </motion.div>
         )
 
-      // ---------- LISTINGS ----------
-      case 'listings':
-        return (
-          <motion.div key="listings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <p>Redirecting to listings page...</p>
-          </motion.div>
-        )
-
-      case 'addListing':
-        return (
-          <motion.div key="addListing" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="space-y-6">
-            <h2 className="text-lg font-semibold">Add Listing</h2>
-            <ListingForm companyId={user?.id ?? ''} onSuccess={async () => {
-              const { data } = await supabase.from('listings').select('*').eq('company_id', user?.id)
-              setListings(data ?? [])
-            }} />
-            <h2 className="text-lg font-semibold mt-6">All Listings</h2>
-            <DataTable columns={listingColumns} data={listings} />
-          </motion.div>
-        )
 
       // ---------- APPOINTMENTS ----------
       case 'appointments':

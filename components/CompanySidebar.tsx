@@ -40,14 +40,10 @@ export default function CompanySidebar({
       key: 'properties',
       icon: <Building size={16} className="mr-2" />,
       submenu: [
-        { label: 'All Properties', key: 'properties-all' },
-        { label: 'Buy', key: 'properties-buy' },
-        { label: 'Rent', key: 'properties-rent' },
-        { label: 'Offplan', key: 'properties-offplan' },
-        { label: 'Projects', key: 'properties-projects' },
-        { label: 'Payment Plan', key: 'properties-payment-plan' },
-        { label: 'Handover Date', key: 'properties-handover' },
+        
         { label: 'Add Property', key: 'addProperty' },
+        { label: 'All Property', key: 'allProperty' },
+
       ],
     },
 
@@ -118,8 +114,8 @@ export default function CompanySidebar({
                   toggleMenu(item.key)
                 }
               }}
-              className={`w-full text-left px-4 py-2 font-semibold rounded flex items-center transition
-                ${activeTab === item.key ? 'bg-gray-200 text-black' : 'hover:bg-gray-100 text-white'}
+               className={`w-full text-left px-4 py-2 rounded flex items-center font-semibold hover:bg-[#132a8e] transition
+                ${activeTab === item.key ? 'bg-white text-[#1836b2]' : ''}
               `}
             >
               {item.icon}
@@ -135,9 +131,9 @@ export default function CompanySidebar({
                       setActiveTab(sub.key)
                       if (isMobile) onClose()
                     }}
-                    className={`w-full text-left px-3 py-1 rounded text-sm transition
-                      ${activeTab === sub.key ? 'bg-gray-200 font-bold text-black' : 'hover:bg-gray-100 text-white'}
-                    `}
+                     className={`w-full text-left px-4 py-2 rounded flex items-center font-semibold hover:bg-[#132a8e] transition
+                ${activeTab === item.key ? 'bg-white text-[#1836b2]' : ''}
+              `}
                   >
                     • {sub.label}
                   </button>
