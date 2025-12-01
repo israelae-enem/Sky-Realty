@@ -180,7 +180,7 @@ export default function RealtorDashboard() {
         setPropertyLimit(planId ? PLAN_LIMITS[planId] ?? 1 : (trial ? 0 : 0))
         setTrialEndsAt(trial)
         setSubscriptionExpiresAt(subExpires)
-        setSubscriptionActive(true)
+        setSubscriptionActive(!isExpired)
         setExpired(isExpired)
 
         if (trial && trial > now) startCountdown(trial)
@@ -772,7 +772,7 @@ case 'rentReminder':
 
       <div className="flex items-center gap-4">
 
-     {/*   {countdown && !expired && (
+        {countdown && !expired && (
           <div className="bg-yellow-400 text-black px-3 py-1 rounded font-mono text-sm">
             {countdown}
           </div>
@@ -780,7 +780,7 @@ case 'rentReminder':
 
         <div className="text-sm text-gray-700">
           Plan: <span className="font-medium">{plan ?? "free"}</span>
-        </div>   */}
+        </div>   
       </div>
     </div>
 
@@ -798,7 +798,7 @@ case 'rentReminder':
 
       
 
-      {/* ⚠ Subscription Modal *
+       ⚠ Subscription Modal *
       {!subscriptionActive && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -827,7 +827,7 @@ case 'rentReminder':
           </motion.div>
         </motion.div>
       )}
-        */}
+        
     </div>
   )
 }

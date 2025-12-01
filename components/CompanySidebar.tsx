@@ -35,14 +35,24 @@ export default function CompanySidebar({
   const menu = [
     { label: 'Home', key: 'home', icon: <Home size={16} className="mr-2" />, submenu: [] },
 
+     {
+      label: 'Rent Analytics',
+      key: 'rentAnalytics',
+      icon: <CreditCard size={16} className="mr-2" />,
+      submenu: [
+        { label: 'Rent Analytics', key: 'rentAnalytics' },
+        { label: 'Rent Reminder', key: 'rentReminder' },
+      ],
+    },
+
     {
       label: 'Properties',
       key: 'properties',
       icon: <Building size={16} className="mr-2" />,
       submenu: [
         
+        { label: 'All Property', key: 'properties' },
         { label: 'Add Property', key: 'addProperty' },
-        { label: 'All Property', key: 'allProperty' },
 
       ],
     },

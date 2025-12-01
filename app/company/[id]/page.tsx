@@ -243,20 +243,9 @@ export default function CompanyDashboardPage() {
           </div>
         </motion.div>
       )
-    }
+    }   
 
-    // Helper to filter properties based on submenu
-    const getPropertyFilter = (tab: string) => {
-      switch (tab) {
-        case 'properties-buy': return { type: 'Buy' }
-        case 'properties-rent': return { type: 'Rent' }
-        case 'properties-offplan': return { offplan: true }
-        case 'properties-projects': return { is_project: true }
-        case 'properties-payment-plan': return { payment_plan: true }
-        case 'properties-handover': return { has_handover: true }
-        default: return {}
-      }
-    }
+  
 
     switch (activeTab) {
       case 'home':
@@ -278,9 +267,7 @@ export default function CompanyDashboardPage() {
               <StatCard icon={<Bell />} title="Unread Notifications" value={unreadCount} />
               <StatCard icon={<Bell />} title="Occupied Properties" value={stats.occupiedProperties} />
             </div>
-            <RentAnalyticsCards />
-            <RentAnalyticsChart />
-            <RentReminders />
+          
             {unreadCount > 0 && (
               <div className="bg-yellow-100 text-yellow-900 p-2 rounded-md">
                 You have {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
@@ -290,66 +277,220 @@ export default function CompanyDashboardPage() {
           </motion.div>
         )
 
-        // ---------- PROPERTIES ----------
-case 'properties':
-case 'addProperty':
 
-  
-
-   (
-    <motion.div
-      key={activeTab}
-      className="space-y-4"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.25 }}
-    >
-      <PropertyForm
-        companyId={user?.id}
-             // optional, your form can use it for pre-filling
-        mode="create"
         
-        onSuccess={fetchAllData}
-      />
-      <DataTable columns={propertyColumns} data={properties} />
-    </motion.div>
-  )
+        
+          case 'rentAnalytics':
+          return (
+            <motion.div
+              key="rentAnalytics"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              {/* Rent Analytics Cards */}
+              <h2 className="text-lg font-semibold">Rent Analytics Overview</h2>
+              <RentAnalyticsCards />
+        
+              {/* Rent Analytics Chart */}
+              <h2 className="text-lg font-semibold mt-6">Analytics Chart</h2>
+              <RentAnalyticsChart />
+            </motion.div>
+          )
+        
+        case 'rentReminder':
+          return (
+            <motion.div
+              key="rentReminder"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              {/* Rent Reminders */}
+              <h2 className="text-lg font-semibold">Rent Reminders</h2>
+              <RentReminders />
+            </motion.div>
+          )
 
 
-      // ---------- TENANTS ----------
-      case 'tenants':
-      case 'addTenant':
-        return (
-          <motion.div key={activeTab} className="space-y-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-            <TenantForm companyId={user?.id} onSuccess={fetchAllData} />
-            <DataTable columns={tenantColumns} data={tenants} />
-          </motion.div>
-        )
+          
+                case 'properties':
+              return (
+                <motion.div
+                  key="properties"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-lg font-semibold">Add Property</h2>
+                  <PropertyForm
+                    companyId={user?.id ?? ''}
+                    
+          
+                    onSuccess={async () => {
+                      const { data } = await supabase
+                        .from('properties')
+                        .select('*')
+                        .eq('company_id', user?.id)
+                      setProperties(data ?? [])
+                    }}
+                  />
+          
+                  <h2 className="text-lg font-semibold mt-6">All Properties</h2>
+                  <DataTable columns={propertyColumns} data={properties} />
+                </motion.div>
+              )
+          
+            case 'addProperty':
+              return (
+                <motion.div
+                  key="addProperty"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-lg font-semibold">Add Property</h2>
+                  <PropertyForm
+                    companyId={user?.id ?? ''}
+                    onSuccess={async () => {
+                      const { data } = await supabase
+                        .from('properties')
+                        .select('*')
+                        .eq('company_id', user?.id)
+                      setProperties(data ?? [])
+                    }}
+                  />
+                </motion.div>
+              )
+          
+            
+          
+            case 'tenants':
+              return (
+                <motion.div
+                  key="tenants"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-lg font-semibold">Add Tenant</h2>
+                  <TenantForm
+                    companyId={user?.id ?? ''}
+                    onSuccess={async () => {
+                      const { data } = await supabase
+                        .from('tenants')
+                        .select('*')
+                        .eq('company_id', user?.id)
+                      setTenants(data ?? [])
+                    }}
+                  />
+          
+                  <h2 className="text-lg font-semibold mt-6">All Tenants</h2>
+                  <DataTable columns={tenantColumns} data={tenants} />
+                </motion.div>
+              )
+          
+            case 'addTenant':
+              return (
+                <motion.div
+                  key="addTenant"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-lg font-semibold">Add Tenant</h2>
+                  <TenantForm
+                    companyId={user?.id ?? ''}
+                    onSuccess={async () => {
+                      const { data } = await supabase
+                        .from('tenants')
+                        .select('*')
+                        .eq('company_id', user?.id)
+                      setTenants(data ?? [])
+                    }}
+                  />
+                </motion.div>
+              )
+          
+            case 'appointments':
+            case 'appointmentsViewing':
+            case 'appointmentsMeeting':
+            case 'appointmentsMaintenance':
+              return (
+                <motion.div 
+                key={activeTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h2 className="text-lg font-semibold mb-4">Add Appointment</h2>
+                <AppointmentForm
+                  companyId={user?.id ?? ''}
+                  onSuccess={async () => {
+                    const { data } = await supabase
+                      .from('appointments')
+                      .select('*')
+                      .eq('company_id', user?.id)
+                    setAppointments(data ?? [])
+                  }}
+                />
+                <DataTable columns={appointmentColumns} data={appointments} />
+                </motion.div>
+              )
+          
+            case 'rentPayments':
+              return (
+                <motion.div key="rentPayments" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="space-y-6">
+                  <h2 className="text-lg font-semibold">Add Rent Payment</h2>
+                  <RentPaymentForm
+                    companyId={user?.id ?? ''}
+                    onSuccess={async () => {
+                      const { data } = await supabase
+                        .from('rent_payment')
+                        .select('*')
+                        .eq('company_id', user?.id)
+                      setRentPayments(data ?? [])
+                    }}
+                  />
+          
+                  <h2 className="text-lg font-semibold mt-6">All Rent Payments</h2>
+                  <DataTable columns={rentColumns} data={rentPayments} />
+                </motion.div>
+              )
+          
+            case 'addPayment':
+              return (
+                <motion.div key="addPayment" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="space-y-6">
+                  <h2 className="text-lg font-semibold">Add Rent Payment</h2>
+                  <RentPaymentForm
+                    companyId={user?.id ?? ''}
+                    onSuccess={async () => {
+                      const { data } = await supabase
+                        .from('rent_payment')
+                        .select('*')
+                        .eq('company_id', user?.id)
+                      setRentPayments(data ?? [])
+                    }}
+                  />
+                </motion.div>
+              )
 
 
-      // ---------- APPOINTMENTS ----------
-      case 'appointments':
-      case 'appointmentsViewing':
-      case 'appointmentsMeeting':
-      case 'appointmentsMaintenance':
-        return (
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
-            <h2 className="text-lg font-semibold mb-4">Add Appointment</h2>
-            <AppointmentForm companyId={user?.id ?? ''} onSuccess={fetchAllData} />
-            <DataTable columns={appointmentColumns} data={appointments} />
-          </motion.div>
-        )
 
-      // ---------- RENT PAYMENTS ----------
-      case 'rentPayments':
-      case 'addPayment':
-        return (
-          <motion.div key="rentPayments" className="space-y-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-            <RentPaymentForm companyId={user?.id} onSuccess={fetchAllData} />
-            <DataTable columns={rentColumns} data={rentPayments} />
-          </motion.div>
-        )
+
+
+
+        
 
       // ---------- LEGAL DOCUMENTS ----------
       case 'legalDocuments':
@@ -523,6 +664,45 @@ case 'addProperty':
           </AnimatePresence>
         </div>
       </main>
+
+
+
+       ⚠ Subscription Modal *
+
+      {!subscriptionActive && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                        className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md w-[90%]"
+          >
+            <h2 className="text-2xl font-bold text-[#302cfc] mb-4">
+              Please Subscribe to Continue
+            </h2>
+            <p className="text-gray-700 mb-6">
+              Your trial or subscription has expired. To regain access to your dashboard features,
+              please choose a plan and subscribe now! see you soon.
+            </p>
+            <button
+              onClick={() => router.push('/subscription')}
+              className="bg-[#302cfc] hover:bg-[#241fd9] text-white font-semibold px-6 py-3 rounded-lg transition"
+            >
+              Go to Pricing Page
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+        
+
+
+
+
+
     </div>
   )
-}
+} 
