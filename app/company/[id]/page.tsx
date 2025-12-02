@@ -486,12 +486,6 @@ export default function CompanyDashboardPage() {
               )
 
 
-
-
-
-
-        
-
       // ---------- LEGAL DOCUMENTS ----------
       case 'legalDocuments':
       case 'addDocument':
@@ -511,15 +505,23 @@ export default function CompanyDashboardPage() {
         )
 
       // ---------- LEADS ----------
-      case 'newLeads':
-      case 'contactedLeads':
-        return (
-          <motion.div key="leads" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-            <LeadsTable companyId={user?.id} />
-          </motion.div>
-        )
+          case 'leads':
+        
+         return (
+          <motion.div
+      key="leads"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.25 }}
+      className="p-4"
+    >
+         <DataTable columns={leadColumns} data={leads} />
 
-      // ---------- CHAT ----------
+    </motion.div>
+  )
+
+      
            // ---------- CHAT ----------
       case 'chat':
         return (

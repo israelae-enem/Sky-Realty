@@ -20,14 +20,14 @@ type Reminder = {
 
 export default function RentReminders() {
   const { user } = useUser()
-  const realtorId = user?.id ?? null
+  const userId = user?.id ?? null
 
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
   const fetchReminders = useCallback(async () => {
-    if (!realtorId) return
+    if (!userId) return
     setLoading(true)
     try {
       const { data: paymentsData, error: paymentsError } = await supabase
@@ -39,22 +39,25 @@ export default function RentReminders() {
 
       const { data: tenantsData } = await supabase
         .from("tenants")
-        .select("id, full_name, realtor_id")
+        .select("id, full_name, realtor_id, company_id")
         .in("id", payments.map(p => p.tenant_id))
       const tenants = tenantsData || []
 
-      const realtorPayments = payments.filter(p => {
-        const tenant = tenants.find(t => t.id === p.tenant_id)
-        return tenant?.realtor_id === realtorId
-      })
-
       const { data: propertiesData } = await supabase
         .from("properties")
-        .select("id, address")
-        .in("id", realtorPayments.map(p => p.property_id))
+        .select("id, address, realtor_id, company_id")
+        .in("id", payments.map(p => p.property_id))
       const properties = propertiesData || []
 
-      const enriched: Reminder[] = realtorPayments.map(p => {
+      // Filter payments relevant to this user (either realtor or company)
+      const userPayments = payments.filter(p => {
+        const tenant = tenants.find(t => t.id === p.tenant_id)
+        const property = properties.find(pr => pr.id === p.property_id)
+        return tenant?.realtor_id === userId || tenant?.company_id === userId ||
+               property?.realtor_id === userId || property?.company_id === userId
+      })
+
+      const enriched: Reminder[] = userPayments.map(p => {
         const tenant = tenants.find(t => t.id === p.tenant_id) || { full_name: "Unknown Tenant" }
         const property = properties.find(pr => pr.id === p.property_id) || { address: "Unknown Property" }
         return {
@@ -78,7 +81,7 @@ export default function RentReminders() {
     } finally {
       setLoading(false)
     }
-  }, [realtorId])
+  }, [userId])
 
   const triggerNotifications = async (reminders: Reminder[]) => {
     const today = new Date()
@@ -96,14 +99,16 @@ export default function RentReminders() {
         try {
           await supabase.from("notification").insert([{
             tenant_id: r.tenant_id,
-            realtor_id: realtorId,
-            rent_payment_id: r.id,
+            realtor_id: r.tenant_id, // optional, adjust if you want separate columns
+            company_id: r.tenant_id, // optional
+            type: "rent_reminder",
             message: `Hi ${r.tenant_name}, your rent for ${r.property_address} is due on ${due.toDateString()}.`,
             sent_at: new Date().toISOString(),
+            update_id: null
           }])
           await supabase.from("rent_payment").update({ reminder_sent: true }).eq("id", r.id)
         } catch (err) {
-          console.error("Failed to send tenant notification:", err)
+          console.error("Failed to send notification:", err)
         }
       }
     }
@@ -137,10 +142,10 @@ export default function RentReminders() {
   }
 
   useEffect(() => {
-    if (!realtorId) return
+    if (!userId) return
     fetchReminders()
     const channel = supabase
-      .channel(`rent_reminders_${realtorId}`)
+      .channel(`rent_reminders_${userId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "rent_payment" },
@@ -150,7 +155,7 @@ export default function RentReminders() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchReminders, realtorId])
+  }, [fetchReminders, userId])
 
   return (
     <div className="bg-gray-100 rounded-lg p-6 grid grid-cols-1 lg:grid-cols-[3fr-1fr] gap-8">
@@ -163,41 +168,51 @@ export default function RentReminders() {
               <th className="px-4 py-2 border border-gray-300">Tenant</th>
               <th className="px-4 py-2 border border-gray-300">Property</th>
               <th className="px-4 py-2 border border-gray-300">Due Date</th>
+              <th className="px-4 py-2 border border-gray-300">Countdown</th>
               <th className="px-4 py-2 border border-gray-300">Status</th>
               <th className="px-4 py-2 border border-gray-300">Action</th>
             </tr>
           </thead>
           <tbody>
-            {reminders.length ? reminders.map((r, idx) => (
-              <motion.tr
-                key={r.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`${getRowColor(r.status, r.due_date)} hover:bg-gray-200`}
-              >
-                <td className="border px-4 py-2">{r.tenant_name}</td>
-                <td className="border px-4 py-2">{r.property_address}</td>
-                <td className="border px-4 py-2">{new Date(r.due_date).toLocaleDateString()}</td>
-                <td className="border px-4 py-2 capitalize">{r.status}</td>
-                <td className="border px-4 py-2 text-center">
-                  {r.status === "Paid" && <span className="text-green-600 text-xl">✅</span>}
-                  {r.status === "Pending" && new Date(r.due_date) >= new Date() && <span className="text-yellow-600 text-xl">⚠</span>}
-                  {r.status === "Pending" && new Date(r.due_date) < new Date() && <span className="text-red-600 text-xl">❌</span>}
-                  {r.status !== "Paid" && new Date(r.due_date) >= new Date() && (
-                    <button
-                      onClick={() => markAsPaid(r.id)}
-                      disabled={loading}
-                      className="ml-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded transition-all duration-200"
-                    >
-                      Mark Paid
-                    </button>
-                  )}
-                </td>
-              </motion.tr>
-            )) : (
+            {reminders.length ? reminders.map((r, idx) => {
+              const dueDate = new Date(r.due_date)
+              const today = new Date()
+              const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+              return (
+                <motion.tr
+                  key={r.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`${getRowColor(r.status, r.due_date)} hover:bg-gray-200`}
+                >
+                  <td className="border px-4 py-2">{r.tenant_name}</td>
+                  <td className="border px-4 py-2">{r.property_address}</td>
+                  <td className="border px-4 py-2">{dueDate.toLocaleDateString()}</td>
+                  <td className="border px-4 py-2">
+                    {r.status === "Paid" ? "✅ Paid" : diffDays < 0 ? `Overdue ${Math.abs(diffDays)}d` : `${diffDays} day(s)`}
+                  </td>
+                  <td className="border px-4 py-2 capitalize">{r.status}</td>
+                  <td className="border px-4 py-2 text-center">
+                    {r.status !== "Paid" && new Date(r.due_date) >= new Date() && (
+                      <button
+                        onClick={() => markAsPaid(r.id)}
+                        disabled={loading}
+                        className="ml-2 px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded transition-all duration-200"
+                      >
+                        Mark Paid
+                      </button>
+                    )}
+                    {r.status === "Paid" && <span className="text-green-600 text-xl">✅</span>}
+                    {r.status === "Pending" && new Date(r.due_date) >= new Date() && <span className="text-yellow-600 text-xl">⚠</span>}
+                    {r.status === "Pending" && new Date(r.due_date) < new Date() && <span className="text-red-600 text-xl">❌</span>}
+                  </td>
+                </motion.tr>
+              )
+            }) : (
               <tr>
-                <td colSpan={5} className="text-center py-4 text-gray-500">No upcoming reminders</td>
+                <td colSpan={6} className="text-center py-4 text-gray-500">No upcoming reminders</td>
               </tr>
             )}
           </tbody>

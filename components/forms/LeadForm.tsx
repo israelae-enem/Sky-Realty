@@ -32,26 +32,39 @@ export default function LeadForm({ realtorId = null, companyId = null, onSuccess
 
     setLoading(true)
     try {
+      // INSERT LEAD
       const payload: any = {
         name: values.name,
         email: values.email,
         phone: values.phone,
         status: 'New',
         realtor_id: realtorId || null,
-        company_id: companyId || null
+        company_id: companyId || null,
+        message: values.message || null
       }
-      // optional message column could be added; if you want it, extend DB above
-      if (values.message) payload.message = values.message
 
-      const { error } = await supabase
+      const { data: leadData, error: leadError } = await supabase
         .from('leads')
-        .insert([{ ...payload }])
+        .insert([payload])
+        .select()
+        .single()
 
-      if (error) throw error
+      if (leadError) throw leadError
 
-      toast.success('Thanks! We received your request — someone will contact you soon.')
+      // INSERT NOTIFICATION
+      await supabase.from('notification').insert([
+        {
+          type: 'lead',
+          realtor_id: realtorId || null,
+          company_id: companyId || null,
+          message: `You received a new lead from ${values.name}`,
+          is_read: false
+        }
+      ])
+
+      toast.success('Thanks! Your request was sent to the agent.')
       reset()
-      if (onSuccess) onSuccess()
+      onSuccess?.()
     } catch (err: any) {
       console.error('Lead submit error', err)
       toast.error(err?.message || 'Failed to submit lead')
@@ -69,7 +82,7 @@ export default function LeadForm({ realtorId = null, companyId = null, onSuccess
       <input {...register('email')} type="email" placeholder="jane@example.com" required className="border p-2 rounded" />
 
       <label className="text-sm font-medium text-gray-700">Phone</label>
-      <input {...register('phone')} placeholder="+1 555 1234" required className="border p-2 rounded" />
+      <input {...register('phone')} placeholder="+971 55 123 4567" required className="border p-2 rounded" />
 
       <label className="text-sm font-medium text-gray-700">Message (optional)</label>
       <textarea {...register('message')} placeholder="Interested in this listing..." className="border p-2 rounded" />

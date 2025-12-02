@@ -8,4 +8,5 @@ export default function PropertyDetailPage({ params }: Props) {
   const propertyId = params.id; // pass to client component
 
   return <PropertyDetailClient propertyId={propertyId} />;
+
 }

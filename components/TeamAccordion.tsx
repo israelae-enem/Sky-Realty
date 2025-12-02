@@ -30,7 +30,7 @@ export default function Team({ companyId }: TeamProps) {
   const [inviteCollapsed, setInviteCollapsed] = useState(false)
   const [teamMembers, setTeamMembers] = useState<any[]>([])
 
-  const TEAM_LIMITS = { free: 0, basic: 2, pro: 5, premium: 10 }
+  const TEAM_LIMITS = { free: 0, basic: 0, pro: 5, premium: 10 }
 
   const ownerColumn = companyId ? 'company_id' : 'realtor_id'
   const ownerId = companyId || user?.id
@@ -74,9 +74,16 @@ export default function Team({ companyId }: TeamProps) {
   const handleInvite = async () => {
     if (!email.trim()) return toast.error('Enter a valid email')
     if (!ownerId) return toast.error('No active organization found')
-    if (plan === 'free') return toast.error('Upgrade your plan to add members')
-    if ((teamMembers?.length || 0) >= TEAM_LIMITS[plan])
+
+    // Only Pro or Premium can add members
+    if (plan !== 'pro' && plan !== 'premium') {
+      return toast.error('Upgrade to Pro or Premium to add team members')
+    }
+
+    const currentCount = teamMembers?.length || 0
+    if (currentCount >= TEAM_LIMITS[plan]) {
       return toast.error(`Team limit reached for ${plan} plan`)
+    }
 
     try {
       setLoading(true)
@@ -133,7 +140,7 @@ export default function Team({ companyId }: TeamProps) {
   if (!isLoaded || !orgListLoaded)
     return <p className="text-gray-500 text-center mt-10">Loading team...</p>
 
-  const canInvite = plan !== 'free'
+  const canInvite = plan === 'pro' || plan === 'premium'
   const memberCount = teamMembers?.length || 0
   const limit = TEAM_LIMITS[plan]
 
@@ -149,7 +156,7 @@ export default function Team({ companyId }: TeamProps) {
             Plan:{' '}
             <span className="text-blue-600 font-medium capitalize">{plan}</span>
           </p>
-          {plan !== 'free' && (
+          {canInvite && (
             <p>
               Members:{' '}
               <span className="text-blue-600 font-medium">{memberCount}</span> /{' '}
@@ -160,7 +167,7 @@ export default function Team({ companyId }: TeamProps) {
       </div>
 
       {/* Collapsible Invite Section */}
-      {canInvite && (
+      {canInvite ? (
         <div className="space-y-2">
           <button
             className="flex justify-between items-center w-full bg-gray-50 hover:bg-gray-100 p-3 rounded-md border border-gray-200 transition"
@@ -188,12 +195,9 @@ export default function Team({ companyId }: TeamProps) {
             </div>
           )}
         </div>
-      )}
-
-      {!canInvite && (
+      ) : (
         <div className="p-4 bg-gray-50 border border-gray-200 rounded text-center text-gray-700">
-          Upgrade to <span className="text-blue-600 font-medium">Basic</span>,{' '}
-          <span className="text-blue-600 font-medium">Pro</span> or{' '}
+          Upgrade to <span className="text-blue-600 font-medium">Pro</span> or{' '}
           <span className="text-blue-600 font-medium">Premium</span> to add team members.
         </div>
       )}

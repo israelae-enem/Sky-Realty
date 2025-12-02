@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import RealtorDetailClient from "./RealtorDetailClient";
+import LeadForm from "./forms/LeadForm";
 
 interface Property {
   id: string;
@@ -220,6 +221,11 @@ export default function PropertyDetailClient({ propertyId }: PropertyDetailClien
         realtorId={property.realtor_id}
         companyId={property.company_id}
       />
+
+      <LeadForm
+      realtorId={property.realtor_id}
+      companyId={property.company_id}
+       />
     </div>
   );
 }
