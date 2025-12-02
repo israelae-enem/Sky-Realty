@@ -798,7 +798,7 @@ case 'rentReminder':
 
       
 
-       ⚠ Subscription Modal *
+       
       {!subscriptionActive && (
         <motion.div
           initial={{ opacity: 0 }}

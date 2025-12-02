@@ -669,7 +669,7 @@ export default function CompanyDashboardPage() {
 
 
 
-       ⚠ Subscription Modal *
+       
 
       {!subscriptionActive && (
         <motion.div
