@@ -105,7 +105,7 @@ export default function RealtorSidebar({
   }
 
   return (
-    <aside className="w-64 bg-[#1836b2] text-white shadow flex flex-col">
+    <aside className="w-64 bg-gray-100 text-[#1836b2] shadow flex flex-col">
       <ProfileSidebar />
       <nav className="flex-1 overflow-y-auto  p-2 space-y-1">
         {menu.map((item) => (
@@ -120,7 +120,7 @@ export default function RealtorSidebar({
                 }
               }}
               className={`w-full text-left px-4 py-2 rounded flex items-center font-semibold hover:bg-[#132a8e] transition
-                ${activeTab === item.key ? 'bg-white text-[#1836b2]' : ''}
+                ${activeTab === item.key ? 'bg-[#1836b2] text-white' : ''}
               `}
             >
               {item.icon}
@@ -141,8 +141,8 @@ export default function RealtorSidebar({
                         if (isMobile) onClose()
                       }
                     }}
-                    className={`w-full text-left px-3 py-1 rounded text-sm hover:bg-white hover:text-[#1836b2]
-                      ${activeTab === sub.key ? 'bg-white text-[#1836b2] font-bold' : ''}
+                    className={`w-full text-left px-3 py-1 rounded text-sm hover:bg-[#1836b2] hover:text-white
+                      ${activeTab === sub.key ? 'bg-[#1836b2] text-white font-bold' : ''}
                     `}
                   >
                     • {sub.label}

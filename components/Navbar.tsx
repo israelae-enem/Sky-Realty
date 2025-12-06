@@ -75,8 +75,8 @@ const Navbar = () => {
       href={href}
       className={`nav-item ${
         pathname === href
-          ? "text-yellow-400 font-semibold"
-          : "text-gray-200 hover:text-yellow-400 transition-colors"
+          ? "text-[#59fcf7] font-semibold"
+          : "text-[#1836b2] hover:text-[#59fcf7] transition-colors"
       }`}
     >
       {children}
@@ -84,7 +84,7 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="w-full bg-[#1836b2] text-gray-100 px-4 py-3 relative z-50 shadow-md">
+    <nav className="w-full bg-white text-[#1836b2] font-bold px-4 py-3 relative z-50 shadow-md">
       <div className="flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
@@ -118,18 +118,18 @@ const Navbar = () => {
             onMouseEnter={() => setIsDropdownOpen(true)}
             onMouseLeave={() => setIsDropdownOpen(false)}
           >
-            <button className="nav-item flex items-center gap-1 text-gray-200 hover:text-yellow-400">
+            <button className="nav-item flex items-center gap-1 text-[#1836b2] hover:text-[#59fcf7]">
               Join ▼
             </button>
             {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-40 bg-gray-900 text-gray-200 rounded-lg shadow-xl z-50 flex flex-col">
-                <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
+              <div className="absolute left-0 mt-2 w-40 bg-gray-200 text-[#1836b2] rounded-lg shadow-xl z-50 flex flex-col">
+                <Link href="/home1" className="px-4 py-2 hover:bg-[#59fcf7] rounded">
                   Realtor
                 </Link>
-                <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
+                <Link href="/home1" className="px-4 py-2 hover:bg-[#59fcf7] rounded">
                   Agency
                 </Link>
-                <Link href="/home2" className="px-4 py-2 hover:bg-gray-800 rounded">
+                <Link href="/home2" className="px-4 py-2 hover:bg-[#59fcf7] rounded">
                   Tenant
                 </Link>
               </div>
@@ -151,7 +151,7 @@ const Navbar = () => {
           {/* Auth Buttons */}
           {!isSignedIn && (
             <SignUpButton>
-              <button className="bg-yellow-400 text-[#0f0f2a] px-5 py-2 rounded-md font-semibold hover:bg-yellow-300 transition">
+              <button className="bg-[#59fcf7] text-[#1836b2] px-5 py-2 rounded-md font-semibold hover:bg-gray-200 transition">
                 Get Started
               </button>
             </SignUpButton>
@@ -159,7 +159,7 @@ const Navbar = () => {
 
           <SignedOut>
             <SignInButton>
-              <button className="nav-item hover:text-yellow-400">Login</button>
+              <button className="nav-item hover:text-[#59fcf7]">Login</button>
             </SignInButton>
           </SignedOut>
 

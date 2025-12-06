@@ -186,7 +186,7 @@ export default function ProfileSidebar() {
   if (!isLoaded || !user) return null;
 
   return (
-    <div className="bg-[#1836b2]  text-gray-100 w-full p-4 rounded-md">
+    <div className="bg-gray-100  text-[#1836b2] w-full p-4 rounded-md">
       {/* Collapsed Header */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -196,7 +196,7 @@ export default function ProfileSidebar() {
           {profilePic ? (
             <img src={profilePic} alt="Profile" className="w-12 h-12 rounded-full object-cover border border-gray-300" />
           ) : (
-            <UserCircle className="w-12 h-12 text-gray-100" />
+            <UserCircle className="w-12 h-12 text-[#1836b2]" />
           )}
           <span className="font-semibold text-lg truncate">{user.firstName || user.fullName || 'User'}</span>
         </div>
@@ -214,19 +214,19 @@ export default function ProfileSidebar() {
             className="overflow-hidden mt-4 space-y-4"
           >
             <div className="text-sm">
-              <p className="text-gray-100 font-semibold">Email:</p>
+              <p className="text-[#1836b2] font-semibold">Email:</p>
               <p>{user.emailAddresses[0]?.emailAddress}</p>
             </div>
 
             {isRealtor && (
               <div className="text-sm">
-                <p className="text-gray-100 font-semibold">Plan:</p>
+                <p className="text-[#1836b2] font-semibold">Plan:</p>
                 <p className="capitalize">{currentPlan.plan}</p>
               </div>
             )}
 
             <div className="text-sm">
-              <label className="text-gray-100 font-semibold cursor-pointer hover:underline">
+              <label className="text-[#1836b2] font-semibold cursor-pointer hover:underline">
                 {loading ? 'Uploading...' : 'Upload Photo'}
                 <input type="file" accept="image/*" onChange={uploadProfilePic} className="hidden" disabled={loading} />
               </label>
@@ -259,7 +259,7 @@ export default function ProfileSidebar() {
               Delete Account
             </Button>
 
-            <Button variant="outline" onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 text-black hover:bg-gray-100">
+            <Button variant="outline" onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 text-white hover:bg-[#1836b2]">
               <LogOut className="w-4 h-4" /> Sign Out
             </Button>
           </motion.div>
