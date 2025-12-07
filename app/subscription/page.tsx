@@ -18,7 +18,7 @@ const plans: Plan[] = [
   {
     id: "basic",
     name: "Basic",
-    monthlyPrice: 99,
+    monthlyPrice: 50,
     yearlyPrice: 250 * 12 * 0.83,
     properties: 10,
     features: [
@@ -37,7 +37,7 @@ const plans: Plan[] = [
   {
     id: "pro",
     name: "Pro",
-    monthlyPrice: 199,
+    monthlyPrice: 75,
     yearlyPrice: 500 * 12 * 0.83,
     properties: 20,
     features: [
@@ -57,7 +57,7 @@ const plans: Plan[] = [
   {
     id: "premium",
     name: "Premium",
-    monthlyPrice: 299,
+    monthlyPrice: 99,
     yearlyPrice: 1000 * 12 * 0.83,
     properties: null,
     features: [
@@ -109,35 +109,12 @@ export default function PricingSubscription() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1836b2] text-gray-900 p-8">
-      <h1 className="text-4xl font-bold font-tech text-center mb-6 text-white">
+    <div className="min-h-screen bg-white text-gray-900 p-8">
+      <h1 className="text-4xl font-bold font-tech text-center mb-15 text-[#1836b2]">
         Sky Realty Plans
       </h1>
 
-      {/* Billing Cycle */}
-      <div className="flex justify-center mb-12 space-x-4">
-        <button
-          className={`px-4 py-2 rounded-full font-semibold ${
-            billingCycle === "monthly"
-              ? "bg-yellow-500 text-gray-900"
-              : "bg-gray-300 text-gray-700"
-          }`}
-          onClick={() => setBillingCycle("monthly")}
-        >
-          Monthly
-        </button>
-
-        <button
-          className={`px-4 py-2 rounded-full font-semibold ${
-            billingCycle === "yearly"
-              ? "bg-yellow-500 text-gray-900"
-              : "bg-gray-300 text-gray-700"
-          }`}
-          onClick={() => setBillingCycle("yearly")}
-        >
-          Yearly (2 months free)
-        </button>
-      </div>
+     
 
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
@@ -145,12 +122,7 @@ export default function PricingSubscription() {
           const isFeatured =
             plan.badge === "Most Popular" || plan.badge === "Best Value";
 
-          const originalPrice =
-            plan.id === "basic"
-              ? 150
-              : plan.id === "pro"
-              ? 300
-              : 450;
+        
 
           return (
             <div
@@ -190,7 +162,7 @@ export default function PricingSubscription() {
                   {/* Original Price - only monthly discount */}
                   {billingCycle === "monthly" && (
                     <span className="text-lg text-gray-500 line-through block">
-                      ${originalPrice}
+                      
                     </span>
                   )}
 
@@ -239,7 +211,7 @@ export default function PricingSubscription() {
         })}
       </div>
 
-      <p className="text-center mt-12 text-gray-200 font-bold">
+      <p className="text-center mt-12 text-gray-800 font-bold">
         All plans include a 7-day free trial. Cancel anytime before your trial ends.
       </p>
     </div>

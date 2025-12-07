@@ -9,7 +9,7 @@ const HeroSection = () => {
       {/* ===== Background Image (Crisp + Full Width) ===== */}
       <div className="absolute inset-0">
         <Image
-          src="/assets/images/burj1.jpg"
+          src="/assets/images/burj5.jpg"
           alt="Sky Realty Luxury Background"
           fill
           priority

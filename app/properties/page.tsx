@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { Heart, Mail, Phone, MessageSquare, MapPin, Tag, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import FooterStickyButtons from "@/components/FooterStickyBottons";
+import  Blog  from "@/components/Blog"
 
 
 /**
@@ -580,7 +581,7 @@ export default function PropertyPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* HERO */}
-      <section className="relative h-[420px]">
+      <section className="relative w-full h-screen overflow-hidden">
         <div className="absolute inset-0">
           <img src="/assets/images/burj2.jpg" alt="Hero" className="w-full h-full object-cover brightness-[0.65]" />
         </div>
@@ -941,9 +942,7 @@ export default function PropertyPage() {
       </main>
 
       <FooterStickyButtons />
-      <footer className="w-full text-center py-4 text-sm text-gray-600 border-t bg-white mt-10">
-      © {new Date().getFullYear()} SkyRealty. All rights reserved.
-    </footer>
+     
 
       {/* COMMUNITY / NEIGHBORHOOD MODAL */}
       {communityModalOpen && (
@@ -1002,6 +1001,14 @@ export default function PropertyPage() {
           </div>
         </div>
       )}
+
+      <section>
+        <Blog />
+      </section>
+
+        <footer className="w-full text-center py-4 text-sm text-gray-600 border-t bg-white mt-10">
+      © {new Date().getFullYear()} SkyRealty. All rights reserved.
+    </footer>
     </div>
   );
 }

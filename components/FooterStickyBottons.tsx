@@ -28,14 +28,7 @@ export default function FooterStickyButtons() {
         <FaPhone size={20} />
       </a>
 
-      {/* Email */}
-      <a
-        href="mailto:info@skyrealtyae.com"
-        className="w-14 h-14 bg-[#1836b2] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-        title="Email Us"
-      >
-        <FaEnvelope size={20} />
-      </a>
+      
 
       {/* Back to Top */}
       <button

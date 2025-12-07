@@ -5,9 +5,9 @@ const ZIINA_API_KEY = process.env.ZIINA_API_KEY!;
 
 const PLAN_PRICES: Record<string, number> = {
   free: 100,
-  basic: 9900,
-  pro: 19900,
-  premium: 29900,
+  basic: 5000,
+  pro: 7500,
+  premium: 9900,
 };
 
 const PLAN_LIMITS: Record<string, number | null> = {
