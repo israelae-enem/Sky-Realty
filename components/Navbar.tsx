@@ -102,7 +102,7 @@ const Navbar = () => {
         </Link>
 
         {/* Mobile Menu Button */}
-        <button className="text-white md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="text-[#59fcf7] md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
@@ -166,7 +166,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden mt-2 flex flex-col gap-2 bg-[#0f0f2a] p-4 rounded-lg">
+        <div className="md:hidden mt-2 flex flex-col gap-2 bg-white p-4 rounded-lg">
           <NavLink href="/">Home</NavLink>
           <NavLink href="/properties">Properties</NavLink>
           <NavLink href="/service">Services</NavLink>
@@ -178,7 +178,7 @@ const Navbar = () => {
             <>
               <button
                 onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
-                className="text-gray-200 font-semibold w-full text-left mb-1"
+                className="text-gray-800 font-semibold w-full text-left mb-1"
               >
                 Get Started ▼
               </button>
