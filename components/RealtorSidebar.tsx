@@ -119,8 +119,8 @@ export default function RealtorSidebar({
                   toggleMenu(item.key)
                 }
               }}
-              className={`w-full text-left px-4 py-2 rounded flex items-center font-semibold hover:bg-[#132a8e] transition
-                ${activeTab === item.key ? 'bg-[#1836b2] text-white' : ''}
+              className={`w-full text-left px-4 py-2 rounded flex items-center font-semibold hover:bg-[#1836b2] hover:text-white transition
+                ${activeTab === item.key ? 'bg-[#302cfc] text-white' : ''}
               `}
             >
               {item.icon}
@@ -142,7 +142,7 @@ export default function RealtorSidebar({
                       }
                     }}
                     className={`w-full text-left px-3 py-1 rounded text-sm hover:bg-[#1836b2] hover:text-white
-                      ${activeTab === sub.key ? 'bg-[#1836b2] text-white font-bold' : ''}
+                      ${activeTab === sub.key ? 'bg-[#302cfc] text-white font-bold' : ''}
                     `}
                   >
                     • {sub.label}

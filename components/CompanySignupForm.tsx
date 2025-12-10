@@ -1,51 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { useUser } from '@clerk/nextjs';
-import { User, Mail, Phone, MapPin, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import PhoneInput from 'react-phone-input-2';
+import { Mail, Phone, MapPin, Lock, Briefcase } from 'lucide-react';
+
+interface FormState {
+  email: string;
+  password: string;
+  company_name: string;
+  phone_number: string;
+  address: string;
+  country: string;
+}
 
 export default function CompanySignUpForm() {
   const router = useRouter();
-  const { user } = useUser();
-  const [form, setForm] = useState({
+
+  const [form, setForm] = useState<FormState>({
+    email: '',
+    password: '',
     company_name: '',
     phone_number: '',
     address: '',
     country: '',
   });
+
   const [profilePic, setProfilePic] = useState<File | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Check if company already exists
-  useEffect(() => {
-    const checkCompany = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
-      const { data: existing } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-
-      if (existing) {
-        toast.success('Welcome back! Redirecting to your dashboard...');
-        router.push(`/company/${user.id}/dashboard`);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    checkCompany();
-  }, [user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -56,21 +42,39 @@ export default function CompanySignUpForm() {
     if (file) setProfilePic(file);
   };
 
+  const handlePhoneChange = (value: string) => {
+    if (!value) return setForm({ ...form, phone_number: '' });
+    const phoneE164 = '+' + value.replace(/\D/g, '');
+    setForm({ ...form, phone_number: phoneE164 });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      toast.error('You must be logged in to complete onboarding.');
-      return;
-    }
-
-    setLoading(true);
     setErrorMsg('');
+    setLoading(true);
 
     try {
-      // Upload profile picture if exists
+      if (!form.email || !form.password || !form.company_name || !form.phone_number || !form.address || !form.country) {
+        setErrorMsg('Please fill in all fields.');
+        setLoading(false);
+        return;
+      }
+
+      // 1️⃣ Create company account in Supabase Auth
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (signUpError) throw signUpError;
+      if (!signUpData.user?.id) throw new Error('Failed to get user ID after signup');
+
+      const companyId = signUpData.user.id;
+
+      // 2️⃣ Upload profile picture if exists
       let profileUrl: string | null = null;
       if (profilePic) {
-        const filePath = `company-profile/${user.id}-${profilePic.name}`;
+        const filePath = `company-profile/${companyId}-${profilePic.name}`;
         const { error: uploadError } = await supabase.storage
           .from('documents')
           .upload(filePath, profilePic, { upsert: true });
@@ -81,12 +85,12 @@ export default function CompanySignUpForm() {
         profileUrl = data.publicUrl;
       }
 
-      // Insert company record
-      const { error } = await supabase.from('companies').insert([
+      // 3️⃣ Insert company record
+      const { error: insertError } = await supabase.from('companies').insert([
         {
-          id: user.id,
+          id: companyId,
           company_name: form.company_name,
-          email: user.primaryEmailAddress?.emailAddress || '',
+          email: form.email,
           phone_number: form.phone_number,
           address: form.address,
           country: form.country,
@@ -95,20 +99,26 @@ export default function CompanySignUpForm() {
         },
       ]);
 
-      if (error) throw error;
+      if (insertError) throw insertError;
 
-      toast.success('✅ Company profile created!');
-      router.push(`/company/${user.id}/dashboard`);
+      // 4️⃣ Automatically sign in the company
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (signInError) throw signInError;
+
+      toast.success('✅ Company account created!');
+      router.push(`/company/${companyId}/dashboard`);
     } catch (err: any) {
-      console.error('Onboarding error:', err);
-      setErrorMsg(err?.message || 'Failed to complete onboarding');
-      toast.error(err?.message || 'Failed to complete onboarding');
+      console.error('Company signup error:', err);
+      setErrorMsg(err?.message || 'Failed to create company account');
+      toast.error(err?.message || 'Failed to create company account');
     } finally {
       setLoading(false);
     }
   };
-
-  if (loading) return <p className="p-8 text-center text-gray-700">Loading...</p>;
 
   const fadeUpVariant = {
     hidden: { opacity: 0, y: 20 },
@@ -120,6 +130,18 @@ export default function CompanySignUpForm() {
   };
 
   const formElements = [
+     {
+      name: 'email',
+      type: 'text',
+      placeholder: 'Email',
+      icon: <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
+    },
+     {
+      name: 'password',
+      type: 'text',
+      placeholder: 'Password',
+      icon: <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />,
+    },
     {
       name: 'company_name',
       type: 'text',
@@ -146,7 +168,9 @@ export default function CompanySignUpForm() {
       initial="hidden"
       animate="visible"
     >
-      {/* Company Name, Address, Country */}
+
+
+
       {formElements.map((field, idx) => (
         <motion.div
           key={field.name}
@@ -167,58 +191,24 @@ export default function CompanySignUpForm() {
         </motion.div>
       ))}
 
-      {/* Phone Number Input using react-phone-input-2 */}
-      <motion.div
-        className="relative"
-        custom={formElements.length}
-        variants={fadeUpVariant}
-      >
-        <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400 z-10" />
+      <motion.div className="relative" custom={formElements.length} variants={fadeUpVariant}>
+        <Phone className="absolute left-3 top-8 h-5 w-5 text-gray-400 z-10" />
         <PhoneInput
-          country={'us'} // default country ISO code lowercase
-          value={form.phone_number.replace('+', '')} // remove + for component
-          onChange={(value, countryData) => {
-            if (!value) return setForm({ ...form, phone_number: '' });
-            const phoneE164 = '+' + value.replace(/\D/g, '');
-            setForm({ ...form, phone_number: phoneE164 });
-          }}
+          country={'us'}
+          value={form.phone_number.replace('+', '')}
+          onChange={handlePhoneChange}
           enableAreaCodes
-          countryCodeEditable={false}
+          countryCodeEditable={true}
           preferredCountries={['us', 'gb', 'ca', 'au', 'in']}
           inputClass="pl-10 w-full px-4 py-2 border rounded-md bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           containerClass="w-full"
         />
       </motion.div>
 
-      {/* Email readonly */}
-      <motion.div
-        className="relative"
-        custom={formElements.length + 1}
-        variants={fadeUpVariant}
-      >
-        <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-        <input
-          type="email"
-          value={user?.primaryEmailAddress?.emailAddress || ''}
-          disabled
-          className="pl-10 w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
-        />
-      </motion.div>
-
-      {/* Profile pic upload */}
-      <motion.div
-        className="relative"
-        custom={formElements.length + 2}
-        variants={fadeUpVariant}
-      >
+      <motion.div className="relative" custom={formElements.length + 1} variants={fadeUpVariant}>
         <label className="cursor-pointer text-blue-600 hover:underline">
-          Upload Profile Picture
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
+          Upload Logo
+          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
         </label>
       </motion.div>
 
@@ -228,7 +218,7 @@ export default function CompanySignUpForm() {
         type="submit"
         disabled={loading}
         className="w-full bg-[#302cfc] text-white py-2 rounded-md hover:bg-blue-700 transition flex justify-center"
-        custom={formElements.length + 3}
+        custom={formElements.length + 2}
         variants={fadeUpVariant}
       >
         {loading ? (

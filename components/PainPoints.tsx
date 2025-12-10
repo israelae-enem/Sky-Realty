@@ -119,7 +119,7 @@ export default function SolutionsSection() {
             Ready to experience smarter property management?
           </h2>
           <a
-            href="/sign-in"
+            href="/realtor"
             className="inline-block bg-[#1836b2] text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-[0_0_15px_#59fcf7] transition-all duration-300"
           >
             Get Started

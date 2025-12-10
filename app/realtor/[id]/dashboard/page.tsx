@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
@@ -40,14 +39,10 @@ import { leadColumns } from '@/lib/columns/lead-columns'
 
 
 // other components
-import ListingTable from '@/components/ListingTable'
-import TenantTable from '@/components/TenantTable'
-import PropertyTable from '@/components/PropertyTable'
-import RentPaymentTable from '@/components/RentPaymentTable'
+
 import MaintenanceTable from '@/components/MaintenanceTable'
-import AppointmentTable from '@/components/AppointmentTable'
+
 import LegalDocumentsTable from '@/components/LegalDocumentTable'
-import TeamAccordion from '@/components/TeamAccordion'
 import RealtorChat from '@/components/RealtorChat'
 import { PLAN_LIMITS } from '@/constants'
 
@@ -73,10 +68,16 @@ interface Notification {
   created_at: string
 }
 
+const getUser = async () => {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error) throw error
+  return user
+}
+
 export default function RealtorDashboard() {
-  const { user } = useUser();
-  const userId = user?.id;
   const router = useRouter()
+
+  const [user, setUser] = useState<any | null>(null)
 
   // UI state
   const [activeTab, setActiveTab] = useState<string>('Home')
@@ -120,6 +121,23 @@ export default function RealtorDashboard() {
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
   }
+
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const u = await getUser()
+        if (!u) {
+          router.push('/login')
+          return
+        }
+        setUser(u)
+      } catch (err) {
+        console.error('Failed to get user', err)
+        router.push('/login')
+      }
+    }
+    initUser()
+  }, [router])
 
   // Subscription logic (fetch / countdown)
   useEffect(() => {
@@ -664,12 +682,7 @@ case 'rentReminder':
           </motion.div>
         )
 
-      case 'team':
-        return (
-          <motion.div key="team" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <TeamAccordion />
-          </motion.div>
-        )
+      
 
           case 'leads':
         
@@ -798,7 +811,7 @@ case 'rentReminder':
 
       
 
-       
+      
       {!subscriptionActive && (
         <motion.div
           initial={{ opacity: 0 }}

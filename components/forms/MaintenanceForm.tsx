@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabaseClient'
-import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
 const schema = z.object({
@@ -26,19 +25,23 @@ export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormPro
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const { user } = useUser()
-  const router = useRouter()
-
-  // Fetch tenant info
   const [tenantInfo, setTenantInfo] = useState<{
     id: string
     property_id: string
     realtor_id: string
   } | null>(null)
 
+  const router = useRouter()
+
+  // Fetch current user from Supabase
   useEffect(() => {
-    if (!user?.id) return
     const fetchTenant = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        toast.error('User not authenticated')
+        return
+      }
+
       const { data, error } = await supabase
         .from('tenants')
         .select('id, property_id, realtor_id')
@@ -50,12 +53,14 @@ export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormPro
         toast.error('Tenant record not found.')
         return
       }
+
       setTenantInfo(data)
     }
-    fetchTenant()
-  }, [user?.id])
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<MaintenanceFormData>({
+    fetchTenant()
+  }, [])
+
+  const { register, handleSubmit, formState: { errors } } = useForm<MaintenanceFormData>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues || { priority: 'medium' },
   })
@@ -69,12 +74,15 @@ export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormPro
   }, [file])
 
   const onSubmit = async (data: MaintenanceFormData) => {
-    if (!user || !tenantInfo) {
-      toast.error('Tenant information not found.')
-      return
-    }
     setLoading(true)
     try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user || !tenantInfo) {
+        toast.error('Tenant information not found.')
+        setLoading(false)
+        return
+      }
+
       let fileUrl: string | null = defaultValues?.media_url || null
       if (file) {
         const filePath = `maintenance/${user.id}-${Date.now()}-${file.name}`
@@ -87,7 +95,7 @@ export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormPro
       }
 
       if (defaultValues?.complaint_id || defaultValues?.id) {
-        // Edit existing complaint or maintenance request
+        // Edit existing complaint
         const idToUpdate = defaultValues.complaint_id || defaultValues.id
         const { error } = await supabase
           .from('maintenance_request')
@@ -101,7 +109,7 @@ export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormPro
         if (error) throw error
         toast.success('Maintenance request updated!')
       } else {
-        // Create new
+        // Create new complaint
         const { error } = await supabase
           .from('maintenance_request')
           .insert({
@@ -120,7 +128,7 @@ export const MaintenanceForm = ({ defaultValues, onSuccess }: MaintenanceFormPro
       }
 
       if (onSuccess) onSuccess()
-      router.push(`/tenant/${user.id}/dashboard?success=maintenance`)
+      router.push(`/tenant/${tenantInfo.id}/dashboard?success=maintenance`)
     } catch (err) {
       console.error(err)
       toast.error('Failed to save request')

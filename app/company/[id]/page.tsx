@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useUser } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import clsx from 'clsx'
 import { supabase } from '@/lib/supabaseClient'
@@ -32,7 +31,7 @@ import { maintenanceRequestColumns } from '@/lib/columns/maintenance-request-col
 import { leadColumns } from '@/lib/columns/lead-columns'
 
 import RealtorChat from '@/components/RealtorChat'
-import TeamAccordion from '@/components/TeamAccordion'
+
 import MaintenanceTable from '@/components/MaintenanceTable'
 import StatCard from '@/components/StatCard'
 import RentAnalyticsCards from '@/components/RentAnalyticsCards'
@@ -40,9 +39,18 @@ import RentAnalyticsChart from '@/components/RentAnalyticsChart'
 import RentReminders from '@/components/RentReminder'
 import { redirect, useRouter } from 'next/navigation'
 
+
+const getUser = async () => {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error) throw error
+  return user
+}
+
 export default function CompanyDashboardPage() {
-  const { user } = useUser()
+  
   const router = useRouter()
+
+  const [user, setUser] = useState<any | null>(null)
   const [activeTab, setActiveTab] = useState('home')
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -88,6 +96,24 @@ export default function CompanyDashboardPage() {
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${pad(days)}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
   }
+
+
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const u = await getUser()
+        if (!u) {
+          router.push('/login')
+          return
+        }
+        setUser(u)
+      } catch (err) {
+        console.error('Failed to get user', err)
+        router.push('/login')
+      }
+    }
+    initUser()
+  }, [router])
 
   // ---------- Fetch Subscription ----------
   useEffect(() => {
@@ -536,19 +562,7 @@ export default function CompanyDashboardPage() {
           </motion.div>
         )
 
-      // ---------- TEAM ----------
-      case 'team':
-        return (
-          <motion.div
-            key="team"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25 }}
-          >
-            <TeamAccordion companyId={user?.id} />
-          </motion.div>
-        )
+      
 
       // ---------- NOTIFICATIONS ----------
       case 'notifications':

@@ -58,29 +58,14 @@ const Page = () => {
     <AboutUsSection />
     <WhySkyRealty />
     <CTASection />
-
-     <section>
-        <WalkthroughSection/>
-     </section>
-
-  <section>
+    <WalkthroughSection/>
     <ServicesSection />
-   </section>
-
-  <section>
     <ClientLogosCarousel />
-  </section>
-
-  <FreeTrial />
-
-  
-  <section>
+    <FreeTrial />
     <TestimonialCards />
-  </section>
-
-  <Marker />
-
-     <Footer />
+    <FAQ />
+    <Marker />
+    <Footer />
 
        
     </main>

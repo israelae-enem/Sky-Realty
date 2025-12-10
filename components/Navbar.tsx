@@ -3,73 +3,77 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  SignUpButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 const Navbar = () => {
-  const { user, isSignedIn } = useUser();
   const pathname = usePathname();
+  const router = useRouter();
 
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [dashboardUrl, setDashboardUrl] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
 
-  // Check user role and set dashboard URL
+  // Track Supabase auth state
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user ?? null);
+    };
+
+    getUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  // Determine user dashboard
   useEffect(() => {
     const checkRole = async () => {
       if (!user) return;
+      const uid = user.id;
 
       const { data: realtor } = await supabase
         .from("realtors")
         .select("id")
-        .eq("id", user.id)
+        .eq("id", uid)
         .maybeSingle();
-      if (realtor) {
-        setOnboardingComplete(true);
-        setDashboardUrl(`/realtor/${user.id}/dashboard`);
-        return;
-      }
+      if (realtor) return setDashboardUrl(`/realtor/${uid}/dashboard`);
 
       const { data: tenant } = await supabase
         .from("tenants")
         .select("id")
-        .eq("id", user.id)
+        .eq("id", uid)
         .maybeSingle();
-      if (tenant) {
-        setOnboardingComplete(true);
-        setDashboardUrl(`/tenant/${user.id}/dashboard`);
-        return;
-      }
+      if (tenant) return setDashboardUrl(`/tenant/${uid}/dashboard`);
 
       const { data: company } = await supabase
         .from("companies")
         .select("id")
-        .eq("id", user.id)
+        .eq("id", uid)
         .maybeSingle();
-      if (company) {
-        setOnboardingComplete(true);
-        setDashboardUrl(`/company/${user.id}/dashboard`);
-        return;
-      }
+      if (company) return setDashboardUrl(`/company/${uid}/dashboard`);
 
-      setOnboardingComplete(false);
       setDashboardUrl(null);
     };
 
     checkRole();
   }, [user]);
 
-  // Reusable nav link component
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push("/");
+  };
+
+  const isSignedIn = !!user;
+
   const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
     <Link
       href={href}
@@ -98,10 +102,7 @@ const Navbar = () => {
         </Link>
 
         {/* Mobile Menu Button */}
-        <button
-          className="text-white md:hidden"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
+        <button className="text-white md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
@@ -111,61 +112,55 @@ const Navbar = () => {
           <NavLink href="/properties">Properties</NavLink>
           <NavLink href="/service">Services</NavLink>
           <NavLink href="/subscription">Pricing</NavLink>
-
-          {/* Join Dropdown */}
-          <div
-            className="relative"
-            onMouseEnter={() => setIsDropdownOpen(true)}
-            onMouseLeave={() => setIsDropdownOpen(false)}
-          >
-            <button className="nav-item flex items-center gap-1 text-[#1836b2] hover:text-[#59fcf7]">
-              Join ▼
-            </button>
-            {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-40 bg-gray-200 text-[#1836b2] rounded-lg shadow-xl z-50 flex flex-col">
-                <Link href="/home1" className="px-4 py-2 hover:bg-[#59fcf7] rounded">
-                  Realtor
-                </Link>
-                <Link href="/home1" className="px-4 py-2 hover:bg-[#59fcf7] rounded">
-                  Agency
-                </Link>
-                <Link href="/home2" className="px-4 py-2 hover:bg-[#59fcf7] rounded">
-                  Tenant
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Onboarding */}
-          {isSignedIn && !onboardingComplete && (
-            <NavLink href="/onboarding">Complete Onboarding</NavLink>
-          )}
-
-          {/* Dashboard */}
-          {isSignedIn && onboardingComplete && dashboardUrl && (
-            <NavLink href={dashboardUrl}>Dashboard</NavLink>
-          )}
-
           <NavLink href="/about">Our Story</NavLink>
 
-          {/* Auth Buttons */}
+          {/* Get Started Dropdown (Desktop) */}
           {!isSignedIn && (
-            <SignUpButton>
+            <div
+              className="relative"
+              onMouseEnter={() => setDropdownOpen(true)}
+              onMouseLeave={() => setDropdownOpen(false)}
+            >
               <button className="bg-[#59fcf7] text-[#1836b2] px-5 py-2 rounded-md font-semibold hover:bg-gray-200 transition">
-                Get Started
+                Get Started ▼
               </button>
-            </SignUpButton>
+              {dropdownOpen && (
+                <div className="absolute mt-2 w-40 bg-white text-[#1836b2] rounded shadow-lg flex flex-col z-50">
+                  <button
+                    onClick={() => router.push("/realtor")}
+                    className="px-4 py-2 hover:bg-gray-200 text-left"
+                  >
+                    Realtor
+                  </button>
+                  <button
+                    onClick={() => router.push("/company")}
+                    className="px-4 py-2 hover:bg-gray-200 text-left"
+                  >
+                    Company
+                  </button>
+                  <button
+                    onClick={() => router.push("/tenant")}
+                    className="px-4 py-2 hover:bg-gray-200 text-left"
+                  >
+                    Tenant
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
-          <SignedOut>
-            <SignInButton>
+          {!isSignedIn && (
+            <Link href="/login">
               <button className="nav-item hover:text-[#59fcf7]">Login</button>
-            </SignInButton>
-          </SignedOut>
+            </Link>
+          )}
 
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          {isSignedIn && dashboardUrl && <NavLink href={dashboardUrl}>Dashboard</NavLink>}
+          {isSignedIn && (
+            <button onClick={handleLogout} className="nav-item hover:text-red-500">
+              Logout
+            </button>
+          )}
         </div>
       </div>
 
@@ -176,46 +171,52 @@ const Navbar = () => {
           <NavLink href="/properties">Properties</NavLink>
           <NavLink href="/service">Services</NavLink>
           <NavLink href="/subscription">Pricing</NavLink>
-
-          {/* Join Dropdown (Mobile) */}
-          <div className="flex flex-col">
-            <span className="nav-item text-gray-200">Join ▼</span>
-            <div className="ml-4 flex flex-col gap-1 mt-1">
-              <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
-                Realtor
-              </Link>
-              <Link href="/home1" className="px-4 py-2 hover:bg-gray-800 rounded">
-                Agency
-              </Link>
-              <Link href="/home2" className="px-4 py-2 hover:bg-gray-800 rounded">
-                Tenant
-              </Link>
-            </div>
-          </div>
-
-          {isSignedIn && !onboardingComplete && (
-            <NavLink href="/onboarding">Complete Onboarding</NavLink>
-          )}
-
-          {isSignedIn && onboardingComplete && dashboardUrl && (
-            <NavLink href={dashboardUrl}>Dashboard</NavLink>
-          )}
-
           <NavLink href="/about">Our Story</NavLink>
 
+          {/* Get Started Dropdown (Mobile) */}
           {!isSignedIn && (
-            <SignUpButton>
-              <button className="bg-yellow-400 text-[#0f0f2a] px-5 py-2 rounded-md font-semibold hover:bg-yellow-300 transition w-full mt-2">
-                Get Started
+            <>
+              <button
+                onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
+                className="text-gray-200 font-semibold w-full text-left mb-1"
+              >
+                Get Started ▼
               </button>
-            </SignUpButton>
+              {mobileDropdownOpen && (
+                <div className="ml-2 flex flex-col gap-1 mb-2">
+                  <button
+                    onClick={() => router.push("/realtor")}
+                    className="px-4 py-2 hover:bg-gray-700 rounded text-left"
+                  >
+                    Realtor
+                  </button>
+                  <button
+                    onClick={() => router.push("/company")}
+                    className="px-4 py-2 hover:bg-gray-700 rounded text-left"
+                  >
+                    Company
+                  </button>
+                  <button
+                    onClick={() => router.push("/tenant")}
+                    className="px-4 py-2 hover:bg-gray-700 rounded text-left"
+                  >
+                    Tenant
+                  </button>
+                </div>
+              )}
+
+              <Link href="/login">
+                <button className="nav-item hover:text-yellow-400 w-full mt-2">Login</button>
+              </Link>
+            </>
           )}
 
-          <SignedOut>
-            <SignInButton>
-              <button className="nav-item hover:text-yellow-400 w-full mt-1">Login</button>
-            </SignInButton>
-          </SignedOut>
+          {isSignedIn && dashboardUrl && <NavLink href={dashboardUrl}>Dashboard</NavLink>}
+          {isSignedIn && (
+            <button onClick={handleLogout} className="text-red-400 mt-2">
+              Logout
+            </button>
+          )}
         </div>
       )}
     </nav>

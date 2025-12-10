@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
 import { UserCircle, Trash2, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,9 +22,6 @@ const PLAN_OPTIONS = [
 ];
 
 export default function ManageAccountForm() {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
-
   const [expanded, setExpanded] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,12 +36,16 @@ export default function ManageAccountForm() {
     email: '',
     phone: '',
   });
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Load user info
   useEffect(() => {
-    if (!isLoaded || !user) return;
+    const loadUserAndProfile = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
 
-    const loadProfile = async () => {
+      setUserId(user.id);
+
       // Check realtor
       const { data: realtor } = await supabase.from('realtors').select('name, email, phone, profile_pic').eq('id', user.id).single();
       if (realtor) {
@@ -73,16 +73,16 @@ export default function ManageAccountForm() {
       }
     };
 
-    loadProfile();
-  }, [isLoaded, user]);
+    loadUserAndProfile();
+  }, []);
 
   // Fetch plan for realtors only
   useEffect(() => {
-    if (!user || role !== 'realtor') return;
+    if (!userId || role !== 'realtor') return;
 
     const fetchPlan = async () => {
       try {
-        const res = await fetch(`/api/ziina?user=${user.id}`);
+        const res = await fetch(`/api/ziina?user=${userId}`);
         if (!res.ok) throw new Error('Failed to fetch plan');
         const data = await res.json();
         setCurrentPlan({
@@ -95,26 +95,26 @@ export default function ManageAccountForm() {
       }
     };
     fetchPlan();
-  }, [user, role]);
+  }, [userId, role]);
 
   // Handle profile pic upload
   const uploadProfilePic = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!user) return;
+      if (!userId) return;
       const file = e.target.files?.[0];
       if (!file) return;
       setLoading(true);
 
-      const filePath = `profile-pics/${user.id}-${file.name}`;
+      const filePath = `profile-pics/${userId}-${file.name}`;
       const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file, { upsert: true });
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('documents').getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
 
-      if (role === 'realtor') await supabase.from('realtors').update({ profile_pic: publicUrl }).eq('id', user.id);
-      else if (role === 'tenant') await supabase.from('tenants').update({ profile_pic: publicUrl }).eq('id', user.id);
-      else if (role === 'company') await supabase.from('companies').update({ profile_pic: publicUrl }).eq('id', user.id);
+      if (role === 'realtor') await supabase.from('realtors').update({ profile_pic: publicUrl }).eq('id', userId);
+      else if (role === 'tenant') await supabase.from('tenants').update({ profile_pic: publicUrl }).eq('id', userId);
+      else if (role === 'company') await supabase.from('companies').update({ profile_pic: publicUrl }).eq('id', userId);
 
       setProfilePic(publicUrl);
     } catch (err) {
@@ -127,13 +127,13 @@ export default function ManageAccountForm() {
 
   const deleteProfilePic = async () => {
     try {
-      if (!user || !profilePic) return;
+      if (!userId || !profilePic) return;
       const fileName = profilePic.split('/').pop();
       if (fileName) await supabase.storage.from('documents').remove([`profile-pics/${fileName}`]);
 
-      if (role === 'realtor') await supabase.from('realtors').update({ profile_pic: null }).eq('id', user.id);
-      else if (role === 'tenant') await supabase.from('tenants').update({ profile_pic: null }).eq('id', user.id);
-      else if (role === 'company') await supabase.from('companies').update({ profile_pic: null }).eq('id', user.id);
+      if (role === 'realtor') await supabase.from('realtors').update({ profile_pic: null }).eq('id', userId);
+      else if (role === 'tenant') await supabase.from('tenants').update({ profile_pic: null }).eq('id', userId);
+      else if (role === 'company') await supabase.from('companies').update({ profile_pic: null }).eq('id', userId);
 
       setProfilePic(null);
     } catch (err) {
@@ -143,12 +143,12 @@ export default function ManageAccountForm() {
   };
 
   const handleChangePlan = async (planId: string) => {
-    if (!user || role !== 'realtor') return;
+    if (!userId || role !== 'realtor') return;
     try {
       const res = await fetch('/api/ziina', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, plan: planId }),
+        body: JSON.stringify({ userId, plan: planId }),
       });
       const data = await res.json();
       if (data.redirectUrl) window.location.href = data.redirectUrl;
@@ -159,7 +159,7 @@ export default function ManageAccountForm() {
   };
 
   const handleSave = async () => {
-    if (!user || !role) return;
+    if (!userId || !role) return;
     setLoading(true);
     try {
       const table = role === 'realtor' ? 'realtors' : role === 'tenant' ? 'tenants' : 'companies';
@@ -168,7 +168,7 @@ export default function ManageAccountForm() {
         email: formValues.email,
         phone: formValues.phone,
         updated_at: new Date().toISOString(),
-      }).eq('id', user.id);
+      }).eq('id', userId);
       if (error) throw error;
       alert('Account updated!');
     } catch (err) {
@@ -180,20 +180,20 @@ export default function ManageAccountForm() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!user || !role) return;
+    if (!userId || !role) return;
     if (!confirm('Are you sure you want to permanently delete your account?')) return;
 
     try {
       const table = role === 'realtor' ? 'realtors' : role === 'tenant' ? 'tenants' : 'companies';
-      await supabase.from(table).delete().eq('id', user.id);
-      signOut();
+      await supabase.from(table).delete().eq('id', userId);
+      await supabase.auth.signOut();
     } catch (err) {
       console.error('Delete failed', err);
       alert('Failed to delete account.');
     }
   };
 
-  if (!isLoaded || !user) return null;
+  if (!userId) return null;
 
   return (
     <div className="bg-white border border-gray-200 text-gray-800 w-full p-4 rounded-md shadow-lg">
@@ -221,13 +221,11 @@ export default function ManageAccountForm() {
             transition={{ duration: 0.4 }}
             className="overflow-hidden mt-4 space-y-4"
           >
-            {/* Info Form */}
             <div className="grid gap-3">
               <Input placeholder="Full Name" value={formValues.name} onChange={(e) => setFormValues(prev => ({ ...prev, name: e.target.value }))} />
               <Input placeholder="Email" type="email" value={formValues.email} onChange={(e) => setFormValues(prev => ({ ...prev, email: e.target.value }))} />
               <Input placeholder="Phone" value={formValues.phone} onChange={(e) => setFormValues(prev => ({ ...prev, phone: e.target.value }))} />
 
-              {/* Profile Pic */}
               <label className="text-[#302cfc] font-semibold cursor-pointer hover:underline">
                 {loading ? 'Uploading...' : 'Upload Photo'}
                 <input type="file" accept="image/*" onChange={uploadProfilePic} className="hidden" disabled={loading} />
@@ -238,7 +236,6 @@ export default function ManageAccountForm() {
                 </button>
               )}
 
-              {/* Realtor-only Plan */}
               {role === 'realtor' && (
                 <div>
                   <p className="text-[#302cfc] font-semibold">Change Plan:</p>
@@ -261,7 +258,7 @@ export default function ManageAccountForm() {
               <Button variant="destructive" onClick={handleDeleteAccount} className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white">
                 Delete Account
               </Button>
-              <Button variant="outline" onClick={() => signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-100">
+              <Button variant="outline" onClick={() => supabase.auth.signOut()} className="w-full flex items-center justify-center gap-2 border-gray-300 hover:bg-gray-100">
                 <LogOut className="w-4 h-4" /> Sign Out
               </Button>
             </div>

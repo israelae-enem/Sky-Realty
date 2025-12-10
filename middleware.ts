@@ -1,14 +1,26 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { supabase } from '@/lib/supabaseClient'
 
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
 
-export default clerkMiddleware();
+  // Get the auth token from cookies
+  const access_token = req.cookies.get('sb-access-token')?.value
 
+  if (access_token) {
+    // Attach the token to the Supabase client
+    supabase.auth.setSession({
+      access_token,
+      refresh_token: req.cookies.get('sb-refresh-token')?.value || ''
+    })
+  }
+
+  return res
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    '/((?!_next|favicon.ico|.\\.(?:css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf)).)',
   ],
-};
+}

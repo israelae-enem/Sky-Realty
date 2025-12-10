@@ -16,7 +16,7 @@ export default function CTASection() {
           viewport={{ once: true }}
         >
           Manage Your Luxury Properties With{" "}
-          <span className="font-semibold text-[#7c7cd6]">Sky Realty</span>
+          <span className="font-semibold text-[#59fcf7]">Sky Realty</span>
         </motion.h2>
 
         {/* Paragraph - slides from bottom with delay */}
@@ -42,8 +42,8 @@ export default function CTASection() {
           viewport={{ once: true }}
         >
           <Link
-            href="/sign-up"
-            className="px-10 py-4 bg-[#302cfc] text-white text-lg font-semibold
+            href="/login"
+            className="px-10 py-4 bg-[#59fcf7] text-white text-lg font-semibold
                        rounded-full shadow-[0_0_20px_rgba(48,44,252,0.35)]
                        hover:shadow-[0_0_35px_rgba(48,44,252,0.55)]
                        hover:scale-105 transition-all duration-300"
@@ -52,7 +52,7 @@ export default function CTASection() {
           </Link>
 
           <Link
-            href="/sign-in"
+            href="/login"
             className="px-10 py-4 bg-white text-[#1836b2] text-lg font-semibold
                        rounded-full shadow-[0_0_20px_rgba(0,0,0,0.2)]
                        hover:shadow-[0_0_35px_rgba(0,0,0,0.3)]

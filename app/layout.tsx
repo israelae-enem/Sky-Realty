@@ -6,7 +6,7 @@ import { cn } from "../lib/utils";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Navbar from "@/components/Navbar";
-import { ClerkProvider } from '@clerk/nextjs';
+
 
 // Primary body font
 const inter = Inter({
@@ -45,11 +45,11 @@ export default function RootLayout({
       className={cn(inter.variable, roboto.variable, audiowide.variable)}
     >
       <body className={cn("min-h-screen antialiased font-[var(--font-inter)] overflow-x-hidden w-full")}>
-        <ClerkProvider appearance={{ variables: { colorPrimary: '#302cfc' } }}>
+        
           <Navbar/>
           {children}
           <Toaster position="top-center" richColors theme="dark" />
-        </ClerkProvider>
+        
       </body>
     </html>
   );

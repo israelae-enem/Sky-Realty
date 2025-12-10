@@ -7,7 +7,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import Footer from "@/components/Footer";
 import { Heart, Mail, Phone, MessageSquare, MapPin, Tag, ChevronLeft, ChevronRight } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+
 import FooterStickyButtons from "@/components/FooterStickyBottons";
 import  Blog  from "@/components/Blog"
 
@@ -103,6 +103,8 @@ interface PropertyRow {
   neighborhood?: Neighborhood | null;
 }
 
+
+
 /** -----------------------
  * Helpers
  * ------------------------*/
@@ -165,7 +167,29 @@ const EMIRATES = ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Umm Al Quwain", "Ra
  * Component
  * ------------------------*/
 export default function PropertyPage() {
-  const { user } = useUser();
+  
+  const [user, setUser] = useState<any>(null);
+
+useEffect(() => {
+  const getUser = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    setUser(session?.user ?? null);
+  };
+
+  getUser();
+
+  // listen for login/logout
+  const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    setUser(session?.user ?? null);
+  });
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, []);
   // data
   const [properties, setProperties] = useState<PropertyRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -249,15 +273,15 @@ export default function PropertyPage() {
     let mounted = true;
     const loadLookups = async () => {
       try {
-        const [comRes, neighRes, devRes] = await Promise.all([
+        const [comRes, neighRes,] = await Promise.all([
           supabase.from("communities").select("id, name, emirate").order("name"),
           supabase.from("neighborhoods").select("id, name, emirate, community_id").order("name"),
-          supabase.from("developers").select("id, name"),
+          
         ]);
         if (!mounted) return;
         setCommunities(comRes.data ?? []);
         setNeighborhoods(neighRes.data ?? []);
-        setDevelopers(devRes.data ?? []);
+        
       } catch (err) {
         console.warn("lookup load error", err);
       }
@@ -268,46 +292,52 @@ export default function PropertyPage() {
     };
   }, []);
 
-  // fetch saved properties (for signed users)
-  const fetchSaved = useCallback(async () => {
-    if (!user) {
-      setSavedIds([]);
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from("saved_properties")
-        .select("property_id")
-        .eq("user_id", user.id);
-      if (error) throw error;
-      setSavedIds((data || []).map((r: any) => r.property_id));
-    } catch (err) {
-      console.error("fetchSaved", err);
-    }
-  }, [user]);
 
-  useEffect(() => {
-    fetchSaved();
-  }, [fetchSaved]);
+  // fetch saved properties (for signed users)
+    const fetchSaved = useCallback(async () => {
+  if (!user) {
+    setSavedIds([]);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("saved_properties")
+    .select("property_id")
+    .eq("user_id", user.id);
+
+  if (!error) {
+    setSavedIds(data.map((x) => x.property_id));
+  }
+}, [user]);
 
   // toggle save
-  const toggleSave = async (propertyId: string) => {
-    if (!user) {
-      alert("Please sign in to save properties.");
-      return;
+    const toggleSave = async (propertyId: string) => {
+  if (!user) {
+    alert("Please sign in to save properties.");
+    return;
+  }
+
+  try {
+    if (savedIds.includes(propertyId)) {
+      await supabase
+        .from("saved_properties")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("property_id", propertyId);
+
+      setSavedIds((prev) => prev.filter((id) => id !== propertyId));
+    } else {
+      await supabase.from("saved_properties").insert({
+        user_id: user.id,
+        property_id: propertyId,
+      });
+
+      setSavedIds((prev) => [...prev, propertyId]);
     }
-    try {
-      if (savedIds.includes(propertyId)) {
-        await supabase.from("saved_properties").delete().eq("user_id", user.id).eq("property_id", propertyId);
-        setSavedIds((s) => s.filter((id) => id !== propertyId));
-      } else {
-        await supabase.from("saved_properties").insert({ user_id: user.id, property_id: propertyId });
-        setSavedIds((s) => [...s, propertyId]);
-      }
-    } catch (err) {
-      console.error("toggleSave", err);
-    }
-  };
+  } catch (error) {
+    console.error("toggleSave error:", error);
+  }
+};
 
   // build and execute supabase query with filters & pagination
   const fetchProperties = useCallback(
@@ -360,7 +390,7 @@ export default function PropertyPage() {
         if (maxSize !== "") query = query.lte("size", Number(maxSize));
         if (filterFurnished === "furnished") query = query.eq("is_furnished", true);
         if (filterFurnished === "unfurnished") query = query.eq("is_furnished", false);
-        if (filterDeveloper) query = query.eq("developer_id", filterDeveloper);
+        
         if (filterCompletionYear) query = query.eq("completion_year", filterCompletionYear);
         if (onlyOffplan) query = query.eq("listing_category", "offplan");
         // community/neighborhood
@@ -383,14 +413,14 @@ export default function PropertyPage() {
         // batch load owners & developers & communities & neighborhoods to attach
         const realtorIds = Array.from(new Set(rows.filter(r => r.realtor_id).map(r => r.realtor_id!)));
         const companyIds = Array.from(new Set(rows.filter(r => r.company_id).map(r => r.company_id!)));
-        const developerIds = Array.from(new Set(rows.filter(r => r.developer_id).map(r => r.developer_id!)));
+        
         const communityIds = Array.from(new Set(rows.filter(r => (r as any).community_id).map(r => (r as any).community_id!)));
         const neighborhoodIds = Array.from(new Set(rows.filter(r => (r as any).neighborhood_id).map(r => (r as any).neighborhood_id!)));
 
         const [rdata, cdata, ddata, communityData, neighborhoodData] = await Promise.all([
           realtorIds.length ? supabase.from("realtors").select("id, full_name, company_name, phone_number, profile_pic, address").in("id", realtorIds) : Promise.resolve({ data: [] }),
           companyIds.length ? supabase.from("companies").select("id, name, contact_email, phone, profile_pic, website").in("id", companyIds) : Promise.resolve({ data: [] }),
-          developerIds.length ? supabase.from("developers").select("id, name").in("id", developerIds) : Promise.resolve({ data: [] }),
+          Promise.resolve({ data: [] }),
           communityIds.length ? supabase.from("communities").select("id, name, emirate").in("id", communityIds) : Promise.resolve({ data: [] }),
           neighborhoodIds.length ? supabase.from("neighborhoods").select("id, name, emirate, community_id").in("id", neighborhoodIds) : Promise.resolve({ data: [] }),
         ]);
@@ -403,7 +433,7 @@ export default function PropertyPage() {
 
         (rdata?.data || []).forEach((r: any) => (realtorMap[r.id] = r));
         (cdata?.data || []).forEach((c: any) => (companyMap[c.id] = c));
-        (ddata?.data || []).forEach((d: any) => (devMap[d.id] = d));
+        
         (communityData?.data || []).forEach((c: any) => (communityMap[c.id] = c));
         (neighborhoodData?.data || []).forEach((n: any) => (neighborhoodMap[n.id] = n));
 
@@ -411,7 +441,7 @@ export default function PropertyPage() {
           ...r,
           realtor: r.realtor_id ? realtorMap[r.realtor_id] ?? null : null,
           company: r.company_id ? companyMap[r.company_id] ?? null : null,
-          developer: r.developer_id ? devMap[r.developer_id] ?? null : null,
+          
           community: (r as any).community_id ? communityMap[(r as any).community_id] ?? null : null,
           neighborhood: (r as any).neighborhood_id ? neighborhoodMap[(r as any).neighborhood_id] ?? null : null,
         }));

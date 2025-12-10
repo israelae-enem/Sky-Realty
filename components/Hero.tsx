@@ -48,14 +48,14 @@ const HeroSection = () => {
           transition={{ duration: 1.2 }}
         >
           <a
-            href="/signin"
+            href="/login"
             className="px-6 py-3 rounded-full bg-[#302cfc] text-white font-semibold shadow hover:scale-105 transition-all"
           >
             List Your Property
           </a>
 
           <a
-            href="/signin"
+            href="/login"
             className="px-6 py-3 rounded-full border border-white text-white font-semibold hover:bg-white hover:text-[#302cfc] transition-all"
           >
             Explore Properties
@@ -90,6 +90,13 @@ const HeroSection = () => {
               className="w-full sm:w-auto px-8 py-3 rounded-full bg-[#1836b2] text-white shadow-[0_0_12px_#59fcf7] hover:shadow-[0_0_20px_#59fcf7] hover:scale-105 transition-all text-center"
             >
               I’m a Realtor
+            </a>
+
+               <a
+              href="/home1"
+              className="w-full sm:w-auto px-8 py-3 rounded-full border border-gray-200 bg-white text-black shadow hover:scale-105 transition-all text-center"
+            >
+              I’m a Company
             </a>
           </div>
         </motion.div>

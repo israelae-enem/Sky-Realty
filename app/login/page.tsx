@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import RealtorSignUpForm from "@/components/RealtorSignUpForm";
 import Image from "next/image";
 import React from "react";
-import CompanySignUpForm from "@/components/CompanySignupForm";
+import LoginPage from "@/components/Login";
 
-const Page = () => {
+const Realtor = () => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -28,12 +29,12 @@ const Page = () => {
         className="relative z-10 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 md:p-10 w-[90%] max-w-lg"
       >
         <h1 className="text-3xl font-bold text-[#302cfc] mb-4 text-center">
-          Comapny Sign Up
+          Login to Sky Realty
         </h1>
-        <CompanySignUpForm />
+        <LoginPage />
       </motion.div>
     </div>
   );
 };
 
-export default Page;
+export default Realtor;

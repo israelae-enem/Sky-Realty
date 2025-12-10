@@ -73,21 +73,21 @@ export default function CommunicationSection() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-blue-700 text-2xl font-tech font-semibold mb-3">Manage Maintenance Requests Easily</h3>
             <p className="text-gray-400 mb-4">
-              Submit and track requests without confusion. <Link href="/maintenance" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
+              Submit and track requests without confusion. <Link href="/login" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
             </p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-blue-700 font-tech text-2xl font-semibold mb-3">Send and Receive Updates</h3>
             <p className="text-gray-400 mb-4">
-              Get notified about your requests and updates automatically. <Link href="/reminders" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
+              Get notified about your requests and updates automatically. <Link href="/login" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
             </p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-blue-700 font-tech text-2xl font-semibold mb-3">Store Every Record Securely</h3>
             <p className="text-gray-400 mb-4">
-              All communication and records are safely stored. <Link href="/records" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
+              All communication and records are safely stored. <Link href="/login" target="_blank" className="text-blue-700 hover:underline">Learn More &rarr;</Link>
             </p>
           </div>
         </div>

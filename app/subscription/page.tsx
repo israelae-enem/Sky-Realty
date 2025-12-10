@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
 
 type Plan = {
   id: string;
@@ -13,7 +14,6 @@ type Plan = {
   badge: string;
 };
 
-// 🎉 Final discounted prices already applied here
 const plans: Plan[] = [
   {
     id: "basic",
@@ -67,7 +67,7 @@ const plans: Plan[] = [
       "Add, edit, and remove properties",
       "View tenant info, lease dates & rent due",
       "Automated rent reminders",
-      "Schedule and track maintenance requests",
+      "Schedule maintenance requests",
       "Receive notifications & reminders",
       "Premium email, chat & phone support",
       "Advanced analytics & reporting",
@@ -79,50 +79,91 @@ const plans: Plan[] = [
 
 export default function PricingSubscription() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] =
+    useState<"monthly" | "yearly">("monthly");
 
   const handleSubscribe = async (planId: string) => {
     try {
       setLoadingPlan(planId);
-      alert("Redirecting you to Ziina to add your card and start your 7-day trial...");
 
+      // 🔥 1. Get current Supabase user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("You must be logged in to subscribe.");
+        return;
+      }
+
+      let realtorId: string | null = null;
+      let companyId: string | null = null;
+
+      // 🔥 2. Check if user is Realtor
+      const { data: realtor } = await supabase
+        .from("realtors")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (realtor) realtorId = realtor.id;
+
+      // 🔥 3. Check if user is Company
+      const { data: company } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+
+      if (company) companyId = company.id;
+
+      if (!realtorId && !companyId) {
+        alert("Only Realtors or Companies can subscribe.");
+        return;
+      }
+
+      alert("Redirecting you to Ziina to start your 7-day trial...");
+
+      // 🔥 4. Create payment intent
       const res = await fetch("/api/ziina", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planId }),
+        body: JSON.stringify({
+          plan: planId,
+          realtorId,
+          companyId,
+        }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create subscription");
 
+      if (!res.ok) throw new Error(data.error || "Subscription failed");
+
+      // 🔥 5. Redirect to Ziina checkout
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       } else {
         window.location.href = "/";
       }
     } catch (err: any) {
-      console.error("❌ Subscribe error:", err.message);
-      alert("Something went wrong: " + err.message);
+      console.error("❌ Error:", err.message);
+      alert("Error: " + err.message);
     } finally {
       setLoadingPlan(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 p-8">
+    <div className="min-h-screen bg-[#1836b2] text-gray-900 p-8">
       <h1 className="text-4xl font-bold font-tech text-center mb-15 text-[#1836b2]">
         Sky Realty Plans
       </h1>
-
-     
 
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {plans.map((plan) => {
           const isFeatured =
             plan.badge === "Most Popular" || plan.badge === "Best Value";
-
-        
 
           return (
             <div
@@ -156,17 +197,8 @@ export default function PricingSubscription() {
                   {plan.name}
                 </h2>
 
-                {/* FINAL PRICE SECTION WITH DISCOUNT */}
+                {/* Price */}
                 <p className="text-3xl font-bold mb-4 text-gray-900">
-
-                  {/* Original Price - only monthly discount */}
-                  {billingCycle === "monthly" && (
-                    <span className="text-lg text-gray-500 line-through block">
-                      
-                    </span>
-                  )}
-
-                  {/* Discounted Price */}
                   {billingCycle === "monthly"
                     ? `$${plan.monthlyPrice}`
                     : `$${plan.yearlyPrice.toFixed(0)}`}{" "}
@@ -203,7 +235,8 @@ export default function PricingSubscription() {
                 </button>
 
                 <p className="text-sm text-gray-700 text-center">
-                  Card details collected securely by Ziina. You won't be charged until the 7-day trial ends.
+                  Card details collected securely by Ziina. You won't be
+                  charged until the 7-day trial ends.
                 </p>
               </div>
             </div>

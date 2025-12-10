@@ -13,18 +13,28 @@ import {
   Legend,
   ChartOptions,
 } from 'chart.js'
-import { useUser } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export default function RentAnalyticsChart() {
-  const { user } = useUser()
+  const [user, setUser] = useState<any>(null)
+
+  // Fetch Supabase user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      if (data?.user) setUser(data.user)
+    }
+    getUser()
+  }, [])
+
   const realtorId = user?.id || null
   const analytics = useRentAnalytics(realtorId)
   const [chartData, setChartData] = useState<number[]>([0, 0, 0])
 
-  // Animate data update smoothly
+  // Animate chart data load
   useEffect(() => {
     const timeout = setTimeout(() => {
       setChartData([
@@ -35,6 +45,8 @@ export default function RentAnalyticsChart() {
     }, 300)
     return () => clearTimeout(timeout)
   }, [analytics])
+
+  if (!user) return null
 
   const data = {
     labels: ['Paid', 'Pending', 'Overdue'],
@@ -69,15 +81,6 @@ export default function RentAnalyticsChart() {
         text: 'Rent Status Breakdown',
         color: '#111827',
         font: { size: 18, weight: 'bold' },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(17, 17, 17, 0.85)',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        borderColor: '#f3f4f6',
-        borderWidth: 1,
-        padding: 10,
-        cornerRadius: 8,
       },
     },
     scales: {

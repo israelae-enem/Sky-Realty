@@ -72,7 +72,7 @@ export default function FreeTrialSection() {
           viewport={{ once: true }}
         >
           <Link
-            href="/sign-up"
+            href="/login"
             className="px-10 py-4 rounded-full bg-gradient-to-br from-[#1836b2] to-[#302cfc] text-white font-semibold tracking-wide shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-300"
           >
             Begin Your Free Trial

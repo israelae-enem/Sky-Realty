@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { Calendar } from "@/components/ui/calendar"
-import { useUser } from "@clerk/nextjs"
 import { motion } from "framer-motion"
 
 type Reminder = {
@@ -19,12 +18,23 @@ type Reminder = {
 }
 
 export default function RentReminders() {
-  const { user } = useUser()
-  const userId = user?.id ?? null
-
+  const [userId, setUserId] = useState<string | null>(null)
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+
+  // Get current user from Supabase
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser()
+      if (error) {
+        console.error("Failed to get user:", error)
+        return
+      }
+      setUserId(data.user?.id ?? null)
+    }
+    fetchUser()
+  }, [])
 
   const fetchReminders = useCallback(async () => {
     if (!userId) return
@@ -49,7 +59,6 @@ export default function RentReminders() {
         .in("id", payments.map(p => p.property_id))
       const properties = propertiesData || []
 
-      // Filter payments relevant to this user (either realtor or company)
       const userPayments = payments.filter(p => {
         const tenant = tenants.find(t => t.id === p.tenant_id)
         const property = properties.find(pr => pr.id === p.property_id)
@@ -74,7 +83,6 @@ export default function RentReminders() {
 
       setReminders(enriched)
       triggerNotifications(enriched)
-
     } catch (err) {
       console.error("Failed to fetch rent reminders:", err)
       toast.error("Failed to fetch rent reminders")
@@ -99,8 +107,8 @@ export default function RentReminders() {
         try {
           await supabase.from("notification").insert([{
             tenant_id: r.tenant_id,
-            realtor_id: r.tenant_id, // optional, adjust if you want separate columns
-            company_id: r.tenant_id, // optional
+            realtor_id: userId,
+            company_id: userId,
             type: "rent_reminder",
             message: `Hi ${r.tenant_name}, your rent for ${r.property_address} is due on ${due.toDateString()}.`,
             sent_at: new Date().toISOString(),

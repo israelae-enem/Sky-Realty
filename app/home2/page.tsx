@@ -89,7 +89,7 @@ export default function TenantsPage() {
       viewport={{ once: true }}
     >
       <Link
-        href="/sign-in"
+        href="/tenant"
         className="bg-[#1836b2] text-white px-8 py-4 rounded-lg text-lg hover:bg-[#241fd9] transition"
       >
         Get Started
@@ -114,7 +114,7 @@ export default function TenantsPage() {
           and communicate seamlessly with landlords.
         </p>
 
-        <Link href="/sign-up">
+        <Link href="/login">
           <button className="bg-blue-500 text-white font-semibold px-8 py-4 rounded-lg text-lg hover:bg-blue-600 transition-all duration-300 shadow-md hover:shadow-lg">
             Get Started
           </button>

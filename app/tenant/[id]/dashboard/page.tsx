@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Bell, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import Profile from '@/components/Profile';
@@ -51,8 +50,16 @@ const navItems = [
   { key: 'Chat', label: 'Chat' },
 ];
 
+const getUser = async () => {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error) throw error
+  return user
+}
+
 const TenantDashboard = () => {
-  const { user, isLoaded } = useUser();
+
+  const [user, setUser] = useState<any | null>(null)
+  
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
@@ -77,7 +84,7 @@ const TenantDashboard = () => {
 
   // ---------------- FETCH DATA ----------------
   useEffect(() => {
-    if (!isLoaded || !user) return;
+    if ( !user) return;
 
     const fetchData = async () => {
       try {
@@ -130,7 +137,7 @@ const TenantDashboard = () => {
     };
 
     fetchData();
-  }, [isLoaded, user]);
+  }, []);
 
   // ---------------- CHAT LOGIC ----------------
   const conversation_id =

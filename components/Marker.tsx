@@ -124,7 +124,7 @@ export default function CTASection() {
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-start gap-4 mb-4">
             <a
-              href="/sign-in"
+              href="/login"
               className="bg-gradient-to-br from-[#c8a96a] to-[#302cfc] text-white font-semibold px-8 py-4 rounded-2xl text-lg shadow-lg hover:scale-105 transition-all duration-300"
             >
               Get Started

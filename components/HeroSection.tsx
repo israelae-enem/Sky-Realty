@@ -71,7 +71,7 @@ export default function HeroSection() {
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
           >
             <Link
-              href="/sign-up"
+              href="/login"
               className="relative z-10 bg-[#CFAE70] text-black px-10 py-4 rounded-lg text-lg font-semibold tracking-wide shadow-xl"
             >
               Get Started

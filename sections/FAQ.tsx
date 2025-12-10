@@ -8,12 +8,12 @@ const faqs = [
   {
     question: "What is Sky-Realty?",
     answer:
-      "Sky-Realty is a property management platform built for realtors to manage properties, tenants, rent, and maintenance requests all in one place.",
+      "Sky-Realty is a real estate Marketplace and a property management platform built for realtors to manage listings, tenants, rent, and maintenance requests all in one place.",
   },
   {
     question: "How much does it cost?",
     answer:
-      "We offer flexible subscription plans: Basic (10 properties), Pro (20 properties), and Premium (unlimited properties). You can view full details on our Pricing page.",
+      "We offer flexible subscription plans: Basic (20 properties), Pro (40 properties), and Premium (unlimited properties). You can view full details on our Pricing page.",
   },
   {
     question: "Do tenants need an account?",
@@ -42,7 +42,7 @@ export default function FAQ() {
   return (
     <section className="bg-gray-200 text-gray-900 py-16 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-tech font-bold text-gray-900">Frequently Asked Questions</h2>
+        <h2 className="text-3xl font-tech font-bold text-[#1836b2]">Frequently Asked Questions</h2>
         <p className="mt-3 text-gray-700">
           Everything you need to know about Sky-Realty.
         </p>
@@ -59,7 +59,7 @@ export default function FAQ() {
             className="border border-gray-400 rounded-lg p-4 bg-gray-100"
           >
             <button
-              className="flex justify-between items-center w-full text-left text-lg font-medium text-gray-900"
+              className="flex justify-between items-center w-full text-left text-lg  text-[#1836b2] font-bold"
               onClick={() => toggleFAQ(index)}
             >
               {faq.question}
